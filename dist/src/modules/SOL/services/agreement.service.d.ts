@@ -1,0 +1,37 @@
+import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
+import { AgreementRepository } from "../repositories/agreement.repository";
+import { UserRepository } from "../repositories/user.repository";
+import { AgreementInterface } from "../interfaces/agreement.interface";
+import { WorkPlanService } from "./work-plan.service";
+import { AssociationService } from "../services/association.service";
+import { ResponseEndpointAgreementDto } from "../dtos/response-endpoint-agreement.dto";
+import { CostItemsService } from "./cost-items.service";
+import { ItemsModel } from "../models/database/items.model";
+import { ProjectRepository } from "../repositories/project.repository";
+import { AgreementModel } from "../models/agreement.model";
+export declare class AgreementService {
+    private readonly _agreementRepository;
+    private readonly _userRepository;
+    private readonly _workPlanService;
+    private readonly _associationService;
+    private readonly _costItemsService;
+    private readonly itemsModel;
+    private readonly _projectRepository;
+    constructor(_agreementRepository: AgreementRepository, _userRepository: UserRepository, _workPlanService: WorkPlanService, _associationService: AssociationService, _costItemsService: CostItemsService, itemsModel: ItemsModel, _projectRepository: ProjectRepository);
+    findById(id: string): Promise<AgreementInterface>;
+    findAgreementByUserId(id: string, userRole: string): Promise<AgreementInterface[]>;
+    findAgreementByReviewerOrManagerId(id: string): Promise<AgreementModel[]>;
+    findAgreementByReviewerId(id: string): Promise<AgreementModel[]>;
+    findAgreementByManagerId(id: string): Promise<AgreementModel[]>;
+    findAgreementByProjectrId(id: string): Promise<AgreementModel>;
+    deleteById(id: string): Promise<AgreementInterface>;
+    register(dto: AgreementRegisterRequestDto): Promise<AgreementInterface>;
+    findAll(): Promise<AgreementInterface[]>;
+    findAgreementsWithOutProject(): Promise<AgreementInterface[] | any>;
+    findForAssociation(associationId: string): Promise<AgreementInterface[]>;
+    getAgreementsWithProjects(): Promise<AgreementInterface[] | any>;
+    update(id: string, dto: AgreementRegisterRequestDto): Promise<AgreementInterface>;
+    addWorkPlan(id: string, workPlanIds: string): Promise<AgreementInterface>;
+    removeWorkPlan(id: string, workPlanId: string): Promise<AgreementInterface>;
+    handlerJob(data: ResponseEndpointAgreementDto[]): Promise<void>;
+}

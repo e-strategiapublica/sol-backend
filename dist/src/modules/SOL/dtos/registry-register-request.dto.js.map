@@ -1,0 +1,1 @@
+{"version":3,"file":"registry-register-request.dto.js","sourceRoot":"","sources":["../../../../../src/modules/SOL/dtos/registry-register-request.dto.ts"],"names":[],"mappings":";;;AACA,MAAa,0BAA0B;IAEnC,YACW,OAAe,EACf,MAAc,EACd,eAAuB;QAFvB,YAAO,GAAP,OAAO,CAAQ;QACf,WAAM,GAAN,MAAM,CAAQ;QACd,oBAAe,GAAf,eAAe,CAAQ;IAC9B,CAAC;CACR;AAPD,gEAOC"}

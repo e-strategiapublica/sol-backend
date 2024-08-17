@@ -1,0 +1,40 @@
+import { Model } from "mongoose";
+import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
+import { UserUpdatePasswordRequestDto } from "../dtos/user-update-password-request.dto";
+import { UserStatusEnum } from "../enums/user-status.enum";
+import { UserModel } from "../models/user.model";
+import { UserUpdateRequestDto } from "../dtos/user-update-request.dto";
+import { UserRegisterPasswordRequestDto } from "../dtos/user-register-password-request.dto";
+import { UserTypeEnum } from "../enums/user-type.enum";
+import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto";
+import { NotificationInterface } from "../interfaces/notification.interface";
+export declare class UserRepository {
+    private readonly _model;
+    private url;
+    private dbName;
+    private collection;
+    constructor(_model: Model<UserModel>);
+    getByEmail(email: string): Promise<UserModel>;
+    getByPhone(phone: string): Promise<UserModel>;
+    getByDocument(document: string): Promise<UserModel>;
+    getAll(): Promise<UserModel[]>;
+    getById(_id: string): Promise<UserModel>;
+    getByIdPopulate(_id: string): Promise<UserModel>;
+    getUserBySupplierId(_id: string): Promise<UserModel[]>;
+    listByType(type: UserTypeEnum): Promise<UserModel[]>;
+    listByRole(role: string): Promise<UserModel[]>;
+    register(dto: UserRegisterRequestDto): Promise<UserModel>;
+    updatePassword(_id: string, dto: UserUpdatePasswordRequestDto): Promise<UserModel>;
+    updateNotifications(_id: string, dto: NotificationInterface): Promise<UserModel>;
+    update(_id: string, dto: UserUpdateRequestDto): Promise<UserModel>;
+    updateById(_id: string, dto: UserUpdateByIdRequestDto): Promise<UserModel>;
+    updateRefreshToken(_id: string, refreshToken: string | null): Promise<UserModel>;
+    registerPassword(_id: string, dto: UserRegisterPasswordRequestDto): Promise<UserModel>;
+    updateStatus(_id: string, status: UserStatusEnum): Promise<UserModel>;
+    addDeviceToken(token: string, id: string): Promise<void>;
+    removeDeviceToken(token: string, id: string): Promise<void>;
+    updateProfilePicture(_id: string, profilePicture: string): Promise<UserModel>;
+    deleteById(_id: string): Promise<UserModel & {
+        _id: import("mongoose").Types.ObjectId;
+    }>;
+}

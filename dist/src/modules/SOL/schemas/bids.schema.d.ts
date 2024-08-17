@@ -1,0 +1,36 @@
+import * as mongoose from "mongoose";
+import { User } from "./user.schema";
+import { BidTypeEnum } from "../enums/bid-type.enum";
+import { BidModalityEnum } from "../enums/bid-modality.enum";
+import { Allotment } from "./allotment.schema";
+import { BidStatusEnum } from "../enums/bid-status.enum";
+import { Agreement } from "./agreement.schema";
+import { Supplier } from "./supplier.schema";
+export declare class Bids {
+    bid_count: string;
+    description: string;
+    agreement: Agreement;
+    classification: string;
+    start_at: string;
+    end_at: string;
+    days_to_tiebreaker: string;
+    days_to_delivery: string;
+    proposal_list: string[];
+    deleted: boolean;
+    local_to_delivery: string;
+    bid_type: BidTypeEnum;
+    modality: BidModalityEnum;
+    status: BidStatusEnum;
+    aditional_site: string;
+    declined_reason: string;
+    add_allotment: Allotment[];
+    invited_suppliers: Supplier[];
+    editalFile: string;
+    ataFile: string;
+    state: string;
+    city: string;
+    association: User;
+    additionalDocuments: string[];
+    concludedAt: Date;
+}
+export declare const BidsSchema: mongoose.Schema<Bids, mongoose.Model<Bids, any, any, any, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, Bids>;

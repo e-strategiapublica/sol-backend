@@ -1,0 +1,664 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var ContractService_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ContractService = void 0;
+const common_1 = require("@nestjs/common");
+const contract_repository_1 = require("../repositories/contract.repository");
+const contract_status_enum_1 = require("../enums/contract-status.enum");
+const notification_service_1 = require("./notification.service");
+const file_repository_1 = require("../repositories/file.repository");
+const proposal_repository_1 = require("../repositories/proposal.repository");
+const model_contract_repository_1 = require("../repositories/model-contract.repository");
+const association_repository_1 = require("../repositories/association.repository");
+const user_repository_1 = require("../repositories/user.repository");
+const supplier_repository_1 = require("../repositories/supplier.repository");
+const moment = require("moment");
+const work_plan_service_1 = require("./work-plan.service");
+const cost_items_service_1 = require("./cost-items.service");
+const node_process_1 = require("node:process");
+const language_contract_enum_1 = require("../enums/language-contract.enum");
+const agreement_repository_1 = require("../repositories/agreement.repository");
+const PizZip = require("pizzip");
+const Docxtemplater = require("docxtemplater");
+const fs = require("fs");
+const path = require("path");
+const { spawn } = require("child_process");
+let ContractService = ContractService_1 = class ContractService {
+    constructor(_contractRepository, _notificationService, _fileRepository, _proposalRepository, _modelContractRepository, _associationRepository, _userRepository, _workPlanService, _supplierRepository, _costItemsService, _agreementRepository) {
+        this._contractRepository = _contractRepository;
+        this._notificationService = _notificationService;
+        this._fileRepository = _fileRepository;
+        this._proposalRepository = _proposalRepository;
+        this._modelContractRepository = _modelContractRepository;
+        this._associationRepository = _associationRepository;
+        this._userRepository = _userRepository;
+        this._workPlanService = _workPlanService;
+        this._supplierRepository = _supplierRepository;
+        this._costItemsService = _costItemsService;
+        this._agreementRepository = _agreementRepository;
+        this._logger = new common_1.Logger(ContractService_1.name);
+    }
+    async register(dto) {
+        const count = await this._contractRepository.list();
+        const incrementProposal = count.find(x => x.bid_number._id.toString() === dto.bid_number.toString() &&
+            x.supplier_id._id.toString() === dto.supplier_id.toString());
+        if (incrementProposal) {
+            incrementProposal.proposal_id.push(dto.proposal_id[0]);
+            incrementProposal.value = incrementProposal.proposal_id.reduce((a, b) => a + Number(b.total_value), 0).toFixed(0);
+            const result = await this._contractRepository.updateValueAndProposal(incrementProposal._id.toString(), {
+                value: incrementProposal.value,
+                proposal: incrementProposal.proposal_id,
+            });
+            return result;
+        }
+        dto.contract_number = Number(count.length + 1).toString();
+        dto.value = dto.proposal_id[0].total_value;
+        const result = await this._contractRepository.register(dto);
+        if (!result)
+            throw new common_1.BadRequestException("Não foi possivel cadastrar esse grupo!");
+        return result;
+    }
+    async list() {
+        const result = await this._contractRepository.listNonDeleted();
+        return result;
+    }
+    async listByUserId(_id) {
+        const contracts = await this._contractRepository.listNonDeleted();
+        const result = contracts.filter((item) => item.bid_number.association._id.toString() === _id);
+        return result;
+    }
+    async updateStatus(_id, dto) {
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        if (contract.status === contract_status_enum_1.ContractStatusEnum.aguardando_assinaturas) {
+            const result = await this._contractRepository.updateStatus(_id, dto);
+            return result;
+        }
+        else {
+            throw new common_1.BadRequestException("A situação do contrato já foi atualizada!");
+        }
+    }
+    async updateStatusItens(_id, dto) {
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract)
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        const result = await this._contractRepository.updateStatusAndItens(_id, dto);
+        return result;
+    }
+    async signAssociation(_id, dto) {
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        const notificationMsg = {
+            title: `O contrato ${contract.contract_number} foi assinado`,
+            description: `O contrato ${contract.contract_number} foi assinado`,
+            from_user: dto.association_id,
+            to_user: ["aaa"],
+            deleted: false,
+        };
+        if (contract.status === contract_status_enum_1.ContractStatusEnum.aguardando_assinaturas) {
+            const result = await this._contractRepository.signAssociation(_id, dto);
+            return this.checkAllsignatures(_id);
+        }
+        else {
+            throw new common_1.BadRequestException("A situação do contrato já foi atualizada!");
+        }
+    }
+    async signSupplier(_id, dto) {
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        const notificationMsg = {
+            title: `O contrato ${contract.contract_number} foi assinado`,
+            description: `O contrato ${contract.contract_number} foi assinado`,
+            from_user: dto.association_id,
+            to_user: ["aaa"],
+            deleted: false,
+        };
+        if (contract.status === contract_status_enum_1.ContractStatusEnum.aguardando_assinaturas) {
+            if (!dto.association_id)
+                throw new common_1.BadRequestException("A associação não foi informada!");
+            const result = await this._contractRepository.signSupplier(_id, dto);
+            return this.checkAllsignatures(_id);
+        }
+        else {
+            throw new common_1.BadRequestException("A situação do contrato já foi atualizada!");
+        }
+    }
+    async checkAllsignatures(_id) {
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        if (contract.status === contract_status_enum_1.ContractStatusEnum.aguardando_assinaturas) {
+            if (contract.supplier_accept && contract.association_accept) {
+                const result = await this._contractRepository.checkAllsignatures(_id);
+                return result;
+            }
+        }
+        return contract;
+    }
+    async contractPdfDownload(_id) {
+        let propostas = [];
+        let convidados = [];
+        let lotes = [];
+        let lotesCompleto = [];
+        let lotesEspecificacao = [];
+        const contract = await this._contractRepository.getById(_id);
+        if (!contract) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        const result = await this.checkAllsignatures(_id);
+        if (!result) {
+            throw new common_1.BadRequestException("Contrato não encontrado!");
+        }
+        const modelResponse = await this._modelContractRepository.getByClassification(contract.bid_number["classification"].toString());
+        if (!modelResponse) {
+            throw new common_1.BadRequestException("Não foi encontrado um modelo de contrato para essa licitação!");
+        }
+        const respondeAssociation = await this._associationRepository.getById(contract.bid_number["association"]["association"].toString());
+        const responseProposal = await this._proposalRepository.listByBid(contract.bid_number["_id"].toString());
+        for (let p = 0; p < responseProposal.length; p++) {
+            if (p == 0) {
+                propostas.push(" empresa " +
+                    responseProposal[p].proposedBy.name +
+                    ", inscrita no cnpj " +
+                    responseProposal[p].proposedBy.document +
+                    " ");
+            }
+            else {
+                propostas.push(", empresa " +
+                    responseProposal[p].proposedBy.name +
+                    ", inscrita no cnpj " +
+                    responseProposal[p].proposedBy.document +
+                    " ");
+            }
+        }
+        for (let q = 0; q < contract.bid_number["invited_suppliers"].length; q++) {
+            const suppliers = await this._supplierRepository.listById(contract.bid_number["invited_suppliers"][q].toString());
+            if (q == 0) {
+                convidados.push(" empresa " + suppliers.name + ", inscrita no cnpj " + suppliers.cpf + " ");
+            }
+            else {
+                convidados.push(" , empresa " + suppliers.name + ", inscrita no cnpj " + suppliers.cpf + " ");
+            }
+        }
+        for (let l = 0; l < contract.bid_number["add_allotment"].length; l++) {
+            if (l == 0) {
+                lotes.push("" + contract.bid_number["add_allotment"][l].allotment_name + " ");
+            }
+            else {
+                lotes.push(contract.bid_number["add_allotment"][l].allotment_name + " ");
+            }
+        }
+        let valor_estimado = 0;
+        for (let a = 0; a < contract.bid_number["agreement"]["workPlan"].length; a++) {
+            const responseWorkPlan = await this._workPlanService.findById(contract.bid_number["agreement"]["workPlan"][a].toString());
+            for (let allotProd of contract.bid_number["add_allotment"]) {
+                for (let p = 0; p < responseWorkPlan.product.length; p++) {
+                    for (let b = 0; b < allotProd.add_item.length; b++) {
+                        if (responseWorkPlan.product[p].items.name === allotProd.add_item[b].item) {
+                            let soma = responseWorkPlan.product[p].unitValue * Number(allotProd.add_item[b].quantity);
+                            valor_estimado = valor_estimado + soma;
+                            if (p == 0) {
+                                lotesEspecificacao.push(" " +
+                                    responseWorkPlan.product[p].items.name +
+                                    ": " +
+                                    " " +
+                                    responseWorkPlan.product[p].items.specification);
+                                lotesCompleto.push("<br>" +
+                                    allotProd.allotment_name +
+                                    ": " +
+                                    "Item: " +
+                                    responseWorkPlan.product[p].items.name +
+                                    ", " +
+                                    "Especificação: " +
+                                    responseWorkPlan.product[p].items.specification +
+                                    ", " +
+                                    "Quantidade: " +
+                                    allotProd.add_item[b].quantity +
+                                    ", " +
+                                    "Unidade: " +
+                                    responseWorkPlan.product[p].items.unitMeasure +
+                                    ", " +
+                                    "Valor unitário: " +
+                                    responseWorkPlan.product[p].unitValue +
+                                    ", " +
+                                    "Valor do frete: " +
+                                    contract.proposal_id.reduce((acc, item) => acc + Number(item.freight), 0) +
+                                    ", " +
+                                    "Valor total: " +
+                                    contract.proposal_id.reduce((acc, item) => acc + Number(item.total_value), 0) +
+                                    "");
+                            }
+                            else {
+                                lotesEspecificacao.push(", " + responseWorkPlan.product[p].items.specification);
+                                lotesCompleto.push("Item: " +
+                                    responseWorkPlan.product[p].items.name +
+                                    ", " +
+                                    "Especificação: " +
+                                    responseWorkPlan.product[p].items.specification +
+                                    ", " +
+                                    "Quantidade: " +
+                                    allotProd.add_item[b].quantity +
+                                    ", " +
+                                    "Unidade: " +
+                                    responseWorkPlan.product[p].items.unitMeasure +
+                                    ", " +
+                                    "Valor unitário: " +
+                                    responseWorkPlan.product[p].unitValue +
+                                    ", " +
+                                    "Valor do frete: " +
+                                    contract.proposal_id.reduce((acc, item) => acc + Number(item.freight), 0) +
+                                    ", " +
+                                    "Valor total: " +
+                                    contract.proposal_id.reduce((acc, item) => acc + Number(item.total_value), 0) +
+                                    "");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        const userResponde = await this._userRepository.getById(contract.proposal_id["proposedBy"].toString());
+        const forcedorResponse = await this._supplierRepository.listById(userResponde.supplier._id);
+        let contractFormated = modelResponse.contract
+            .replace(/\[contract_number\]/g, " " + contract.contract_number + " ")
+            .replace(/\[supplier_signature\]/g, " " + forcedorResponse.legal_representative.name + " ")
+            .replace(/\[signature_association\]/g, " " + respondeAssociation.legalRepresentative.name + " ")
+            .replace("[supplier_name]", " " + forcedorResponse.name + " ")
+            .replace("[</span>supplier_name<span>]", " " + forcedorResponse.name + " ")
+            .replace("[supplier]", " " + forcedorResponse.name + " ")
+            .replace("[supplier_id]", " " + forcedorResponse.cpf + " ")
+            .replace("[supplier_zip_code]", " " + forcedorResponse.address.zipCode + "")
+            .replace("[supplier_address]", " " +
+            forcedorResponse.address.publicPlace +
+            " " +
+            forcedorResponse.address.number +
+            " " +
+            forcedorResponse.address.neighborhood +
+            " " +
+            forcedorResponse.address.complement +
+            " ")
+            .replace("[<span>supplier_address]", " " +
+            forcedorResponse.address.publicPlace +
+            " " +
+            forcedorResponse.address.number +
+            " " +
+            forcedorResponse.address.neighborhood +
+            " " +
+            forcedorResponse.address.complement +
+            " ")
+            .replace("[supplier_municipality]", " " + forcedorResponse.address.city + " ")
+            .replace(/\[supplier_name\]/g, " " + forcedorResponse.name + " ")
+            .replace(/\[supplier\]/g, " " + forcedorResponse.name + " ")
+            .replace("[supplier_id]", " " + forcedorResponse.cpf + " ")
+            .replace(/\[supplier_id\]/g, " " + forcedorResponse.cpf + " ")
+            .replace(/\[supplier_zip_code\]/g, " " + forcedorResponse.address.zipCode + "")
+            .replace(/\[supplier_address\]/g, " " +
+            forcedorResponse.address.publicPlace +
+            " " +
+            forcedorResponse.address.number +
+            " " +
+            forcedorResponse.address.neighborhood +
+            " " +
+            forcedorResponse.address.complement +
+            " ")
+            .replace(/\[supplier_municipality\]/g, " " + forcedorResponse.address.city + " ")
+            .replace(/\[supplier_state\]/g, " " + forcedorResponse.address.state + " ")
+            .replace(/\[supplier_legal_representative_name\]/g, " " + forcedorResponse.legal_representative.name + " ")
+            .replace("</span><span>supplier_legal_representative_id</span><span>", " " + forcedorResponse.cpf + " ")
+            .replace(/\[supplier_legal_representative_id\]/g, " " + forcedorResponse.legal_representative.cpf + " ")
+            .replace("[</span><span>supplier_legal_representative_name]", " " +
+            forcedorResponse.legal_representative.address.publicPlace +
+            " " +
+            forcedorResponse.legal_representative.address.number +
+            " " +
+            forcedorResponse.legal_representative.address.neighborhood +
+            " " +
+            forcedorResponse.legal_representative.address.complement +
+            " ")
+            .replace("[</span><span>supplier_legal_representative_address</span><span>]", " " +
+            forcedorResponse.legal_representative.address.publicPlace +
+            " " +
+            forcedorResponse.legal_representative.address.number +
+            " " +
+            forcedorResponse.legal_representative.address.neighborhood +
+            " " +
+            forcedorResponse.legal_representative.address.complement +
+            " ")
+            .replace(/\[supplier_legal_representative_address\]/g, " " +
+            forcedorResponse.legal_representative.address.publicPlace +
+            " " +
+            forcedorResponse.legal_representative.address.number +
+            " " +
+            forcedorResponse.legal_representative.address.neighborhood +
+            " " +
+            forcedorResponse.legal_representative.address.complement +
+            " ")
+            .replace(/\[supplier_legal_representative_address\]/g, " " +
+            forcedorResponse.legal_representative.address.publicPlace +
+            " " +
+            forcedorResponse.legal_representative.address.number +
+            " " +
+            forcedorResponse.legal_representative.address.neighborhood +
+            " " +
+            forcedorResponse.legal_representative.address.complement +
+            " ")
+            .replace(/\[supplier_legal_representative_supplier_municipality\]/g, " " + forcedorResponse.legal_representative.address.city + " ")
+            .replace(/\[supplier_legal_representative_supplier_state\]/g, " " + forcedorResponse.legal_representative.address.state + " ")
+            .replace(/\[association_name\]/g, "" + respondeAssociation.name + "")
+            .replace(/\[association_id\]/g, "" + respondeAssociation.cnpj + " ")
+            .replace(/\[association_zip_code\]/g, "" + respondeAssociation.address.zipCode + " ")
+            .replace(/\[association_address\]/g, "" +
+            respondeAssociation.address.publicPlace +
+            " " +
+            respondeAssociation.address.number +
+            " " +
+            respondeAssociation.address.neighborhood +
+            " " +
+            respondeAssociation.address.complement +
+            " ")
+            .replace(/\[association_municipality\]/g, "" + respondeAssociation.address.city + "")
+            .replace(/\[association_state\]/g, "" + respondeAssociation.address.state + " ")
+            .replace(/\[association_legal_representative_name\]/g, "" + respondeAssociation.legalRepresentative.name + " ")
+            .replace(/\[association_legal_representative_id\]/g, "" + respondeAssociation.legalRepresentative.cpf + " ")
+            .replace(/\[association_legal_representative_address\]/g, "" +
+            respondeAssociation.legalRepresentative.address.publicPlace +
+            " " +
+            respondeAssociation.legalRepresentative.address.number +
+            " " +
+            respondeAssociation.legalRepresentative.address.neighborhood +
+            " " +
+            respondeAssociation.legalRepresentative.address.complement +
+            " ")
+            .replace(/\[association_legal_representative_supplier_municipality\]/g, "" + respondeAssociation.legalRepresentative.address.city + " ")
+            .replace(/\[association_legal_representative_supplier_state\]/g, "" + respondeAssociation.legalRepresentative.address.state + " ")
+            .replace(/\[covenant_number\]/g, " " + contract.bid_number["agreement"]["register_number"].toString() + " ")
+            .replace(/\[covenant_object\]/g, " " + contract.bid_number["agreement"]["register_object"].toString() + " ")
+            .replace(/\[municipality_execution_covenant\]/g, " " + contract.bid_number["local_to_delivery"].toString() + " ")
+            .replace("[object_description]", " " + contract.bid_number["description"].toString() + " ")
+            .replace(/\[object_description\]/g, "" + contract.bid_number["description"].toString() + " ")
+            .replace("[number/year_bidding]", " " +
+            contract.bid_number["bid_count"].toString() +
+            "/" +
+            moment(contract.bid_number["start_at"]).format("YYYY").toString())
+            .replace(/\[guest_supplier\]/g, "" + convidados + " ")
+            .replace(/\[proposed_list\]/g, " " + propostas)
+            .replace(/\[estimated_value_of_the_bid\]/g, " " +
+            valor_estimado.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+            }))
+            .replace(/\[winning_supplier\]/g, " " + forcedorResponse.legal_representative.name + " ")
+            .replace("[document_contract_date]", " " + moment(contract["createdAt"]).format("DD/MM/YYYY").toString() + " ")
+            .replace(/\[document_contract_date\]/g, " " + moment(contract["createdAt"]).format("DD/MM/YYYY").toString() + " ")
+            .replace(/\[closing_date\]/g, " " + moment(contract["end_at"]).format("DD/MM/YYYY").toString() + " ")
+            .replace(/\[start_date\]/g, " " + moment(contract["start_at"]).format("DD/MM/YYYY").toString() + " ")
+            .replace("[batch_c</font><span>omplete_list</span><span>]", "" + lotesCompleto + " ")
+            .replace("[batch_complete_list]", "" + lotesCompleto + " ")
+            .replace("[batch_specification</font>_list]", "" + lotesEspecificacao + " ")
+            .replace("[batch_specification_list]", "" + lotesEspecificacao + " ")
+            .replace("[batch_list]", "" + lotes + " ");
+        return contractFormated;
+    }
+    async createDocument(_id, lang = language_contract_enum_1.LanguageContractEnum.english, type) {
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+        const modelContract = await this._modelContractRepository.getByContractAndLanguage(lang, type);
+        if (!modelContract)
+            throw new Error("Modelo de documento não encontrado");
+        const content = fs.readFileSync(path.resolve("src/shared/documents", modelContract.contract), "binary");
+        const zip = new PizZip(content);
+        const doc = new Docxtemplater(zip, {
+            paragraphLoop: true,
+            linebreaks: true,
+        });
+        const contract = await this._contractRepository.getById(_id);
+        const proposalArray = await this._proposalRepository.listByBid(contract.bid_number._id.toString());
+        let allotment = [];
+        contract.proposal_id.forEach(proposal => {
+            proposal.allotment.forEach(allot => {
+                allotment.push(allot);
+            });
+        });
+        let listOfItems = [];
+        listOfItems = await this.costItensGet(allotment, proposalArray);
+        let signature = "Assinado eletronicamente pela: ";
+        let yes = "Sim";
+        let no = "Não";
+        switch (lang) {
+            case language_contract_enum_1.LanguageContractEnum.english:
+                signature = "Electronically signed by: ";
+                yes = "Yes";
+                no = "No";
+                break;
+            case language_contract_enum_1.LanguageContractEnum.spanish:
+                signature = "Firmado electrónicamente por: ";
+                yes = "Sí";
+                no = "No";
+                break;
+            case language_contract_enum_1.LanguageContractEnum.portuguese:
+                signature = "Assinado eletronicamente pela: ";
+                yes = "Sim";
+                no = "Não";
+                break;
+            case language_contract_enum_1.LanguageContractEnum.french:
+                signature = "Signé électroniquement par: ";
+                yes = "Oui";
+                no = "Non";
+                break;
+            default:
+                break;
+        }
+        const formatDateString = lang === language_contract_enum_1.LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
+        let listOfBidPrices = [];
+        if (proposalArray)
+            proposalArray
+                .sort((a, b) => Number((a === null || a === void 0 ? void 0 : a.total_value) || 0) - Number((b === null || b === void 0 ? void 0 : b.total_value) || 0))
+                .forEach(proposal => {
+                listOfBidPrices.push({
+                    lot: proposal.allotment.map(allot => allot.allotment_name).join(", "),
+                    rank: listOfBidPrices.length + 1,
+                    bidders_name: proposal.proposedBy.supplier.name || "",
+                    didders_id: proposal._id.toString(),
+                    bid_price: (proposal === null || proposal === void 0 ? void 0 : proposal.total_value) || 0,
+                    submited_at: moment(proposal.createdAt).format(formatDateString),
+                    accepted: proposal.association_accept && proposal.reviewer_accept ? yes : no,
+                    justification_for_rejection: proposal.refusedBecaused || "",
+                    awarded_at: proposal.association_accept && proposal.reviewer_accept
+                        ? moment(proposal.acceptedRevisorAt).format(formatDateString)
+                        : "",
+                    number_contract: contract.contract_number + "/" + moment(contract.createdAt).format("YYYY"),
+                });
+            });
+        doc.render({
+            process_description: contract.bid_number.description,
+            bid_number: contract.bid_number.bid_count + "/" + moment(contract.bid_number.start_at).format("YYYY"),
+            name_project: contract.contract_document,
+            name_purchaser: contract.bid_number.agreement.association.name,
+            purchaser_country: contract.bid_number.agreement.association.address.state,
+            publication_date: moment(contract.bid_number.createdAt).format(formatDateString),
+            list_of_items: listOfItems,
+            list_of_bid_prices: listOfBidPrices,
+            bid_opening_date: moment(contract.bid_number.start_at).format(formatDateString),
+            email_purchaser: contract.bid_number.association.email,
+            deadline_date: contract.bid_number.end_at ? moment(contract.bid_number.end_at).format(formatDateString) : "| A definir no momento da abertura da licitação |",
+            website_url: contract.bid_number.aditional_site || "Sem site adicional",
+            day_contract: moment(contract.createdAt).format("DD"),
+            month_contract: moment(contract.createdAt).format("MM"),
+            year_contract: moment(contract.createdAt).format("YYYY"),
+            date_contract: moment(contract.createdAt).format(formatDateString),
+            number_contract: contract.contract_number + "/" + moment(contract.createdAt).format("YYYY"),
+            adress_purchaser: contract.bid_number.agreement.association.address.publicPlace +
+                ", " +
+                contract.bid_number.agreement.association.address.number +
+                ", " +
+                contract.bid_number.agreement.association.address.complement +
+                ", " +
+                contract.bid_number.agreement.association.address.city +
+                ", " +
+                contract.bid_number.agreement.association.address.state +
+                ", " +
+                contract.bid_number.agreement.association.address.zipCode,
+            name_legal_representative_purchaser: contract.bid_number.agreement.association.legalRepresentative.name,
+            cpf_legal_representative_purchaser: contract.bid_number.agreement.association.legalRepresentative.cpf,
+            name_supplier: ((_a = contract.supplier_id) === null || _a === void 0 ? void 0 : _a.name) || '',
+            supplier_country: (_b = contract.supplier_id) === null || _b === void 0 ? void 0 : _b.address.state,
+            adress_supplier: ((_c = contract.supplier_id) === null || _c === void 0 ? void 0 : _c.address.publicPlace) +
+                ", " +
+                ((_d = contract.supplier_id) === null || _d === void 0 ? void 0 : _d.address.number) +
+                ", " +
+                ((_e = contract.supplier_id) === null || _e === void 0 ? void 0 : _e.address.complement) +
+                ", " +
+                ((_f = contract.supplier_id) === null || _f === void 0 ? void 0 : _f.address.city) +
+                ", " +
+                ((_g = contract.supplier_id) === null || _g === void 0 ? void 0 : _g.address.state) +
+                ", " +
+                ((_h = contract.supplier_id) === null || _h === void 0 ? void 0 : _h.address.zipCode),
+            name_legal_representative_supplier: ((_k = (_j = contract.supplier_id) === null || _j === void 0 ? void 0 : _j.legal_representative) === null || _k === void 0 ? void 0 : _k.name) || '',
+            purchaser_cnpj: contract.bid_number.agreement.association.cnpj,
+            supplier_cnpj: (_l = contract.supplier_id) === null || _l === void 0 ? void 0 : _l.cpf,
+            supplier_cpf: (_m = contract.supplier_id) === null || _m === void 0 ? void 0 : _m.cpf,
+            delivery_place: contract.bid_number.local_to_delivery,
+            supplier_email: (_o = contract.supplier_id) === null || _o === void 0 ? void 0 : _o.name,
+            days_to_delivery: contract.bid_number.days_to_delivery,
+            date_to_delivery: moment().add(contract.bid_number.days_to_delivery, "days").format(formatDateString),
+            role_purchaser: "",
+            role_supplier: "",
+            contract_value: contract.value,
+            batch_list_name: listOfItems.map(item => item.name).toString(),
+            agreement_name: contract.bid_number.agreement.register_number + "/" + contract.bid_number.agreement.register_object,
+            agreement_number: contract.bid_number.agreement.register_number,
+            signature_purchaser: signature +
+                contract.bid_number.agreement.association.name +
+                " em " +
+                moment(new Date(contract.association_sign_date)).format(formatDateString),
+            signature_supplier: signature + ((_p = contract.supplier_id) === null || _p === void 0 ? void 0 : _p.name) + " em " + moment(new Date(contract.supplier_sign_date)).format(formatDateString),
+            bid_concluded_date: contract.bid_number.concludedAt
+                ? moment(contract.bid_number.concludedAt).format(formatDateString)
+                : "",
+            guest_suppliers: ((_q = contract.bid_number.invited_suppliers) === null || _q === void 0 ? void 0 : _q.map(supplier => supplier.name).toString()) || "",
+            estimated_value: (listOfItems === null || listOfItems === void 0 ? void 0 : listOfItems.reduce((acc, item) => acc + Number((item === null || item === void 0 ? void 0 : item.total_value) || 0), 0)) || 0,
+        });
+        const buf = doc.getZip().generate({ type: "nodebuffer" });
+        await fs.writeFileSync(path.resolve("src/shared/documents", "output.docx"), buf);
+        await this.callPythonFile()
+            .then(async () => {
+            fs.unlinkSync(path.resolve("src/shared/documents", "output.docx"));
+            return;
+        })
+            .catch(err => {
+            console.log(err);
+            throw new common_1.BadRequestException("Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto");
+        });
+        return buf;
+    }
+    async getById(_id) {
+        const result = await this._contractRepository.getById(_id);
+        if (result.deleted === true) {
+            throw new common_1.BadRequestException("Esse contrato já foi deletado!");
+        }
+        return result;
+    }
+    async listByBidId(bid_id) {
+        const result = await this._contractRepository.getByBidId(bid_id);
+        return result;
+    }
+    async deleteById(_id) {
+        return await this._contractRepository.deleteById(_id);
+    }
+    async costItensGet(allotment, proposal) {
+        var _a;
+        let listOfItems = [];
+        for (let allot of allotment) {
+            let el = proposal.find(proposal => proposal.allotment.find(all => all._id.toString() === allot._id.toString()));
+            let price = 0;
+            let quantity = 0;
+            if (el) {
+                price = +(el === null || el === void 0 ? void 0 : el.total_value) || 0;
+                quantity = +el.allotment
+                    .map(all => all.quantity)
+                    .reduce((a, b) => Number(a) + Number(b), 0)
+                    .toFixed(2);
+                price = +Number(price / quantity).toFixed(2);
+            }
+            for (let item of allot.add_item) {
+                const costItems = await this._costItemsService.getByName(item.item);
+                listOfItems.push({
+                    code: costItems.code || item.group,
+                    name: item.item,
+                    classification: ((_a = costItems === null || costItems === void 0 ? void 0 : costItems.category) === null || _a === void 0 ? void 0 : _a.segment) || "Sem classificação",
+                    specification: item.specification || "Sem especificação",
+                    quantity: item.quantity,
+                    unit_measure: item.unitMeasure,
+                    place_to_delivery: allot.place_to_delivery,
+                    days_to_delivery: allot.days_to_delivery,
+                    price_unit: price,
+                    total_value: price * quantity,
+                });
+            }
+        }
+        return listOfItems;
+    }
+    async callPythonFile() {
+        return new Promise((resolve, reject) => {
+            if (!fs.existsSync(path.resolve("src/shared/documents", "output.docx"))) {
+                reject("Arquivo não encontrado");
+            }
+            const py = node_process_1.platform === "win32" ? "python" : "python3";
+            const soft = node_process_1.platform === "win32" ? "win32" : "linux";
+            const python = spawn(py, [
+                path.resolve("src/shared/documents", "convertPDF.py"),
+                path.resolve("src/shared/documents", "output.docx"),
+                path.resolve("src/shared/documents", "output.pdf"),
+                soft,
+            ]);
+            python.stdout.on("data", data => {
+                console.log(`stdout: ${data}`);
+            });
+            python.stderr.on("data", data => {
+                console.error(`stderr: ${data}`);
+            });
+            python.on("close", code => {
+                console.log(`child process exited with code ${code}`);
+                if (code === 0) {
+                    return resolve(0);
+                }
+                return reject(1);
+            });
+            python.on("error", err => {
+                console.error(err);
+                reject(err);
+            });
+        });
+    }
+};
+ContractService = ContractService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [contract_repository_1.ContractRepository,
+        notification_service_1.NotificationService,
+        file_repository_1.FileRepository,
+        proposal_repository_1.ProposalRepository,
+        model_contract_repository_1.ModelContractRepository,
+        association_repository_1.AssociationRepository,
+        user_repository_1.UserRepository,
+        work_plan_service_1.WorkPlanService,
+        supplier_repository_1.SupplierRepository,
+        cost_items_service_1.CostItemsService,
+        agreement_repository_1.AgreementRepository])
+], ContractService);
+exports.ContractService = ContractService;
+//# sourceMappingURL=contract.service.js.map

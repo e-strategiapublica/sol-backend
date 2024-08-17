@@ -1,0 +1,35 @@
+import { ResponseDto } from "src/shared/dtos/response.dto";
+import { ProposalService } from "../services/proposal.service";
+import { ProposalRegisterDto } from "../dtos/proposal-register-request.dto";
+import { ProposalAddItemUpdateDto } from "../dtos/proposal-addItem-update.dto";
+import { ProposalStatusUpdateDto } from "../dtos/proposal-status-update-request.dto";
+import { ProposalSupplierAcceptUpdateDto } from "../dtos/proposal-accept-supplier-updatet.dto";
+import { ProposalAssociationAcceptUpdateDto } from "../dtos/proposal-accept-association-updatet.dto";
+import { ProposalRefusedRequestDto } from "../dtos/proposal-refused-request.dto";
+import { ProposalNotificationInterface } from "../interfaces/proposal-notification-dto";
+import { ProposalUpdateValues } from "../dtos/proposal-update-values-request.dto";
+import { BidService } from "../services/bid.service";
+import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
+export declare class ProposalController {
+    private readonly proposalService;
+    private readonly bidService;
+    private readonly logger;
+    constructor(proposalService: ProposalService, bidService: BidService);
+    register(dto: ProposalRegisterDto, request: any): Promise<ResponseDto>;
+    list(): Promise<ResponseDto>;
+    getById(_id: string): Promise<ResponseDto>;
+    listProposalByBid(_id: string): Promise<ResponseDto>;
+    getProposalAcceptedBid(_id: string): Promise<ResponseDto>;
+    verifyProposalByUser(request: any, _id: string): Promise<ResponseDto>;
+    updateStatus(_id: string, dto: ProposalStatusUpdateDto): Promise<ResponseDto>;
+    updateAcceptfromSupplier(_id: string, dto: ProposalSupplierAcceptUpdateDto): Promise<ResponseDto>;
+    updateAcceptfromAssosiation(_id: string, dto: ProposalAssociationAcceptUpdateDto): Promise<ResponseDto>;
+    updateAcceptReviewer(_id: string, dto: ProposalReviewerAcceptUpdateDto, request: any): Promise<ResponseDto>;
+    addItemById(_id: string, dto: ProposalAddItemUpdateDto): Promise<ResponseDto>;
+    removeItemById(_id: string, dto: ProposalAddItemUpdateDto): Promise<ResponseDto>;
+    deleteById(_id: string): Promise<ResponseDto>;
+    refused(dto: ProposalRefusedRequestDto, _id: string, request: any): Promise<ResponseDto>;
+    accept(dto: ProposalNotificationInterface, _id: string, request: any): Promise<ResponseDto>;
+    updateValues(_id: string, dto: ProposalUpdateValues): Promise<ResponseDto>;
+    sendTieBreaker(_id: string): Promise<ResponseDto>;
+}

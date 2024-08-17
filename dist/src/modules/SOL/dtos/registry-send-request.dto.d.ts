@@ -1,0 +1,30 @@
+import { BidModalityEnum } from "../enums/bid-modality.enum";
+import { BidStatusEnum } from "../enums/bid-status.enum";
+import { BidTypeEnum } from "../enums/bid-type.enum";
+import { AgreementInterface } from "../interfaces/agreement.interface";
+import { AllotmentModel } from "../models/allotment.model";
+import { SupplierModel } from "../models/supplier.model";
+import { UserModel } from "../models/user.model";
+export declare class RegistrySendRequestDto {
+    id: number;
+    description: string;
+    agreement: AgreementInterface;
+    classification: string;
+    start_at: string;
+    end_at: string;
+    days_to_tiebreaker: string;
+    days_to_delivery: string;
+    local_to_delivery: string;
+    bid_type: BidTypeEnum;
+    modality: BidModalityEnum;
+    aditional_site: string;
+    add_allotment: AllotmentModel[];
+    invited_suppliers: SupplierModel[];
+    bid_count: string;
+    state: string;
+    city: string;
+    status: BidStatusEnum;
+    association: UserModel;
+    createdAt: Date;
+    constructor(id: number, description: string, agreement: AgreementInterface, classification: string, start_at: string, end_at: string, days_to_tiebreaker: string, days_to_delivery: string, local_to_delivery: string, bid_type: BidTypeEnum, modality: BidModalityEnum, aditional_site: string, add_allotment: AllotmentModel[], invited_suppliers: SupplierModel[], bid_count: string, state: string, city: string, status: BidStatusEnum, association: UserModel, createdAt: Date);
+}

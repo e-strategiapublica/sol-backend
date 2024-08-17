@@ -1,0 +1,43 @@
+import { UserTypeEnum } from '../enums/user-type.enum';
+import { UserRegisterRequestDto } from '../dtos/user-register-request.dto';
+import { UserRegisterResponseDto } from '../dtos/user-register-response.dto';
+import { UserRepository } from '../repositories/user.repository';
+import { UserUpdateRequestDto } from '../dtos/user-update-request.dto';
+import { UserUpdateResponseDto } from '../dtos/user-update-response.dto';
+import { UserUpdatePasswordRequestDto } from '../dtos/user-update-password-request.dto';
+import { UserGetResponseDto } from '../dtos/user-get-response.dto';
+import { UserUpdatePasswordWithCodeRequestDto } from '../dtos/user-update-password-with-code-request.dto';
+import { VerificationService } from './verification.service';
+import { UserRegisterPasswordRequestDto } from '../dtos/user-register-password-request.dto';
+import { UserUpdateProfilePictureResponseDto } from '../dtos/user-update-profile-picture-response.dto';
+import { UserInterface } from '../interfaces/user.interface';
+import { UserModel } from '../models/user.model';
+import { UserListByTypeResponseDto } from '../dtos/user-list-by-type-response.dto';
+import { UserUpdateByIdRequestDto } from '../dtos/user-update-by-id-request.dto';
+import { SupplierService } from './supplier.service';
+import { AssociationService } from './association.service';
+export declare class UserService {
+    private readonly _userRepository;
+    private readonly _supplierService;
+    private readonly _associationService;
+    private readonly _verificationService;
+    constructor(_userRepository: UserRepository, _supplierService: SupplierService, _associationService: AssociationService, _verificationService: VerificationService);
+    getById(_id: string): Promise<UserGetResponseDto>;
+    getUserBySupplierId(_id: string): Promise<UserModel[]>;
+    getByIdInternal(_id: string): Promise<UserInterface>;
+    getAll(): Promise<UserInterface[]>;
+    getByEmail(email: string): Promise<UserGetResponseDto>;
+    getByEmailFirstAccess(email: string): Promise<UserGetResponseDto>;
+    register(dto: UserRegisterRequestDto): Promise<UserRegisterResponseDto>;
+    update(_id: string, dto: UserUpdateRequestDto): Promise<UserUpdateResponseDto>;
+    updateById(_id: string, dto: UserUpdateByIdRequestDto): Promise<UserUpdateResponseDto>;
+    updatePassword(_id: string, dto: UserUpdatePasswordRequestDto): Promise<UserUpdateResponseDto>;
+    registerPassword(_id: string, dto: UserRegisterPasswordRequestDto): Promise<UserUpdateResponseDto>;
+    updatePasswordWithCode(dto: UserUpdatePasswordWithCodeRequestDto): Promise<UserUpdateResponseDto>;
+    updateProfilePicture(_id: string, profilePicture: string): Promise<UserUpdateProfilePictureResponseDto>;
+    listByType(type: UserTypeEnum): Promise<UserListByTypeResponseDto[]>;
+    listByRole(role: string): Promise<UserModel[]>;
+    deleteById(_id: string): Promise<UserModel & {
+        _id: import("mongoose").Types.ObjectId;
+    }>;
+}
