@@ -269,12 +269,16 @@ export class BidService {
 
     const data = await this.createData(dto);
     const hash = await this.calculateHash(data);
-    const txHash = await this._lacchainModel.setBidData(
-      token,
-      bidHistoryId,
-      hash
-    );
-    await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
+        
+    const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
+    if(sendToBlockchain && sendToBlockchain == 'true'){
+        const txHash = await this._lacchainModel.setBidData(
+        token,
+        bidHistoryId,
+        hash
+      );
+      await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
+    }
 
     const obj = {
       title: `Convite para licitação de número ${dto.bid_count}`,
@@ -572,12 +576,15 @@ export class BidService {
 
       const newData = await this.createData(bid);
       const hash = await this.calculateHash(newData);
-      const txHash = await this._lacchainModel.setBidData(
-        token,
-        bidHistoryId,
-        hash
-      );
-      await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
+      const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
+      if(sendToBlockchain && sendToBlockchain == 'true'){
+        const txHash = await this._lacchainModel.setBidData(
+          token,
+          bidHistoryId,
+          hash
+        );
+        await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
+      }
 
       /*
       const sendToBlockchain = this._configService.get<boolean>(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
@@ -610,12 +617,16 @@ export class BidService {
 
     const newData = await this.createData(bid);
     const hash = await this.calculateHash(newData);
-    const txHash = await this._lacchainModel.setBidData(
-      token,
-      bidHistoryId,
-      hash
-    );
-    await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
+    
+    const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
+    if(sendToBlockchain && sendToBlockchain == 'true'){
+        const txHash = await this._lacchainModel.setBidData(
+        token,
+        bidHistoryId,
+        hash
+      );
+      await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
+    }
 
     return result;
   }

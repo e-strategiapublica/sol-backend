@@ -15,7 +15,7 @@ import {
   UploadedFiles,
   UseGuards,
   UseInterceptors,
-  Headers
+  Headers,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
@@ -36,8 +36,10 @@ import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
 import { Response } from "express";
+import { ConfigService } from "@nestjs/config";
 const path = require("path");
 import * as fs from "fs";
+import { EnviromentVariablesEnum } from "src/shared/enums/enviroment.variables.enum";
 
 @ApiTags("bid")
 @Controller("bid")
@@ -47,7 +49,8 @@ export class BidController {
   constructor(
     private readonly bidsService: BidService,
     private _lacchainModel: LacchainModel,
-    private _bidHistoryModel: BidHistoryModel
+    private _bidHistoryModel: BidHistoryModel,
+    private readonly configService: ConfigService,
   ) {}
 
   @Post("register")
@@ -56,20 +59,33 @@ export class BidController {
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
   @ApiBearerAuth()
   @ApiConsumes("multipart/form-data")
-  @UseInterceptors(AnyFilesInterceptor({ limits: { fieldSize: 50 * 1024 * 1024 } }))
-  async register(@Req() request, @Body() dto: BideRegisterDto, @UploadedFiles() files: Array<Express.Multer.File>, @Headers('authorization') authorizationHeader: string) {
+  @UseInterceptors(
+    AnyFilesInterceptor({ limits: { fieldSize: 50 * 1024 * 1024 } })
+  )
+  async register(
+    @Req() request,
+    @Body() dto: BideRegisterDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Headers("authorization") authorizationHeader: string
+  ) {
     try {
-      
-      const [bearer, token] = authorizationHeader.split(' ');
+      const [bearer, token] = authorizationHeader.split(" ");
 
       const payload: JwtPayload = request.user;
-      const response = await this.bidsService.register(token, payload.userId, dto, files);
+      const response = await this.bidsService.register(
+        token,
+        payload.userId,
+        dto,
+        files
+      );
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      
-      this.logger.error(error.message);      
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      this.logger.error(error.message);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -85,7 +101,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -103,7 +122,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -113,16 +135,20 @@ export class BidController {
   @ApiBearerAuth()
   async listForProposalSupplier(@Req() request) {
     try {
-      
       const payload: JwtPayload = request.user;
 
-      const response = await this.bidsService.listForProposalSupplier(payload.userId);
+      const response = await this.bidsService.listForProposalSupplier(
+        payload.userId
+      );
 
       return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -138,7 +164,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -154,7 +183,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -165,14 +197,17 @@ export class BidController {
   @ApiBearerAuth()
   async getByManagerOrRevieweId(@Param("_id") _id: string) {
     try {
-      
-      const response = await this.bidsService.findAgreementByReviewerOrManagerId(_id);
+      const response =
+        await this.bidsService.findAgreementByReviewerOrManagerId(_id);
 
       return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -189,7 +224,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -206,7 +244,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -217,14 +258,18 @@ export class BidController {
   @ApiBearerAuth()
   async findAgreementByProjectManagerId(@Param("_id") _id: string) {
     try {
-
-      const response = await this.bidsService.findAgreementByProjectManagerId(_id);
+      const response = await this.bidsService.findAgreementByProjectManagerId(
+        _id
+      );
 
       return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -242,7 +287,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -258,7 +306,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -266,7 +317,10 @@ export class BidController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateOpenDate(@Param("_id") _id: string, @Body() dto: BidDateUpdateDto) {
+  async updateOpenDate(
+    @Param("_id") _id: string,
+    @Body() dto: BidDateUpdateDto
+  ) {
     try {
       const response = await this.bidsService.updateOpenDate(dto);
 
@@ -274,26 +328,46 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
   @Put("change-status/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.associacao,
+    UserTypeEnum.project_manager
+  )
   @ApiBearerAuth()
-  async updateStatus(@Param("_id") _id: string, @Body() dto: BidUpdateStatusRequestDto, @Req() request, @Headers('authorization') authorizationHeader: string) {
+  async updateStatus(
+    @Param("_id") _id: string,
+    @Body() dto: BidUpdateStatusRequestDto,
+    @Req() request,
+    @Headers("authorization") authorizationHeader: string
+  ) {
     try {
-      const [bearer, token] = authorizationHeader.split(' ');
+      const [bearer, token] = authorizationHeader.split(" ");
       const payload: JwtPayload = request.user;
-      const response = await this.bidsService.updateStatus(token, payload.userId, _id, dto);
+      const response = await this.bidsService.updateStatus(
+        token,
+        payload.userId,
+        _id,
+        dto
+      );
 
       return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -310,7 +384,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -325,20 +402,30 @@ export class BidController {
 
       return new ResponseDto(true, result, null);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
   @Get("download/:id/:type")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  async download(@Res() response, @Param("id") id: string, @Param("type") type: string) {
+  async download(
+    @Res() response,
+    @Param("id") id: string,
+    @Param("type") type: string
+  ) {
     try {
       const result = await this.bidsService.downloadFile(id, type);
 
       response.send(result);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -351,7 +438,10 @@ export class BidController {
       const result = await this.bidsService.bidPdfDownload(id, type);
       return new ResponseDto(true, result, null);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -365,16 +455,25 @@ export class BidController {
   ) {
     try {
       await this.bidsService.createDocument(_id, language, type as any);
-      res.sendFile(path.resolve("src/shared/documents", "output.pdf"), {}, (err) => {
-        if (err) {
-          throw new HttpException(new ResponseDto(false, null, [err.message]), HttpStatus.BAD_REQUEST);
+      res.sendFile(
+        path.resolve("src/shared/documents", "output.pdf"),
+        {},
+        (err) => {
+          if (err) {
+            throw new HttpException(
+              new ResponseDto(false, null, [err.message]),
+              HttpStatus.BAD_REQUEST
+            );
+          }
+          fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
         }
-        fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
-      });
-      
+      );
     } catch (error) {
       this.logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
@@ -389,48 +488,56 @@ export class BidController {
       return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST
+      );
     }
   }
 
-  @Get('lacchain/getBidData/:bidId')
+  @Get("lacchain/getBidData/:bidId")
   @HttpCode(200)
   async getBidData(@Req() request, @Param("bidId") bidId: string) {
     try {
+      const bidsHistory = await this._bidHistoryModel.listByBidId(bidId);
+      let hash;
 
-          const bidsHistory = await this._bidHistoryModel.listByBidId(bidId);          
-          let hash;                  
-
-          let res, fieldSaved;
-          if(bidsHistory.length > 0){
-
-            for(let i = 0;i<bidsHistory.length;i++){
-              
-              hash = await this.bidsService.calculateHash(bidsHistory[i].data)                            
-              res = await this._lacchainModel.getBidData(bidsHistory[i]._id.toHexString());                                                  
-              bidsHistory[i].hash = hash;              
-
-              if(res[0] == true){
-                if(hash == res[1]){
-                  bidsHistory[i].verifiedByLacchain = {result: true, hash: res[1]};  
-                }else{
-                  bidsHistory[i].verifiedByLacchain = {result: false, hash: res[1]};
-                }                
-              }else{
-                bidsHistory[i].verifiedByLacchain = {result: false, hash: res[1]};
-              }
-
-            }
-          }else{
-            return { type: "error", message: "A licitação existe" }
+      let res, fieldSaved;
+      if (bidsHistory.length > 0) {
+        for (let i = 0; i < bidsHistory.length; i++) {
+          hash = await this.bidsService.calculateHash(bidsHistory[i].data);
+          const sendToBlockchain = this.configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
+          if(sendToBlockchain && sendToBlockchain == 'true'){
+              res = await this._lacchainModel.getBidData(
+              bidsHistory[i]._id.toHexString()
+            );
           }
-
-          return bidsHistory;
-          
-        } catch (error) {
-            throw ErrorManager.createError(error)
+          bidsHistory[i].hash = hash;
+          if (!res) {
+            bidsHistory[i].verifiedByLacchain = { result: false, hash: "" };
+          } else if (res[0] == true) {
+            if (hash == res[1]) {
+              bidsHistory[i].verifiedByLacchain = {
+                result: true,
+                hash: res[1],
+              };
+            } else {
+              bidsHistory[i].verifiedByLacchain = {
+                result: false,
+                hash: res[1],
+              };
+            }
+          } else {
+            bidsHistory[i].verifiedByLacchain = { result: false, hash: res[1] };
+          }
         }
+      } else {
+        return { type: "error", message: "A licitação existe" };
+      }
+
+      return bidsHistory;
+    } catch (error) {
+      throw ErrorManager.createError(error);
+    }
   }
-
-
 }
