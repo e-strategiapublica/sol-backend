@@ -4,6 +4,7 @@ import { Notification } from "./notification.schema";
 import { Category } from "./category.schema";
 import { SuplierTypeEnum } from "../enums/supplier-type.enum";
 import { Address } from "src/shared/schemas/address.schema";
+import { User } from "../../../shared/schemas/user.schema";
 export declare class Supplier {
     name: string;
     cpf: string;
@@ -15,5 +16,6 @@ export declare class Supplier {
     group_id: string[];
     notification_list: Notification[];
     categories: Category[];
+    users: User[];
 }
 export declare const SupplierSchema: mongoose.Schema<Supplier, mongoose.Model<Supplier, any, any, any, any>, {}, {}, {}, {}, mongoose.DefaultSchemaOptions, Supplier>;

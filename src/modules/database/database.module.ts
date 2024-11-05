@@ -29,6 +29,7 @@ import { Plataform, PlataformSchema } from "../SOL/schemas/plataform.schema";
 import { Project, ProjectSchema } from "../SOL/schemas/project.schema";
 import { Registry, RegistrySchema } from "../SOL/schemas/registry.schema";
 import { Items, ItemsSchema } from "../SOL/schemas/items.schema";
+import { Gamification, GamificationSchema } from "../SOL/schemas/gamification.schema";
 
 
 @Module({
@@ -67,6 +68,7 @@ import { Items, ItemsSchema } from "../SOL/schemas/items.schema";
       { name: Plataform.name, schema: PlataformSchema },
       { name: Project.name, schema: ProjectSchema },
       { name: Registry.name, schema: RegistrySchema },
+      { name: Gamification.name, schema: GamificationSchema}
     ]),
   ],
   exports: [MongooseModule],

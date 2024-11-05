@@ -90,6 +90,22 @@ let SupplierRepository = class SupplierRepository {
         }, { new: true });
         return data;
     }
+
+    async addUserToSupplier(supplierId, userId) {
+      return await this._model.findByIdAndUpdate(
+          { _id: supplierId },
+          { $push: { users: userId } },  // Adiciona o usuário à lista de usuários do fornecedor
+          { new: true }
+      );
+  }
+  
+  async removeUserFromSupplier(supplierId, userId) {
+      return await this._model.findByIdAndUpdate(
+          { _id: supplierId },
+          { $pull: { users: userId } },  // Remove o usuário da lista de usuários do fornecedor
+          { new: true }
+      );
+  }
 };
 SupplierRepository = __decorate([
     (0, common_1.Injectable)(),

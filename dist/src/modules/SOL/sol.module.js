@@ -105,6 +105,8 @@ const pdm_model_1 = require("./models/database/pdm.model");
 const items_controller_1 = require("./controllers/items.controller");
 const items_service_1 = require("./services/items.service");
 const items_model_1 = require("./models/database/items.model");
+const gamification_controller_1 = require("./controllers/gamification.controller");
+const gamification_service_1 = require("./services/gamification.service");
 let SolModule = class SolModule {
 };
 SolModule = __decorate([
@@ -154,6 +156,7 @@ SolModule = __decorate([
             classes_controller_1.ClassesController,
             pdm_controller_1.PdmController,
             items_controller_1.ItemsController,
+            gamification_controller_1.GamificationController
         ],
         providers: [
             jwt_strategy_1.JwtStrategy,
@@ -220,7 +223,8 @@ SolModule = __decorate([
             lacchain_model_1.LacchainModel,
             bid_model_1.MyBidModel,
             project_model_1.ProjectModel,
-            bid_history_model_1.BidHistoryModel
+            bid_history_model_1.BidHistoryModel,
+            gamification_service_1.GamificationService,
         ],
         exports: [
             authentication_service_1.AuthenticationService,

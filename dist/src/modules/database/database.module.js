@@ -36,6 +36,7 @@ const plataform_schema_1 = require("../SOL/schemas/plataform.schema");
 const project_schema_1 = require("../SOL/schemas/project.schema");
 const registry_schema_1 = require("../SOL/schemas/registry.schema");
 const items_schema_1 = require("../SOL/schemas/items.schema");
+const gamification_schema_1 = require("../SOL/schemas/gamification.schema");
 let DatabaseModule = class DatabaseModule {
 };
 DatabaseModule = __decorate([
@@ -74,6 +75,7 @@ DatabaseModule = __decorate([
                 { name: plataform_schema_1.Plataform.name, schema: plataform_schema_1.PlataformSchema },
                 { name: project_schema_1.Project.name, schema: project_schema_1.ProjectSchema },
                 { name: registry_schema_1.Registry.name, schema: registry_schema_1.RegistrySchema },
+                { name: gamification_schema_1.Gamification.name, schema: gamification_schema_1.GamificationSchema }
             ]),
         ],
         exports: [mongoose_1.MongooseModule],

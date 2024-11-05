@@ -96,6 +96,8 @@ import { PdmModel } from './models/database/pdm.model';
 import { ItemsController } from "./controllers/items.controller";
 import { ItemsService } from './services/items.service';
 import { ItemsModel } from './models/database/items.model';
+import { GamificationController } from './controllers/gamification.controller';
+import { GamificationService } from './services/gamification.service';
 
 @Module({
     imports: [
@@ -145,6 +147,7 @@ import { ItemsModel } from './models/database/items.model';
         ClassesController,
         PdmController,
         ItemsController,
+        GamificationController
     ],
     providers: [
         JwtStrategy,
@@ -216,7 +219,9 @@ import { ItemsModel } from './models/database/items.model';
         LacchainModel,
         MyBidModel,
         ProjectModel,
-        BidHistoryModel
+        BidHistoryModel,
+        
+        GamificationService,
     ],
     exports: [
         AuthenticationService,

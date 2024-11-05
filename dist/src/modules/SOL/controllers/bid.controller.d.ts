@@ -9,12 +9,14 @@ import { BidDateUpdateDto } from "../dtos/bid-date-update.dto";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { Response } from "express";
+import { ConfigService } from "@nestjs/config";
 export declare class BidController {
     private readonly bidsService;
     private _lacchainModel;
     private _bidHistoryModel;
+    private readonly configService;
     private readonly logger;
-    constructor(bidsService: BidService, _lacchainModel: LacchainModel, _bidHistoryModel: BidHistoryModel);
+    constructor(bidsService: BidService, _lacchainModel: LacchainModel, _bidHistoryModel: BidHistoryModel, configService: ConfigService);
     register(request: any, dto: BideRegisterDto, files: Array<Express.Multer.File>, authorizationHeader: string): Promise<ResponseDto>;
     list(): Promise<ResponseDto>;
     listForSupplier(request: any): Promise<ResponseDto>;
