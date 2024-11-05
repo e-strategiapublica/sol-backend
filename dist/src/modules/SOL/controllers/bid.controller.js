@@ -31,18 +31,21 @@ const bid_date_update_dto_1 = require("../dtos/bid-date-update.dto");
 const lacchain_model_1 = require("../models/blockchain/lacchain.model");
 const bid_history_model_1 = require("../models/database/bid_history.model");
 const error_manager_1 = require("../../../shared/utils/error.manager");
+const config_1 = require("@nestjs/config");
 const path = require("path");
 const fs = require("fs");
+const enviroment_variables_enum_1 = require("../../../shared/enums/enviroment.variables.enum");
 let BidController = class BidController {
-    constructor(bidsService, _lacchainModel, _bidHistoryModel) {
+    constructor(bidsService, _lacchainModel, _bidHistoryModel, configService) {
         this.bidsService = bidsService;
         this._lacchainModel = _lacchainModel;
         this._bidHistoryModel = _bidHistoryModel;
+        this.configService = configService;
         this.logger = new common_1.Logger(user_controller_1.UserController.name);
     }
     async register(request, dto, files, authorizationHeader) {
         try {
-            const [bearer, token] = authorizationHeader.split(' ');
+            const [bearer, token] = authorizationHeader.split(" ");
             const payload = request.user;
             const response = await this.bidsService.register(token, payload.userId, dto, files);
             return new response_dto_1.ResponseDto(true, response, null);
@@ -177,7 +180,7 @@ let BidController = class BidController {
     }
     async updateStatus(_id, dto, request, authorizationHeader) {
         try {
-            const [bearer, token] = authorizationHeader.split(' ');
+            const [bearer, token] = authorizationHeader.split(" ");
             const payload = request.user;
             const response = await this.bidsService.updateStatus(token, payload.userId, _id, dto);
             return new response_dto_1.ResponseDto(true, response, null);
@@ -257,14 +260,26 @@ let BidController = class BidController {
             if (bidsHistory.length > 0) {
                 for (let i = 0; i < bidsHistory.length; i++) {
                     hash = await this.bidsService.calculateHash(bidsHistory[i].data);
-                    res = await this._lacchainModel.getBidData(bidsHistory[i]._id.toHexString());
+                    const sendToBlockchain = this.configService.get(enviroment_variables_enum_1.EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);
+                    if (sendToBlockchain && sendToBlockchain == 'true') {
+                        res = await this._lacchainModel.getBidData(bidsHistory[i]._id.toHexString());
+                    }
                     bidsHistory[i].hash = hash;
-                    if (res[0] == true) {
+                    if (!res) {
+                        bidsHistory[i].verifiedByLacchain = { result: false, hash: "" };
+                    }
+                    else if (res[0] == true) {
                         if (hash == res[1]) {
-                            bidsHistory[i].verifiedByLacchain = { result: true, hash: res[1] };
+                            bidsHistory[i].verifiedByLacchain = {
+                                result: true,
+                                hash: res[1],
+                            };
                         }
                         else {
-                            bidsHistory[i].verifiedByLacchain = { result: false, hash: res[1] };
+                            bidsHistory[i].verifiedByLacchain = {
+                                result: false,
+                                hash: res[1],
+                            };
                         }
                     }
                     else {
@@ -293,9 +308,10 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.UploadedFiles)()),
-    __param(3, (0, common_1.Headers)('authorization')),
+    __param(3, (0, common_1.Headers)("authorization")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, bid_register_request_dto_1.BideRegisterDto, Array, String]),
+    __metadata("design:paramtypes", [Object, bid_register_request_dto_1.BideRegisterDto,
+        Array, String]),
     __metadata("design:returntype", Promise)
 ], BidController.prototype, "register", null);
 __decorate([
@@ -432,7 +448,7 @@ __decorate([
     __param(0, (0, common_1.Param)("_id")),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, common_1.Req)()),
-    __param(3, (0, common_1.Headers)('authorization')),
+    __param(3, (0, common_1.Headers)("authorization")),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, bid_update_status_request_dto_1.BidUpdateStatusRequestDto, Object, String]),
     __metadata("design:returntype", Promise)
@@ -504,7 +520,7 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], BidController.prototype, "report", null);
 __decorate([
-    (0, common_1.Get)('lacchain/getBidData/:bidId'),
+    (0, common_1.Get)("lacchain/getBidData/:bidId"),
     (0, common_1.HttpCode)(200),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)("bidId")),
@@ -517,7 +533,8 @@ BidController = __decorate([
     (0, common_1.Controller)("bid"),
     __metadata("design:paramtypes", [bid_service_1.BidService,
         lacchain_model_1.LacchainModel,
-        bid_history_model_1.BidHistoryModel])
+        bid_history_model_1.BidHistoryModel,
+        config_1.ConfigService])
 ], BidController);
 exports.BidController = BidController;
 //# sourceMappingURL=bid.controller.js.map
