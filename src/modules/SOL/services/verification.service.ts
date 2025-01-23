@@ -37,7 +37,7 @@ export class VerificationService {
                     'Um código já foi enviado e está válido!',
                 );
             } else {
-                await this.verificationRepository.delete(verification._id);
+                await this.verificationRepository.delete(verification.id);
             }
         }
 
@@ -80,7 +80,7 @@ export class VerificationService {
                     'Um código já foi enviado e está válido!',
                 );
             } else {
-                await this.verificationRepository.delete(verification._id);
+                await this.verificationRepository.delete(verification.id);
             }
         }
 
@@ -164,7 +164,7 @@ export class VerificationService {
                     'Um email já foi enviado e está válido!',
                 );
             } else {
-                await this.verificationRepository.delete(verification._id);
+                await this.verificationRepository.delete(verification.id);
             }
         }
 
@@ -190,7 +190,7 @@ export class VerificationService {
         );
 
         return new UserResetPasswordResendEmailResponseDto(
-            verification._id,
+            verification.id,
             userModel.email,
         );
     }
@@ -202,7 +202,7 @@ export class VerificationService {
         let verification = await this.verificationRepository.getByUser(userModel);
 
         if (verification) {
-            await this.verificationRepository.delete(verification._id);
+            await this.verificationRepository.delete(verification.id);
         }
 
         let deadline: Date = new Date();
@@ -227,7 +227,7 @@ export class VerificationService {
         );
 
         return new UserResetPasswordResendEmailResponseDto(
-            verification._id,
+            verification.id,
             userModel.email,
         );
     }
@@ -279,13 +279,13 @@ export class VerificationService {
 
         const now = new Date();
         if (now > verification.deadline) {
-            await this.verificationRepository.delete(verification._id);
+            await this.verificationRepository.delete(verification.id);
             throw new UnauthorizedException('Código expirado!');
             response = false;
         }
 
         if (verification.attempt == 5) {
-            await this.verificationRepository.delete(verification._id);
+            await this.verificationRepository.delete(verification.id);
             throw new UnauthorizedException(
                 'Você excedeu o limite de 5 tentativas!',
             );
@@ -298,7 +298,7 @@ export class VerificationService {
             response = false;
         }
 
-        await this.verificationRepository.delete(verification._id);
+        await this.verificationRepository.delete(verification.id);
 
         response = true;
 
@@ -318,7 +318,7 @@ export class VerificationService {
                     'Um código já foi enviado e está válido!',
                 );
             } else {
-                await this.verificationRepository.delete(verification._id);
+                await this.verificationRepository.delete(verification.id);
             }
         }
 

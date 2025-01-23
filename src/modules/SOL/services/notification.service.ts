@@ -42,7 +42,7 @@ export class NotificationService {
             if (!result)
                 throw new BadRequestException('Não foi possivel cadastrar essa notificação!');
             
-                await this._userRepository.updateNotifications(user[i]._id, result)
+                await this._userRepository.updateNotifications(user[i].id, result)
             
             
         }
@@ -117,14 +117,14 @@ export class NotificationService {
         const dtoReviewer: NotificationRegisterDto = {
             title: 'Licitação aguardando liberação',            
             description: `“A Licitação ${name} está aguardando liberação`,            
-            from_user: associationUser._id,
+            from_user: associationUser.id,
             deleted: false,
         }
 
         const dtoAssociation: NotificationRegisterDto = {
             title: 'Licitação aguardando liberação',
             description: `A Licitação ${name} está aguardando liberação`,
-            from_user: reviewer._id,
+            from_user: reviewer.id,
             deleted: false,
         }
 
@@ -134,8 +134,8 @@ export class NotificationService {
         if (!resultAssociation || !resultReviewer)
             throw new BadRequestException('Não foi possivel cadastrar essa notificação!');
 
-        await this._userRepository.updateNotifications(reviewer._id, resultReviewer)
-        await this._userRepository.updateNotifications(associationUser._id, resultAssociation)
+        await this._userRepository.updateNotifications(reviewer.id, resultReviewer)
+        await this._userRepository.updateNotifications(associationUser.id, resultAssociation)
     }
 
 }

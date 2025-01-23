@@ -154,7 +154,7 @@ export class ProposalRepository {
 
     async listByUser(proposedById: string): Promise<ProposalModel[]> {
         const proposedByUser = await this._userRepository.getById(proposedById);
-        const supplier_user = await this._userRepository.getUserBySupplierId(proposedByUser.supplier._id);
+        const supplier_user = await this._userRepository.getUserBySupplierId(proposedByUser.supplier.id);
     
         // Extrai apenas os IDs dos usuários fornecedores
         const supplierIds = supplier_user.map(user => user._id);

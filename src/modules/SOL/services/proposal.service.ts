@@ -175,7 +175,7 @@ export class ProposalService {
         }
         if (newProposal.length > 0)
           for (let data of anotherWithSameValue) {
-            const index = newProposal.findIndex(el => extractAndCompareContent(el.proposal._id, data._id.toString()));
+            const index = newProposal.findIndex(el => extractAndCompareContent(el.proposal.id, data.id));
             
             if(newProposal[index]){
               data.proposalWin = true;
@@ -320,13 +320,13 @@ export class ProposalService {
     }
     const result = await this._proposalRepository.updateAcceptReviewer(_id, dto);
     if (dto.reviewer_accept === false) {
-      await this._allotmentService.updateStatus(result.allotment[0]._id, AllotmentStatusEnum.fracassado);
+      await this._allotmentService.updateStatus(result.allotment[0].id, AllotmentStatusEnum.fracassado);
       result.allotment[0].status = AllotmentStatusEnum.fracassado;
 
     }
 
     if (result.association_accept && result.reviewer_accept) {
-      await this._allotmentService.updateStatus(result.allotment[0]._id, AllotmentStatusEnum.adjudicado);
+      await this._allotmentService.updateStatus(result.allotment[0].id, AllotmentStatusEnum.adjudicado);
       return await this.acceptProposal(result._id.toString(), userId);
     }
     return result;
@@ -341,20 +341,20 @@ export class ProposalService {
 
     const proposal = await this._proposalRepository.getById(proposalId);
 
-    const list = await this._proposalRepository.listByBid(proposal.bid._id);
+    const list = await this._proposalRepository.listByBid(proposal.bid.id);
 
     if (refusedBy.type !== "administrador") {
       if (list.length > 1) {
         const listOrder = await list
           .filter(proposal => proposal.total_value !== null && Number(proposal.total_value) > 0)
           .sort((a, b) => Number(a.total_value) - Number(b.total_value));
-        await this._proposalRepository.updateProposedWin(listOrder[1]._id, { proposalWin: true });
-        await this._proposalRepository.updateProposedWin(proposal._id, { proposalWin: false });
+        await this._proposalRepository.updateProposedWin(listOrder[1].id, { proposalWin: true });
+        await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
       } else {
-        await this._proposalRepository.updateProposedWin(proposal._id, { proposalWin: false });
+        await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
       }
     } else {
-      const result = await this._proposalRepository.updateProposedWin(proposal._id, { proposalWin: false });
+      const result = await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
     }
 
     dto.refusedAt = new Date();
@@ -412,13 +412,13 @@ export class ProposalService {
         const teste = await this._allotmentRepository.register(iterator as any);
       }
 
-      return await this._proposalRepository.updateStatus(proposal._id, obj);
+      return await this._proposalRepository.updateStatus(proposal.id, obj);
     } else {
       obj.status = ProposalStatusEnum.aceitoRevisor;
 
       const proposal = await this._proposalRepository.getById(proposalId);
 
-      const bid = await this._bidRepository.getById(proposal.bid._id);
+      const bid = await this._bidRepository.getById(proposal.bid.id);
 
       // for (let iterator of proposal.allotment) {
       //   await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.adjudicado);
@@ -426,18 +426,18 @@ export class ProposalService {
 
       let contractDto: ContractRegisterDto = {
         contract_number: "1",
-        bid_number: proposal.bid._id,
+        bid_number: proposal.bid.id,
         value: proposal.total_value,
         contract_document: "teste",
         association_accept: false,
         supplier_accept: false,
         status: ContractStatusEnum.aguardando_assinaturas,
         proposal_id: [proposal],
-        association_id: bid._id,
-        supplier_id: proposal.proposedBy.supplier._id,
+        association_id: bid.id,
+        supplier_id: proposal.proposedBy.supplier.id,
       };
 
-      await this._bidRepository.changeStatus(proposal.bid._id, { status: BidStatusEnum["completed"] });
+      await this._bidRepository.changeStatus(proposal.bid.id, { status: BidStatusEnum["completed"] });
 
       await this._allotmentRepository.updateStatusByIds(
         proposal.allotment.map(item => item._id.toString()),
@@ -568,7 +568,7 @@ export class ProposalService {
       let request: ProposalWinRequestDto = {
         proposalWin: false,
       };
-      return await this._proposalRepository.updateProposedWin(proposalWinAtMoment._id, request);
+      return await this._proposalRepository.updateProposedWin(proposalWinAtMoment.id, request);
     } else {
       return undefined;
     }
@@ -577,7 +577,7 @@ export class ProposalService {
   async updateValues(id: string, dto: ProposalUpdateValues): Promise<ProposalModel> {
     const newProposal = await this._proposalRepository.updateValues(id, dto);
 
-    const list: MutableObject<ProposalModel>[] = await this._proposalRepository.listByBid(newProposal.bid._id);
+    const list: MutableObject<ProposalModel>[] = await this._proposalRepository.listByBid(newProposal.bid.id);
 
     const allotment = await this._allotmentRepository.listByIds(newProposal.allotment.map(item => item._id.toString()));
 

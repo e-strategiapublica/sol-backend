@@ -169,7 +169,7 @@ export class AgreementService {
     ]);
     agreement.workPlan = works;
 
-    return await this._agreementRepository.update(agreement._id, agreement);
+    return await this._agreementRepository.update(agreement.id, agreement);
   }
 
   async removeWorkPlan(id: string, workPlanId: string): Promise<AgreementInterface> {

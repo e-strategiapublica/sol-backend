@@ -78,12 +78,12 @@ export class SupplierController {
                         status: UserStatusEnum.active,
                         association: null,
                         office: null,
-                        supplier: response._id
+                        supplier: response.id
                     }
                     response['supplier_user'] = await this.userService.register(dto_user);
                 } catch (error) {
                     this.logger.error(error.message);
-                    this.supplierService.deleteById(response._id);
+                    this.supplierService.deleteById(response.id);
                     throw new HttpException(
                         new ResponseDto(false, null, [error.message]),
                         HttpStatus.BAD_REQUEST,

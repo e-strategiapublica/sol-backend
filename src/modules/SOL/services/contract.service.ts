@@ -324,7 +324,7 @@ export class ContractService {
     }
     const userResponde = await this._userRepository.getById(contract.proposal_id["proposedBy"].toString());
 
-    const forcedorResponse = await this._supplierRepository.listById(userResponde.supplier._id);
+    const forcedorResponse = await this._supplierRepository.listById(userResponde.supplier.id);
 
     //Contrato e assinaturas
     let contractFormated = modelResponse.contract

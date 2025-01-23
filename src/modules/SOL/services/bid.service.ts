@@ -107,7 +107,7 @@ export class BidService {
             if (!proposal.length) {
               this._logger.debug("update to deserted " + bid._id);
               await this._bidsRepository.rotineStatus(
-                bid._id,
+                bid.id,
                 BidStatusEnum.deserted
               );
               await this._allotmentRepository.updateStatusByIds(
@@ -119,7 +119,7 @@ export class BidService {
 
             this._logger.debug("update to analysis " + bid._id);
             await this._bidsRepository.rotineStatus(
-              bid._id,
+              bid.id,
               BidStatusEnum.analysis
             );
             await this._allotmentRepository.updateStatusByIds(
@@ -140,7 +140,7 @@ export class BidService {
           try {
             this._logger.debug("update to open " + bid._id);
             await this._bidsRepository.rotineStatus(
-              bid._id,
+              bid.id,
               BidStatusEnum.open
             );
             await this._allotmentRepository.updateStatusByIds(
@@ -161,9 +161,9 @@ export class BidService {
         const isTargetDateAfterCurrent = isAfter(parsedTargetDate, currentDate);
 
         if (!isTargetDateAfterCurrent) {
-          const proposals = await this._proposalRepository.listByBid(bid._id);
+          const proposals = await this._proposalRepository.listByBid(bid.id);
           if (proposals.length === 0) {
-            await this._bidsRepository.changeStatus(bid._id, {
+            await this._bidsRepository.changeStatus(bid.id, {
               status: BidStatusEnum["deserted"],
             });
             await this._allotmentRepository.updateStatusByIds(
@@ -311,7 +311,7 @@ export class BidService {
       if (result.invited_suppliers.length)
         for (let j = 0; j < result.invited_suppliers.length; j++) {
           await this._notificationService.registerByBidCreation(
-            result.invited_suppliers[j]?._id,
+            result.invited_suppliers[j]?.id,
             obj
           );
         }
@@ -326,7 +326,7 @@ export class BidService {
     const results: BidModel[] = [];
     for (let i = 0; i < agreements.length; i++) {
       const bid = await this._bidsRepository.getByAgreementId(
-        agreements[i]._id
+        agreements[i].id
       );
       if (bid) results.push(...bid);
     }
@@ -641,7 +641,7 @@ export class BidService {
       // const nextDay = new Date(addDate.setDate(addDate.getDate() + 1)).toISOString().slice(0,10)
       if (awaitingBids[i].start_at) {
         await this._bidsRepository.addStartHour(
-          awaitingBids[i]._id,
+          awaitingBids[i].id,
           `${awaitingBids[i].start_at}-T:${dto.start_at}`
         );
       }
@@ -656,7 +656,7 @@ export class BidService {
 
         returnArray.push(
           await this._bidsRepository.addEndHour(
-            awaitingBids[i]._id,
+            awaitingBids[i].id,
             `${endDate}-T:${dto.end_at}`
           )
         );
@@ -673,10 +673,10 @@ export class BidService {
       for (let j = 0; j < result.add_allotment[i].proposals.length; j++) {
         result.add_allotment[i].proposals[j].proposal.proposedBy =
           await this._userRepository.getById(
-            result.add_allotment[i].proposals[j].proposal.proposedBy._id
+            result.add_allotment[i].proposals[j].proposal.proposedBy.id
           );
         const proposalDetails = await this._proposalRepository.getById(
-          result.add_allotment[i].proposals[j].proposal._id
+          result.add_allotment[i].proposals[j].proposal.id
         );
 
         if (proposalDetails) {
@@ -730,7 +730,7 @@ export class BidService {
     const user = await this._userRepository.getByIdPopulate(userId);
     if (user.type === UserTypeEnum.associacao) {
       const list = await this._bidsRepository.listForSupplier(
-        user.association._id
+        user.association.id
       );
 
       return list;
@@ -751,13 +751,13 @@ export class BidService {
     const user = await this._userRepository.getByIdPopulate(userId);
     //@ts-ignore
     if (user.supplier) {
-      const supplier = await this._supplierService.listById(user.supplier._id);
+      const supplier = await this._supplierService.listById(user.supplier.id);
 
       if (!supplier) {
         throw new BadRequestException("Fornecedor não encontrado!");
       }
       const listProposal =
-        await this._proposalRepository.listProposalByUserSupplier(supplier._id);
+        await this._proposalRepository.listProposalByUserSupplier(supplier.id);
 
       // listProposal.filter(ele => ele.proposedBy!.supplier?._id.toString() === supplier._id.toString() && !!ele.bid);
       let filteredList: ProposalModel[] = [];
@@ -775,9 +775,7 @@ export class BidService {
       }
 
       const list = await this._bidsRepository.listByIds(
-        filteredList.map((ele) =>
-          ele.bid?._id ? ele.bid?._id.toString() : ele.bid
-        )
+        filteredList.map((ele) => ele.bid?.id ? ele.bid?.id : ele.bid)
       );
       return list;
     } else {
@@ -847,7 +845,7 @@ export class BidService {
       await this._modelContractRepository.getByClassification(type);
 
     const respondeAssociation = await this._associationRepository.getById(
-      respondseBids.association.association._id
+      respondseBids.association.association.id
     );
 
     const responseProposal = await this._proposalRepository.listByBid(_id);

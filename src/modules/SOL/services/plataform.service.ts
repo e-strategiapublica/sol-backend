@@ -15,7 +15,7 @@ export class PlataformService {
  async register(dto:BidDateUpdateDto): Promise<PlataformModel>{
   const config = await this._plataformRepository.findOne()
   if (config) {
-    return await this._plataformRepository.update(config._id,dto)
+    return await this._plataformRepository.update(config.id, dto)
   }
   return await this._plataformRepository.register(dto)
  }

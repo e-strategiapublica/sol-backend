@@ -137,7 +137,7 @@ export class TfaController {
 
       const user = await this._userRepository.getById(payload.userId);
 
-      const isValid = await this._tfaService.verifyAuth(user._id, dto);
+      const isValid = await this._tfaService.verifyAuth(user.id, dto);
 
       const accessToken = await this.authenticationService.createAccessToken(
         payload.userId,

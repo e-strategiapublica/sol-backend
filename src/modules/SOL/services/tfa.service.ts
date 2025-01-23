@@ -27,9 +27,9 @@ export class TfaService {
         const tfa = await this._tfaRepository.getByUserId(userId);
 
         return new TfaGetResponseDto(
-            tfa?._id,
+            tfa?.id,
             tfa?.url,
-            tfa?.user._id,
+            tfa?.user.id,
             tfa?.secret,
         );
     }
@@ -47,7 +47,7 @@ export class TfaService {
 
 
         const accessToken = this.authenticationService.createAccessToken(
-            dto.user._id,
+            dto.user.id,
             dto.user.email,
             dto.user.type,
             true,
@@ -55,7 +55,7 @@ export class TfaService {
         );
 
         const refreshToken = this.authenticationService.createRefreshToken(
-            dto.user._id,
+            dto.user.id,
             dto.user.email,
             dto.user.type,
             true,
@@ -89,7 +89,7 @@ export class TfaService {
             throw new BadRequestException('Erro ao deletar 2fa!');
 
         const accessToken = this.authenticationService.createAccessToken(
-            dto.user._id,
+            dto.user.id,
             dto.user.email,
             dto.user.type,
             true,
@@ -97,7 +97,7 @@ export class TfaService {
         );
 
         const refreshToken = this.authenticationService.createRefreshToken(
-            dto.user._id,
+            dto.user.id,
             dto.user.email,
             dto.user.type,
             true,

@@ -104,7 +104,7 @@ export class AuthenticationService {
     const tfa = await this._tfaRepository.getByUserId(user._id.toString());
 
     const accessToken = this.createAccessToken(
-      user._id,
+      user.id,
       user.email,
       user.type,
       !!tfa ? true : false,
@@ -112,7 +112,7 @@ export class AuthenticationService {
     );
 
     const refreshToken = this.createRefreshToken(
-      user._id,
+      user.id,
       user.email,
       user.type,
       !!tfa ? true : false,
@@ -137,6 +137,6 @@ export class AuthenticationService {
   }
 
   async updateRefreshTokenFromUser(user: UserModel, refreshToken: { accessToken: string; expiresIn: any; }) {
-    this._userRepository.updateRefreshToken(user._id, await bcrypt.hash(refreshToken.accessToken, 13));
+    this._userRepository.updateRefreshToken(user.id, await bcrypt.hash(refreshToken.accessToken, 13));
   }
 }

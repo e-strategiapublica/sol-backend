@@ -37,7 +37,7 @@ export class UserService {
     const result = await this._userRepository.getById(_id);
     
     return new UserGetResponseDto(
-      result._id,
+      result.id,
       result.name,
       result.email,
       result.phone,
@@ -73,7 +73,7 @@ export class UserService {
     if (!result) throw new BadRequestException('Email não encontrado!');
 
     return new UserGetResponseDto(
-      result._id,
+      result.id,
       result.name,
       result.email,
       result.phone,
@@ -90,7 +90,7 @@ export class UserService {
     if (result.status == UserStatusEnum.active) throw new BadRequestException('Você já realizou o primeiro acesso!');
 
     return new UserGetResponseDto(
-      result._id,
+      result.id,
       result.name,
       result.email,
       result.phone,
@@ -143,7 +143,7 @@ export class UserService {
       throw new BadRequestException('Email já existente na plataforma!');
 
     return new UserRegisterResponseDto(
-      result._id,
+      result.id,
       result.email,
 
     );
@@ -207,16 +207,16 @@ export class UserService {
 
     const password = await bcrypt.hash(dto.newPassword, 13);
 
-    await this._userRepository.updatePassword(userModel._id, {
+    await this._userRepository.updatePassword(userModel.id, {
       password: password,
       newPassword: '',
     });
 
     if (userModel.status == UserStatusEnum.inactive) {
-      await this._userRepository.updateStatus(userModel._id, UserStatusEnum.active);
+      await this._userRepository.updateStatus(userModel.id, UserStatusEnum.active);
     }
 
-    return new UserUpdateResponseDto(userModel._id, userModel.email);
+    return new UserUpdateResponseDto(userModel.id, userModel.email);
   }
 
   async updateProfilePicture(_id: string, profilePicture: string): Promise<UserUpdateProfilePictureResponseDto> {
@@ -234,7 +234,7 @@ export class UserService {
     for (const iterator of list) {
       response.push(
         new UserListByTypeResponseDto(
-          iterator._id,
+          iterator.id,
           iterator.name,
           iterator.email,
           iterator.status,

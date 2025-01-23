@@ -92,7 +92,7 @@ export class EndPointsService {
     const endpoint = await this.endpointsRepository.getByEndpointType(type);
     endpoint.lastRun = new Date();
     endpoint.status = EndPointsStatusEnum.running;
-    await this.endpointsRepository.update(endpoint._id, endpoint);    
+    await this.endpointsRepository.update(endpoint.id, endpoint);    
     try {      
         
       const headers = {
@@ -103,7 +103,7 @@ export class EndPointsService {
       
       if (result.data) {        
         endpoint.status = EndPointsStatusEnum.success;
-        await this.endpointsRepository.update(endpoint._id, endpoint);        
+        await this.endpointsRepository.update(endpoint.id, endpoint);        
         if(type === EndPointsTypeEnum.association)          
           return await this.associationService.handlerJob(result.data);
         if(type === EndPointsTypeEnum.agreement)          
@@ -115,13 +115,13 @@ export class EndPointsService {
       endpoint.status = EndPointsStatusEnum.error;
       endpoint.messageError = 'Não foi possivel obter os dados do endpoint';
       
-      await this.endpointsRepository.update(endpoint._id, endpoint);
+      await this.endpointsRepository.update(endpoint.id, endpoint);
       return;
     } catch (error) {      
       endpoint.status = EndPointsStatusEnum.error;
       endpoint.messageError = error;
       this._logger.error(error);
-      await this.endpointsRepository.update(endpoint._id, endpoint);
+      await this.endpointsRepository.update(endpoint.id, endpoint);
     }
   }
 
