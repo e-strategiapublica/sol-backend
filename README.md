@@ -7,17 +7,22 @@
 [![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/install/#install-compose)
 
-## Descriçao
+## Dependency management
 
-Sol API.
+This project uses `yarn`, so use that for dependency management.
 
+## Building
 
-## Instalação
-
-Acesse o diretório raiz da API e execute o comando.
+To simply build the project as it is, run the following:
 
 ```bash
-$ npm install
+yarn install
+```
+
+To build the docker image with the project running inside, use:
+
+```sh
+docker build .
 ```
 
 ## Rodar seed
