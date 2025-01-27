@@ -44,7 +44,7 @@ export class RegistryRepository {
 
     async send(dto: RegistrySendRequestDto) {
 
-        const provider = new ethers.providers.JsonRpcProvider(
+        const provider = new ethers.JsonRpcProvider(
             this._configService.get<string>(EnviromentVariablesEnum.PROVIDER)
         );
 
@@ -71,7 +71,7 @@ export class RegistryRepository {
         );
 
         const payload = JSON.stringify(dto);
-        const payloadId = ethers.utils.id(payload);
+        const payloadId = ethers.id(payload);
 
         const tx = await contract.register(ownerAddress, dto.id, payloadId);
         await tx.wait();
