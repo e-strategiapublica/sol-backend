@@ -3,7 +3,7 @@ import { AgreementActiveStatusEnum } from "../enums/agreement-active-status";
 import { UserModel } from "../models/user.model";
 import { AgreementInterface } from "./agreement.interface";
 import { User } from "../schemas/user.schema";
-import mongoose from "mongoose";
+import { Types } from "mongoose";
 
 export interface ProjectInterface {
   name: string;
@@ -16,6 +16,6 @@ export interface ProjectInterface {
 
 }
 
-export interface ProjectInterfaceWithId extends AgreementInterface {
-  _id: mongoose.Types.ObjectId; // Make sure to import mongoose
+export interface ProjectInterfaceWithId extends ProjectInterface {
+  _id: Types.ObjectId;
 }

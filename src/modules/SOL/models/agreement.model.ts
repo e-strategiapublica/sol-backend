@@ -1,5 +1,6 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { AgreementInterface} from "../interfaces/agreement.interface";
 
-export interface AgreementModel extends AgreementInterface, Document{
+export interface AgreementModel extends AgreementInterface, Document {
+  _id: Types.ObjectId
 }

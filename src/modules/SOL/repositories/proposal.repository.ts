@@ -160,10 +160,10 @@ export class ProposalRepository {
         const supplierIds = supplier_user.map(user => user._id);
     
         // Garante que os IDs estejam no formato ObjectID
-        const supplierObjectIds = supplierIds.map(id => new mongoose.Types.ObjectId(id)); // Supondo que você esteja usando Mongoose
+        // const supplierObjectIds = supplierIds.map(id => new mongoose.Types.ObjectId(id)); // Supondo que você esteja usando Mongoose
     
         // Agora você pode usar os IDs formatados corretamente na consulta
-        const proposals = await this._model.find({ proposedBy: { $in: supplierObjectIds } }).populate('proposedBy').populate('allotment');
+        const proposals = await this._model.find({ proposedBy: { $in: supplierIds } }).populate('proposedBy').populate('allotment');
     
         return proposals;
     }

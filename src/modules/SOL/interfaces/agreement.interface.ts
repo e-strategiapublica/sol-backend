@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import { Types } from "mongoose";
 import { AgreementStatusEnum } from "../enums/agreement-status.enum";
 import { AssociationModel } from "../models/association.model";
 import { ProjectModel } from "../models/project.model";
@@ -23,11 +23,9 @@ export interface AgreementInterface {
   reviewer: UserModel;
 }
 
-
 export interface AgreementInterfaceWithId extends AgreementInterface {
-  _id?: mongoose.Types.ObjectId; // Make sure to import mongoose
+  _id: Types.ObjectId;
 }
-
 
 export interface WorkPlanInterface {
   name: string;
