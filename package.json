@@ -8,7 +8,7 @@
   "scripts": {
     "prebuild": "npx rimraf dist",
     "build": "npx nest build",
-    "start": "npx nest start",
+    "start": "npx nest start --env-file .env",
     "test": "npx jest",
     "coverage": "npx jest --coverage"
   },

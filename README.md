@@ -1,10 +1,11 @@
-<h1 align="center">SOL - Sistema online de licitação API </h1>
+# SOL - Sistema online de licitação API
 
-## :computer: Requisitos
+Backend do SOL: Solução Online de Licitação.
+
+## Requisitos
 
 [![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)]((https://nodejs.org/en//))
 [![YARN](https://img.shields.io/badge/Yarn-2C8EBB.svg?style=for-the-badge&logo=Yarn&logoColor=white)](https://yarnpkg.com/cli/install)
-[![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/install/#install-compose)
 
 ## Dependency management
@@ -24,6 +25,16 @@ To build the docker image with the project running inside, use:
 ```sh
 docker build .
 ```
+
+## Running
+
+Create a `.env` file by copying the template
+
+```
+cp template.env .env
+```
+
+then filling-in the values in `.env`.
 
 ## Rodar seed
 
@@ -55,16 +66,6 @@ JWT_REFRESH_TOKEN_EXPIRATION=7d
 ENCRYPT_KEY=********-****-****-****-************
 SENDGRID_EMAIL_SENDER=email@email.com
 SENDGRID_API_KEY=	**.****-****-*******.********-****
-
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=******************
-AWS_SECRET_ACCESS_KEY=**********/********/****
-
-S3_BUCKET=dev-sol-app-api
-
-S3_BUCKET_DOCUMENTS=dev-sol-app-api
-
-S3_BUCKET_ANNOUNCEMENT_PHOTO=dev-sol-app-api
 ```
 
 | Descrição | Parâmetro |
@@ -118,7 +119,3 @@ $ npm run test:e2e:watch
 $ npm run test:e2e:cov
 
 ```
-
-## Suporte
-
-contact@tgtdigital.com
