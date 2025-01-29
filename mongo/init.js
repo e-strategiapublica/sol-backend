@@ -1,11 +1,11 @@
 db.createUser(
 	{
-		user: "",
-		pwd: "",
+		user: "sol",
+		pwd: process.env.MONGO_SOL_PASSWORD,
 		roles: [
 			{
 				role: "readWrite",
-				db: ""
+				db: "sol"
 			}
 		]
 	}

@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { configuration } from 'config/env/configuration';
 import { SolModule } from './modules/SOL/sol.module';
-import { SeedModule } from './modules/database_seed/seed.module';
 
 
 @Module({
@@ -17,7 +16,6 @@ import { SeedModule } from './modules/database_seed/seed.module';
     }),
     ScheduleModule.forRoot(),
     SolModule,
-    SeedModule,
   ],
   controllers: [],
   providers: [],
