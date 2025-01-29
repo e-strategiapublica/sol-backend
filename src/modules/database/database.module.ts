@@ -37,8 +37,7 @@ import { Gamification, GamificationSchema } from "../SOL/schemas/gamification.sc
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get(EnviromentVariablesEnum.NOSQL_CONNECTION_STRING),
-        useNewUrlParser: true,
+        uri: configService.get(EnviromentVariablesEnum.NOSQL_CONNECTION_STRING)
       }),
       inject: [ConfigService],
     }),
