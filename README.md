@@ -36,6 +36,8 @@ cp template.env .env
 
 then filling-in the values in `.env`.
 
+This file is the single source of truth for environment variables. It is read by `docker compose` (by default), and is then inherited by the containers. That is: the database, which reads some of its values by default and in its init scripts, but also the Nest modules.
+
 ## Rodar seed
 
 Execute o comando:

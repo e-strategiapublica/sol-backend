@@ -1,1 +1,0 @@
-pm2 start npm --name "sol-api-prod" -- run "start:prod"
