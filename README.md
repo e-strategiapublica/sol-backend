@@ -32,7 +32,7 @@ yarn
 
 ---
 
-## Build do Projeto (Opcionais)
+## Build do Projeto
 
 ### Build Local
 
