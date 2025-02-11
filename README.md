@@ -9,10 +9,12 @@ Backend do SOL: Sistema Online de Licitação.
 [![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
 [![YARN](https://img.shields.io/badge/Yarn-2C8EBB.svg?style=for-the-badge&logo=Yarn&logoColor=white)](https://yarnpkg.com/cli/install)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/install/#install-compose)
+[![MongoDB](https://img.shields.io/badge/mongodb-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
 - **Node.js** v14+
 - **Yarn** para gerenciamento de dependências
 - **Docker** e **Docker Compose** para ambiente containerizado
+- **MongoDB** como banco de dados NoSQL
 
 ---
 
