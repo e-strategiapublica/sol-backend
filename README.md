@@ -1,4 +1,5 @@
-![Logo](https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png)
+<img src="https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png" alt="Logo" width="200"/>
+
 
 # SOL - Sistema Online de Licitação API
 
