@@ -21,7 +21,7 @@ Backend do SOL: Sistema Online de Licitação.
 Este projeto utiliza **Yarn**. Para instalar as dependências, execute:
 
 ```bash
-yarn install
+yarn
 ```
 
 ---
