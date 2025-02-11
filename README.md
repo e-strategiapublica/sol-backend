@@ -6,6 +6,8 @@
 
 Backend do SOL: Sistema Online de Licitação.
 
+O backend do SOL é a base do Sistema Online de Licitação, encarregado de administrar toda a lógica comercial, segurança e comunicação com o banco de dados. O backend, projetado com ênfase em desempenho, escalabilidade e segurança, assegura que os procedimentos de licitação sejam realizados de maneira transparente, eficaz e em conformidade com a legislação em vigor.
+
 ---
 
 ## Requisitos
