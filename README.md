@@ -154,5 +154,5 @@ Para dúvidas ou suporte, entre em contato com a equipe de desenvolvimento.
 
 ---
 
-**Licença:** Este projeto está licenciado sob os termos da licença MIT.
+**Licença:** Este projeto está licenciado sob os termos da licença AGPL-3.0.
 
