@@ -58,7 +58,7 @@ cp template.env .env
 
 ```env
 PORT=4002
-NOSQL_CONNECTION_STRING=mongodb://localhost:20000/lacchain
+NOSQL_CONNECTION_STRING=mongodb://localhost:20000/<whoami do root>
 JWT_KEY=secret_KEY
 JWT_REFRESH_TOKEN_KEY=****************==
 JWT_ACCESS_TOKEN_EXPIRATION=8h
