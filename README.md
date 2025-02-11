@@ -1,3 +1,5 @@
+![Logo](https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png)
+
 # SOL - Sistema Online de Licitação API
 
 Backend do SOL: Sistema Online de Licitação.
