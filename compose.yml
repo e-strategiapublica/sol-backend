@@ -1,4 +1,4 @@
-version: '1.0' 
+version: '1.0' # Altere á versão mais recente se precisar
 
 services:
   mongo_db:
