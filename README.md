@@ -1,66 +1,62 @@
-# SOL - Sistema online de licitação API
+# SOL - Sistema Online de Licitação API
 
-Backend do SOL: Solução Online de Licitação.
+Backend do SOL: Sistema Online de Licitação.
 
-SENDO ALTERADO!
+---
 
 ## Requisitos
 
-[![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)]((https://nodejs.org/en//))
+[![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/en/)
 [![YARN](https://img.shields.io/badge/Yarn-2C8EBB.svg?style=for-the-badge&logo=Yarn&logoColor=white)](https://yarnpkg.com/cli/install)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/install/#install-compose)
 
-## Dependency management
+- **Node.js** v14+
+- **Yarn** para gerenciamento de dependências
+- **Docker** e **Docker Compose** para ambiente containerizado
 
-This project uses `yarn`, so use that for dependency management.
+---
 
-## Building
+## Gerenciamento de Dependências
 
-To simply build the project as it is, run the following:
+Este projeto utiliza **Yarn**. Para instalar as dependências, execute:
 
 ```bash
 yarn install
 ```
 
-To build the docker image with the project running inside, use:
+---
 
-```sh
-docker build .
+## Build do Projeto
+
+### Build Local
+
+Para construir o projeto localmente:
+
+```bash
+yarn build
 ```
 
-## Running
+### Build com Docker
 
-Create a `.env` file by copying the template
+Para construir a imagem Docker do projeto:
 
+```bash
+docker build -t sol-api .
 ```
+
+---
+
+## Configuração do Ambiente
+
+1. **Copie o arquivo de template `.env`:**
+
+```bash
 cp template.env .env
 ```
 
-then filling-in the values in `.env`.
+2. **Preencha as variáveis de ambiente** no arquivo `.env` conforme o exemplo:
 
-This file is the single source of truth for environment variables. It is read by `docker compose` (by default), and is then inherited by the containers. That is: the database, which reads some of its values by default and in its init scripts, but also the Nest modules.
-
-## Rodar seed
-
-Execute o comando:
-
-```bash
-$ npm run seed
-```
-
-## Preparar o ambiente
-
-**1**. Acesse o diretório raiz da API e execute o comando abaixo:
-
-``` sh
-$ docker-compose up -d
-```
-
-> Para utilizar o Docker, é necessário abrir o arquivo docker-compose.yml e configurar a senha, nome da base, etc.
-
-**2**. Crie um arquivo `.env` na pasta raiz da API com o seguinte formato:
-
-``` sh
+```env
 PORT=4002
 NOSQL_CONNECTION_STRING=mongodb://localhost:20000/lacchain
 JWT_KEY=secret_KEY
@@ -69,57 +65,94 @@ JWT_ACCESS_TOKEN_EXPIRATION=8h
 JWT_REFRESH_TOKEN_EXPIRATION=7d
 ENCRYPT_KEY=********-****-****-****-************
 SENDGRID_EMAIL_SENDER=email@email.com
-SENDGRID_API_KEY=	**.****-****-*******.********-****
+SENDGRID_API_KEY=**.****-****-*******.********-****
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=your_aws_access_key
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key
+S3_BUCKET=your_bucket_name
+S3_BUCKET_DOCUMENTS=your_documents_bucket
+S3_BUCKET_ANNOUNCEMENT_PHOTO=your_announcement_photo_bucket
 ```
 
-| Descrição | Parâmetro |
-| --- | --- |
-| PORT | Porta em que a API será iniciada |
-| NOSQL_CONNECTION_STRING | String de conexão com a base de dados, aqui deve ser adicionado o caminho publicado pelo docker compose. |
-| JWT_KEY | Chave utilizada para a criptografia JWT |
-| JWT_REFRESH_TOKEN_KEY | Chave utilizada para verificar a autenticidade dos Tokens de atualização JWT |
-| JWT_ACCESS_TOKEN_EXPIRATION | Tempo de expiração do Token JWT |
-| JWT_REFRESH_TOKEN_EXPIRATION | Tempo de expiração do Token de atualização JWT |
-| ENCRYPT_KEY | Chave utilizada para a criptografia do Payload. Deve ser gerada pelo usuário e o mesmo deve estar de acordo com o frontend. |
-| SENDGRID_EMAIL_SENDER | Email de origem para os serviços SendGrid |
-| SENDGRID_API_KEY | Chave utilizada para autenticar e autorizar o acesso aos recursos do serviço SendGrid |
-| AWS_REGION | Região do servidor AWS (Nulo caso não utilize AWS) |
-| AWS_ACCESS_KEY_ID | Chave de acesso da AWS | 
-| AWS_SECRET_ACCESS_KEY | Autenticador de acesso para serviços AWS |
-| S3_BUCKET | Bucket de armazenamento da AWS (Opcional, podendo utilizar outro bucket) |
-| S3_BUCKET_DOCUMENTS | Bucket de armazenamento da AWS (Opcional, podendo utilizar outro bucket) | 
-| S3_BUCKET_ANNOUNCEMENT_PHOTO | Bucket de armazenamento da AWS (Opcional, podendo utilizar outro bucket) |
+> **Nota:** O arquivo `.env` é a fonte única de verdade para as variáveis de ambiente, sendo utilizado pelo Docker Compose e herdado pelos containers.
 
-## Executando a API
+---
+
+## Executando o Projeto
+
+### Com Docker Compose
+
+1. **Suba os containers:**
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+docker-compose up -d
 ```
 
-## Documentação
+> Antes de rodar o Docker Compose, configure o arquivo `docker-compose.yml` conforme as necessidades do projeto (senha do banco, nomes das bases, etc).
 
-Após executar a api acesse http://localhost:4002/docs
+### Localmente
 
-> O Link pode mudar de acordo com a porta utilizada.
+- **Modo desenvolvimento:**
+
+```bash
+npm run start:dev
+```
+
+- **Modo produção:**
+
+```bash
+npm run start:prod
+```
+
+---
+
+## Rodando Seeds
+
+Para popular o banco com dados iniciais (seeds), execute:
+
+```bash
+npm run seed
+```
+
+---
 
 ## Testes
 
+- **Testes de ponta a ponta (e2e):**
+
 ```bash
-
-# end to end tests
-$ npm run test:e2e
-
-# end to end test watch
-$ npm run test:e2e:watch
-
-# test coverage
-$ npm run test:e2e:cov
-
+npm run test:e2e
 ```
+
+- **Testes de ponta a ponta com watch:**
+
+```bash
+npm run test:e2e:watch
+```
+
+- **Cobertura de testes:**
+
+```bash
+npm run test:e2e:cov
+```
+
+---
+
+## Documentação da API
+
+Após iniciar a API, acesse a documentação interativa via Swagger em:
+
+[http://localhost:4002/docs](http://localhost:4002/docs)
+
+> O link pode variar conforme a porta definida no arquivo `.env`.
+
+---
+
+## Contato
+
+Para dúvidas ou suporte, entre em contato com a equipe de desenvolvimento.
+
+---
+
+**Licença:** Este projeto está licenciado sob os termos da licença MIT.
+
