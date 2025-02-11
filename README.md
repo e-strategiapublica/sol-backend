@@ -88,7 +88,7 @@ S3_BUCKET_ANNOUNCEMENT_PHOTO=your_announcement_photo_bucket
 docker-compose up -d
 ```
 
-> Antes de rodar o Docker Compose, configure o arquivo `docker-compose.yml` conforme as necessidades do projeto (senha do banco, nomes das bases, etc).
+> Antes de rodar o Docker Compose, configure o arquivo `compose.yml` conforme as necessidades do projeto (senha do banco, nomes das bases, etc).
 
 ### Localmente
 
