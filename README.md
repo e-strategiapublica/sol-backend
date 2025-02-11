@@ -78,6 +78,34 @@ S3_BUCKET_ANNOUNCEMENT_PHOTO=your_announcement_photo_bucket
 
 ---
 
+## Verificando o Status do MongoDB
+
+**Para verificar se o MongoDB está em serviço, use o seguinte comando:**
+
+```bash
+sudo systemctl status mongod
+```
+
+Se o serviço não estiver ativo, tente reiniciá-lo com:
+
+```bash
+sudo systemctl restart mongod
+```
+
+### Troubleshooting
+
+**exit-code ao iniciar o projeto**
+Caso o MongoDB não esteja funcionando corretamente e você receba um erro relacionado ao exit-code, pode ser necessário corrigir as permissões do diretório de dados do MongoDB. Execute os seguintes comandos para ajustar as permissões:
+
+```bash
+sudo chown -R mongodb:mongodb /var/lib/mongodb
+sudo chown mongodb:mongodb /tmp/mongodb-27017.sock
+```
+
+Esses comandos garantem que o MongoDB tenha as permissões adequadas para acessar seus arquivos e diretórios necessários.
+
+---
+
 ## Executando o Projeto
 
 ### Com Docker Compose
