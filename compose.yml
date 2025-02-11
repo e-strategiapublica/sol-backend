@@ -1,23 +1,32 @@
+version: '1.0'
+
 services:
-  database:
+  mongo_db:
     image: mongo
     restart: always
+    env_file:
+      - .env
     environment:
       MONGO_INITDB_DATABASE: sol
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
-      MONGO_SOL_PASSWORD: "${MONGO_SOL_PASSWORD}"
     ports:
-      - "30000:27017"
+      - "127.0.0.1:30000:27017"  # Restrito ao localhost
     volumes:
       - "${DB_DIR}:/data/db"
+      - "mongo_config:/data/configdb"
       - "./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
     networks:
       - sol-backend
+
   # server:
   #   build: .
+  #   depends_on:
+  #     - mongo_db
   #   networks:
   #     - sol-backend
 
 networks:
   sol-backend:
+
+volumes:
+  mongo_config:
