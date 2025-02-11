@@ -1,5 +1,5 @@
 <p align="center">
-    <img  src="https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png" alt="Logo" width="200"/>
+    <img  src="https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png" alt="Logo" width="300"/>
 </p>
 
 # SOL - Sistema Online de Licitação API
