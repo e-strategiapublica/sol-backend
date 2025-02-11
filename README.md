@@ -64,7 +64,7 @@ JWT_REFRESH_TOKEN_KEY=****************==
 JWT_ACCESS_TOKEN_EXPIRATION=8h
 JWT_REFRESH_TOKEN_EXPIRATION=7d
 ENCRYPT_KEY=********-****-****-****-************
-SENDGRID_EMAIL_SENDER=email@email.com
+SENDGRID_EMAIL_SENDER=your.email@email.com
 SENDGRID_API_KEY=**.****-****-*******.********-****
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your_aws_access_key
