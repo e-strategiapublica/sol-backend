@@ -1,6 +1,7 @@
-<p align="center">
-    <img  src="https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png" alt="Logo" width="300"/>
+<p align="center" style="background-color: #f0f0f0; padding: 10px; display: inline-block;">
+  <img src="https://e-strategiapublica.com/wp-content/uploads/2021/02/logo-blanco.png" alt="Logo" width="200"/>
 </p>
+
 
 # SOL - Sistema Online de Licitação API
 
