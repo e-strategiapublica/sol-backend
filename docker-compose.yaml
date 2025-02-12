@@ -11,9 +11,9 @@ services:
       context: ./
       dockerfile: Dockerfile
     environment:
-      DATABASE_NAME: ${DATABASE}          # Nova variável
-      DATABASE_USER: ${DATABASE_USER}     # Nova variável
-      DATABASE_PASS: ${MONGO_PASSWORD}    # Nova variável
+      DATABASE_NAME: ${DATABASE}         
+      DATABASE_USER: ${DATABASE_USER}    
+      DATABASE_PASS: ${MONGO_PASSWORD}   
       DATABASE_URI: ${NOSQL_CONNECTION_STRING}
     ports:
       - '4002:4002'
