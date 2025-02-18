@@ -64,7 +64,7 @@ cp template.env .env
 
 ```env
 PORT=4002
-NOSQL_CONNECTION_STRING=mongodb://localhost:<your_mongodb_PORT>/your_whoami_root
+NOSQL_CONNECTION_STRING=mongodb://database:27017/<whoamI>?authSource=<authSource>
 JWT_KEY=secret_KEY(exemplo)
 JWT_REFRESH_TOKEN_KEY=****************==
 JWT_ACCESS_TOKEN_EXPIRATION=8h
