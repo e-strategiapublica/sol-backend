@@ -1,8 +1,6 @@
 # Docker Compose Configuration
 # visit https://docs.docker.com/compose/
 
-version: '3.8'
-
 services:
   # app service for your backend
   app:
@@ -28,17 +26,19 @@ services:
     container_name: mongodb
     restart: always
     ports:
-      - '30000:27017'  # Mantendo a porta original
+      - '30000:27017'
     environment:
-      MONGO_INITDB_DATABASE: ${DATABASE}           
-      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER} 
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-      MONGO_SOL_PASSWORD: ${MONGO_SOL_PASSWORD:-default_password}  # Default caso não esteja setada
+      MONGO_INITDB_DATABASE: ${DATABASE}  # Banco de dados
+      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}  # Usuário
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}  # Senha
+      MONGO_AUTH_SOURCE: admin  # Banco de autenticação
     volumes:
-      - "${DB_DIR}:/data/db"
+      - "/home/anthonysfarias/mongodb:/data/db"
       - "./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
     networks:
       - sol-backend
+
+
 
 networks:
   sol-backend:

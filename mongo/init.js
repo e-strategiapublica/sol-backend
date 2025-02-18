@@ -1,7 +1,7 @@
 db.createUser(
 	{
 		user: "sol",
-		pwd: process.env.MONGO_SOL_PASSWORD,
+		pwd: process.env.MONGO_PASSWORD,
 		roles: [
 			{
 				role: "readWrite",

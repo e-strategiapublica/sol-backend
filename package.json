@@ -5,6 +5,14 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "compilerOptions": {
+    "webpack": true
+  },
+  "projects": {
+    "default": {
+      "sourceRoot": "src"
+    }
+  },
   "scripts": {
     "prebuild": "npx rimraf dist",
     "build": "npx nest build",
