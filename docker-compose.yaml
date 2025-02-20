@@ -1,26 +1,37 @@
-# Docker Compose Configuration
-# visit https://docs.docker.com/compose/
-
 services:
-  # app service for your backend
+  # Backend service
   app:
     container_name: sol_backend
     build:
       context: ./
       dockerfile: Dockerfile
     environment:
-      DATABASE_NAME: ${DATABASE}         
-      DATABASE_USER: ${DATABASE_USER}    
-      DATABASE_PASS: ${MONGO_PASSWORD}   
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_NAME: ${DATABASE}
+      DATABASE_USER: sol
+      DATABASE_PASS: ${MONGO_SOL_PASSWORD}
       DATABASE_URI: ${NOSQL_CONNECTION_STRING}
+      JWT_KEY: ${JWT_KEY}
+      JWT_REFRESH_TOKEN_KEY: ${JWT_REFRESH_TOKEN_KEY}
+      JWT_ACCESS_TOKEN_EXPIRATION: ${JWT_ACCESS_TOKEN_EXPIRATION}
+      JWT_REFRESH_TOKEN_EXPIRATION: ${JWT_REFRESH_TOKEN_EXPIRATION}
+      ENCRYPT_KEY: ${ENCRYPT_KEY}
+      SENDGRID_EMAIL_SENDER: ${SENDGRID_EMAIL_SENDER}
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY}
+      BUCKET: ${BUCKET}
+      BLOCKCHAIN_ACTIVE: ${BLOCKCHAIN_ACTIVE}
+      PROJECT_ID: ${PROJECT_ID}
+      PROVIDER: ${PROVIDER}
+      REGISTRY_CONTRACT_ADDRESS: ${REGISTRY_CONTRACT_ADDRESS}
+      OWNER_ADDRESS: ${OWNER_ADDRESS}
+      ADMIN_PRIVATE_KEY: ${ADMIN_PRIVATE_KEY}
     ports:
-      - '4002:4002'
-    depends_on:
-      - database
+      - '4002:4003'
+   
     networks:
       - sol-backend
 
-  # start the mongodb service as container
+  # MongoDB service
   database:
     image: mongo:6.0
     container_name: mongodb
@@ -28,17 +39,16 @@ services:
     ports:
       - '30000:27017'
     environment:
-      MONGO_INITDB_DATABASE: ${DATABASE}  # Banco de dados
-      MONGO_INITDB_ROOT_USERNAME: ${DATABASE_USER}  # Usuário
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}  # Senha
-      MONGO_AUTH_SOURCE: admin  # Banco de autenticação
+      MONGO_INITDB_DATABASE: ${DATABASE}
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
     volumes:
-      - "/home/anthonysfarias/mongodb:/data/db"
+      - "./mongo/data:/data/db"
       - "./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
+   
     networks:
       - sol-backend
 
-
-
 networks:
   sol-backend:
+    driver: bridge
