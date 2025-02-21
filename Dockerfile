@@ -2,7 +2,7 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Copiar as dependências para instalar
+# Copiar os arquivos necessários
 COPY package.json yarn.lock ./
 
 # Instalar dependências
@@ -11,8 +11,15 @@ RUN yarn install
 # Copiar o restante do código
 COPY . .
 
-# Expor a porta do app
-EXPOSE 3000
+# Copiar e dar permissão ao script de inicialização
+COPY entry.sh /entry.sh
+RUN chmod +x /entry.sh
 
-# Comando para iniciar o servidor
+# Definir a porta padrão
+EXPOSE 80
+
+# Definir o script de entrada
+ENTRYPOINT ["/entry.sh"]
+
+# Iniciar a aplicação
 CMD ["yarn", "run", "start"]
