@@ -3,7 +3,7 @@
 echo "Aguardando MongoDB iniciar..."
 
 # Esperar MongoDB ficar acessível
-until nc -z -v -w30 mongo 27017
+until nc -z -v -w30 mongodb 27017
 do
   echo "Aguardando MongoDB..."
   sleep 5
