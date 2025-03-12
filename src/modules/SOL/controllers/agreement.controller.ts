@@ -1,5 +1,6 @@
 import {
   Body,
+  Query,
   Controller,
   Delete,
   Get,
@@ -35,16 +36,20 @@ export class AgreementController {
 
   constructor(private _airdropService: AgreementService) { }
 
-
   @Get()
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, FuncoesGuard)
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async get() {
+  async get(@Query('withoutProject') withoutProject?: boolean) {
     try {
-     
-      const response = await this._airdropService.findAll();
+      let response;
+
+      if (withoutProject) {
+        response = await this._airdropService.findAgreementsWithOutProject();
+      } else {
+        response = await this._airdropService.findAll();
+      }
 
       return new ResponseDto(true, response, null);
     } catch (error) {
@@ -52,20 +57,6 @@ export class AgreementController {
     }
   }
 
-  @Get('without-project')
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async findAgreementsWithOutProject() {
-    try {
-      const response = await this._airdropService.findAgreementsWithOutProject();
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
-  }
 
   @Get('for-association')
   @HttpCode(200)

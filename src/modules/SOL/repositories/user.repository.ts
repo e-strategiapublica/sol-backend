@@ -21,6 +21,7 @@ export class UserRepository {
     private dbName: string = process.env.DATABASE;
     private collection: string = "user";
 
+
     constructor(
         @InjectModel(User.name) private readonly _model: Model<UserModel>,
     ) { }

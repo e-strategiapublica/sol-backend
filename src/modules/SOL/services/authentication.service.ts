@@ -29,6 +29,12 @@ export class AuthenticationService {
   private async validate(email: string, password: string): Promise<UserModel> {
     const user = await this._userRepository.getByEmail(email);
 
+    // console.log("Senha fornecida:", password);
+    // console.log("Senha armazenada:", user.password);
+    // console.log("As senhas são iguais?", password === user.password);
+    // const isMatch = await bcrypt.compare(password, user.password);
+    // console.log("As senhas coincidem?", isMatch);
+
     if (user && (await bcrypt.compare(password, user.password))) return user;
     else return null;
   }
@@ -93,9 +99,9 @@ export class AuthenticationService {
 
     const userByemail = await this._userRepository.getByEmail(dto.email);
     if (userByemail && userByemail.status == UserStatusEnum.inactive) throw new NotFoundException('Usuário inativo, faça o primeiro acesso!');
-
+    
     const user = await this.validate(dto.email, dto.password);
-
+    
     if (!user) throw new NotFoundException('Email ou senha inválido(s)!');
 
     if (user.status === UserStatusEnum.inactive)
