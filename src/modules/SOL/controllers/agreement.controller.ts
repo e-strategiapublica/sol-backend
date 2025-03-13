@@ -12,6 +12,7 @@ import {
   Post,
   Put,
   UseGuards,
+  BadRequestException,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags, ApiQuery } from "@nestjs/swagger";
 import { ResponseDto } from "src/shared/dtos/response.dto";
@@ -122,17 +123,22 @@ export class AgreementController {
     return this.handleRequest(() => this._agreementService.update(id, dto));
   }
 
-  @Put("add-work-plan/:id")
+  @Put("work-plan/:id/:action")
   @HttpCode(200)
   @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async addWorkPlan(@Param("id") id: string, @Body() dto: WorkPlanWorkPlanRequestDto) {
-    return this.handleRequest(() => this._agreementService.addWorkPlan(id, dto.workPlanId));
+  async handleWorkPlan(
+    @Param("id") id: string,
+    @Param("action") action: "add" | "remove",
+    @Body() dto: WorkPlanWorkPlanRequestDto
+  ) {
+    return this.handleRequest(() => {
+      if (action === "add") {
+        return this._agreementService.addWorkPlan(id, dto.workPlanId);
+      } else if (action === "remove") {
+        return this._agreementService.removeWorkPlan(id, dto.workPlanId);
+      }
+      throw new BadRequestException("Ação inválida");
+    });
   }
-
-  @Put("remove-work-plan/:id")
-  @HttpCode(200)
-  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async removeWorkPlan(@Param("id") id: string, @Body() dto: WorkPlanWorkPlanRequestDto) {
-    return this.handleRequest(() => this._agreementService.removeWorkPlan(id, dto.workPlanId));
-  }
+  
 }
