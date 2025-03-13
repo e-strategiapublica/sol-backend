@@ -11,206 +11,128 @@ import {
   Param,
   Post,
   Put,
-  Req,
   UseGuards,
-  UseInterceptors,
 } from "@nestjs/common";
-import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiTags, ApiQuery } from "@nestjs/swagger";
 import { ResponseDto } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
-import { ApiQuery } from "@nestjs/swagger";
 import { AgreementService } from "../services/agreement.service";
 import { FuncoesGuard } from "src/shared/guards/funcoes.guard";
 import { UserTypeEnum } from "../enums/user-type.enum";
 import { Funcoes } from "src/shared/decorators/function.decorator";
 import { WorkPlanWorkPlanRequestDto } from "../dtos/work-plan-add-work-plan-request.dto";
 import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
-import { UserRolesEnum } from "../enums/user-roles.enum";
 import { UserTypeRequestDto } from "../dtos/user-type-request.dto";
+import { applyDecorators, createParamDecorator, ExecutionContext } from "@nestjs/common";
+
+// Decorator para reduzir repetição de autenticação e autorização
+export function AuthRoles(...roles: UserTypeEnum[]) {
+  return applyDecorators(
+    ApiBearerAuth(),
+    UseGuards(JwtAuthGuard, FuncoesGuard),
+    Funcoes(...roles)
+  );
+}
+
+// Decorator para obter usuário autenticado
+export const GetUser = createParamDecorator(
+  (data: unknown, ctx: ExecutionContext): JwtPayload => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  }
+);
 
 @ApiTags("conveios")
 @Controller("convenios")
 export class AgreementController {
   private readonly _logger = new Logger(AgreementController.name);
 
-  constructor(private _airdropService: AgreementService) { }
+  constructor(private _agreementService: AgreementService) { }
 
-  @ApiQuery({ name: 'withoutProject', required: false, type: Boolean })
-  @Get()
-  @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async get(@Query('withoutProject') withoutProject?: string) {
+  private async handleRequest<T>(fn: () => Promise<T>): Promise<ResponseDto> {
     try {
-      const shouldFilterWithoutProject = withoutProject === 'true';
-      
-      const response = shouldFilterWithoutProject 
-        ? await this._airdropService.findAgreementsWithOutProject() 
-        : await this._airdropService.findAll();
-  
+      const response = await fn();
       return new ResponseDto(true, response, null);
     } catch (error) {
+      this._logger.error(error.message);
       throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
     }
   }
 
+  @Get()
+  @HttpCode(200)
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @ApiQuery({ name: 'withoutProject', required: false, type: Boolean })
+  async get(@Query('withoutProject') withoutProject?: string) {
+    return this.handleRequest(() =>
+      withoutProject === 'true'
+        ? this._agreementService.findAgreementsWithOutProject()
+        : this._agreementService.findAll()
+    );
+  }
 
   @Get('for-association')
   @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async getForAssociation(
-    @Req() request,
-  ) {
-    try {
-
-     
-      const payload: JwtPayload = request.user;
-      const response = await this._airdropService.findForAssociation(payload.userId);
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  async getForAssociation(@GetUser() user: JwtPayload) {
+    return this.handleRequest(() => this._agreementService.findForAssociation(user.userId));
   }
 
   @Get('agreement-with-project')
   @HttpCode(200)
-  @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async getAgreementsWithProjects(
-  ) {
-    try {
-      const response = await this._airdropService.getAgreementsWithProjects();
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  async getAgreementsWithProjects() {
+    return this.handleRequest(() => this._agreementService.getAgreementsWithProjects());
   }
 
   @Post("register")
   @HttpCode(201)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
-  async register(@Req() request, @Body() dto: AgreementRegisterRequestDto) {
-    try {
-   
-      const payload: JwtPayload = request.user;
-      dto.manager = payload.userId
-      const response = await this._airdropService.register(dto);
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  async register(@GetUser() user: JwtPayload, @Body() dto: AgreementRegisterRequestDto) {
+    dto.manager = user.userId;
+    return this.handleRequest(() => this._agreementService.register(dto));
   }
 
-  @Get("/:id")
+  @Get(":id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
   async findById(@Param("id") id: string) {
-    try {
-      
-      const response = await this._airdropService.findById(id);
-      return new ResponseDto(true, response, null)
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+    return this.handleRequest(() => this._agreementService.findById(id));
   }
 
   @Post("by-user-id/:id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
-  async findAgreementByUserId(@Param("id") id: string,
- @Body() userRoles: UserTypeRequestDto) {
-    try {
-      const response = await this._airdropService.findAgreementByUserId(id, userRoles.roles);
-      return new ResponseDto(true, response, null)
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  async findAgreementByUserId(@Param("id") id: string, @Body() userRoles: UserTypeRequestDto) {
+    return this.handleRequest(() => this._agreementService.findAgreementByUserId(id, userRoles.roles));
   }
 
-  @Delete("/:id")
+  @Delete(":id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
   async deleteById(@Param("id") id: string) {
-    try {
-      const response = await this._airdropService.deleteById(id);
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+    return this.handleRequest(() => this._agreementService.deleteById(id));
   }
 
   @Put("update/:id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
   async update(@Param("id") id: string, @Body() dto: AgreementRegisterRequestDto) {
-    try {
-      const response = await this._airdropService.update(id, dto);
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+    return this.handleRequest(() => this._agreementService.update(id, dto));
   }
 
   @Put("add-work-plan/:id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
   async addWorkPlan(@Param("id") id: string, @Body() dto: WorkPlanWorkPlanRequestDto) {
-    try {
-      const response = await this._airdropService.addWorkPlan(id, dto.workPlanId);
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+    return this.handleRequest(() => this._agreementService.addWorkPlan(id, dto.workPlanId));
   }
 
   @Put("remove-work-plan/:id")
   @HttpCode(200)
-  @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  @ApiBearerAuth()
+  @AuthRoles(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
   async removeWorkPlan(@Param("id") id: string, @Body() dto: WorkPlanWorkPlanRequestDto) {
-    try {
-      const response = await this._airdropService.removeWorkPlan(id, dto.workPlanId);
-      return response;
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
-    }
+    return this.handleRequest(() => this._agreementService.removeWorkPlan(id, dto.workPlanId));
   }
-
 }
