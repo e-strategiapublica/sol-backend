@@ -99,9 +99,10 @@ export class AuthenticationService {
 
     const userByemail = await this._userRepository.getByEmail(dto.email);
     if (userByemail && userByemail.status == UserStatusEnum.inactive) throw new NotFoundException('Usuário inativo, faça o primeiro acesso!');
-    
+
     const user = await this.validate(dto.email, dto.password);
-    
+    console.log()
+
     if (!user) throw new NotFoundException('Email ou senha inválido(s)!');
 
     if (user.status === UserStatusEnum.inactive)

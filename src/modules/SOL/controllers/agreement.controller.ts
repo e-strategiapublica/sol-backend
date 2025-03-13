@@ -19,7 +19,7 @@ import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ResponseDto } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
-
+import { ApiQuery } from "@nestjs/swagger";
 import { AgreementService } from "../services/agreement.service";
 import { FuncoesGuard } from "src/shared/guards/funcoes.guard";
 import { UserTypeEnum } from "../enums/user-type.enum";
@@ -36,21 +36,20 @@ export class AgreementController {
 
   constructor(private _airdropService: AgreementService) { }
 
+  @ApiQuery({ name: 'withoutProject', required: false, type: Boolean })
   @Get()
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, FuncoesGuard)
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.project_manager)
-  async get(@Query('withoutProject') withoutProject?: boolean) {
+  async get(@Query('withoutProject') withoutProject?: string) {
     try {
-      let response;
-
-      if (withoutProject) {
-        response = await this._airdropService.findAgreementsWithOutProject();
-      } else {
-        response = await this._airdropService.findAll();
-      }
-
+      const shouldFilterWithoutProject = withoutProject === 'true';
+      
+      const response = shouldFilterWithoutProject 
+        ? await this._airdropService.findAgreementsWithOutProject() 
+        : await this._airdropService.findAll();
+  
       return new ResponseDto(true, response, null);
     } catch (error) {
       throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
