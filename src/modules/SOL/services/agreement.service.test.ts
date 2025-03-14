@@ -32,7 +32,7 @@ describe('AgreementController', () => {
     service = module.get<AgreementService>(AgreementService);
   });
 
-  it('should call findAgreementsWithOutProject when withoutProject=true', async () => {
+  it('should call findAgreementsWithOutProject when withoutProject=true [/]', async () => {
     const findAgreementsWithOutProjectSpy = jest
       .spyOn(service, 'findAgreementsWithOutProject')
       .mockResolvedValue([]);
@@ -42,7 +42,7 @@ describe('AgreementController', () => {
     expect(findAgreementsWithOutProjectSpy).toHaveBeenCalled();
   });
 
-  it('should call findAll when withoutProject is false or undefined', async () => {
+  it('should call findAll when withoutProject is false or undefined [/]', async () => {
     const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue([]);
 
     await controller.get();
@@ -51,7 +51,7 @@ describe('AgreementController', () => {
     expect(findAllSpy).toHaveBeenCalledTimes(2);
   });
 
-  it('should call findForAssociation with userId from JwtPayload', async () => {
+  it('should call findForAssociation with userId from JwtPayload [/for-association]', async () => {
     const user: JwtPayload = { 
       userId: '123', 
       email: 'test@example.com', 
@@ -69,7 +69,7 @@ describe('AgreementController', () => {
     expect(findForAssociationSpy).toHaveBeenCalledWith('123');
   });
 
-  it('should call getAgreementsWithProjects', async () => {
+  it('should call getAgreementsWithProjects [/agreement-with-project]', async () => {
     const getAgreementsWithProjectsSpy = jest
       .spyOn(service, 'getAgreementsWithProjects')
       .mockResolvedValue([]);
@@ -79,7 +79,7 @@ describe('AgreementController', () => {
     expect(getAgreementsWithProjectsSpy).toHaveBeenCalled();
   });
 
-  it('should call register with AgreementRegisterRequestDto and userId', async () => {
+  it('should call register with AgreementRegisterRequestDto and userId [/register]', async () => {
     const user: JwtPayload = {
       userId: '123',
       email: 'test@example.com',
