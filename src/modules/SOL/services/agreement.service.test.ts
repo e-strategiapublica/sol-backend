@@ -1,23 +1,51 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
-import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
-import { UserTypeRequestDto } from "../dtos/user-type-request.dto";
-import { AgreementStatusEnum } from "../enums/agreement-status.enum";
-import { UserRolesEnum } from "../enums/user-roles.enum";
-import { UserTypeEnum } from "../enums/user-type.enum";
-import { AgreementInterface } from "../interfaces/agreement.interface";
-import { AssociationModel } from "../models/association.model";
-import { ProjectModel } from "../models/project.model";
-import { UserModel } from "../models/user.model";
-import { AgreementController } from "../controllers/agreement.controller";
-import { AgreementService } from "./agreement.service"
+import { JwtPayload } from 'src/shared/interfaces/jwt-payload.interface';
+import { AgreementRegisterRequestDto } from '../dtos/agreement-register-request.dto';
+import { UserTypeRequestDto } from '../dtos/user-type-request.dto';
+import { AgreementStatusEnum } from '../enums/agreement-status.enum';
+import { UserRolesEnum } from '../enums/user-roles.enum';
+import { UserTypeEnum } from '../enums/user-type.enum';
+import { AgreementInterface } from '../interfaces/agreement.interface';
+import { AssociationModel } from '../models/association.model';
+import { ProjectModel } from '../models/project.model';
+import { UserModel } from '../models/user.model';
+import { AgreementController } from '../controllers/agreement.controller';
+import { AgreementService } from './agreement.service';
 import { WorkPlanWorkPlanRequestDto } from '../dtos/work-plan-add-work-plan-request.dto';
 
 describe('AgreementController', () => {
   let controller: AgreementController;
   let service: AgreementService;
 
- beforeEach(async () => {
+  // Mocks comuns
+  const user: JwtPayload = {
+    userId: '123',
+    email: 'test@example.com',
+    type: UserTypeEnum.administrador,
+    tfaRegistered: true,
+    tfaAuthenticate: true,
+  };
+
+  // Mock de um acordo para os testes
+  const mockAgreement: AgreementInterface = {
+    register_number: 'ABC123',
+    register_object: 'Agreement Test',
+    status: AgreementStatusEnum.inExecution,
+    city: 'Sample City',
+    states: 'SP',
+    value: 10000,
+    validity_date: new Date(),
+    signature_date: new Date(),
+    association: {} as AssociationModel,
+    project: {} as ProjectModel,
+    manager: {} as UserModel,
+    workPlan: [],
+    project_id: {} as ProjectModel,
+    reviewer: {} as UserModel,
+  };
+
+  beforeEach(async () => {
+    // Configuração do módulo de testes
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AgreementController],
       providers: [
@@ -36,7 +64,7 @@ describe('AgreementController', () => {
             addWorkPlan: jest.fn(),
             removeWorkPlan: jest.fn(),
           },
-        }
+        },
       ],
     }).compile();
 
@@ -44,7 +72,7 @@ describe('AgreementController', () => {
     service = module.get<AgreementService>(AgreementService);
   });
 
-  // Teste para findAgreementsWithOutProject
+  // Teste de chamada do método 'findAgreementsWithOutProject' quando 'withoutProject=true'
   it('should call findAgreementsWithOutProject when withoutProject=true [/]', async () => {
     const findAgreementsWithOutProjectSpy = jest
       .spyOn(service, 'findAgreementsWithOutProject')
@@ -55,7 +83,7 @@ describe('AgreementController', () => {
     expect(findAgreementsWithOutProjectSpy).toHaveBeenCalled();
   });
 
-  // Teste para findAll
+  // Teste de chamada do método 'findAll' quando 'withoutProject=false' ou indefinido
   it('should call findAll when withoutProject is false or undefined [/]', async () => {
     const findAllSpy = jest.spyOn(service, 'findAll').mockResolvedValue([]);
 
@@ -65,26 +93,18 @@ describe('AgreementController', () => {
     expect(findAllSpy).toHaveBeenCalledTimes(2);
   });
 
-  // Teste para findForAssociation
+  // Teste de chamada do método 'findForAssociation' com o userId do JwtPayload
   it('should call findForAssociation with userId from JwtPayload [/for-association]', async () => {
-    const user: JwtPayload = { 
-      userId: '123', 
-      email: 'test@example.com', 
-      type: UserTypeEnum.administrador, 
-      tfaRegistered: true, 
-      tfaAuthenticate: true 
-    };
-
     const findForAssociationSpy = jest
       .spyOn(service, 'findForAssociation')
       .mockResolvedValue([]);
 
     await controller.getForAssociation(user);
 
-    expect(findForAssociationSpy).toHaveBeenCalledWith('123');
+    expect(findForAssociationSpy).toHaveBeenCalledWith(user.userId);
   });
 
-  // Teste para getAgreementsWithProjects
+  // Teste de chamada do método 'getAgreementsWithProjects'
   it('should call getAgreementsWithProjects [/agreement-with-project]', async () => {
     const getAgreementsWithProjectsSpy = jest
       .spyOn(service, 'getAgreementsWithProjects')
@@ -95,246 +115,97 @@ describe('AgreementController', () => {
     expect(getAgreementsWithProjectsSpy).toHaveBeenCalled();
   });
 
-  // Teste para register
+  // Teste de chamada do método 'register' com o DTO AgreementRegisterRequestDto e userId
   it('should call register with AgreementRegisterRequestDto and userId [/register]', async () => {
-    const user: JwtPayload = {
-      userId: '123',
-      email: 'test@example.com',
-      type: UserTypeEnum.administrador,
-      tfaRegistered: true,
-      tfaAuthenticate: true,
-    };
-
-    const dto: AgreementRegisterRequestDto = { manager: '' } as AgreementRegisterRequestDto;
-
-    const mockAgreement: AgreementInterface = {
-      register_number: 'ABC123',
-      register_object: 'Agreement Test',
-      status: AgreementStatusEnum.inExecution, 
-      city: 'Sample City',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as any,
-      project: {} as any,
-      manager: {} as any,
-      workPlan: [],
-      project_id: {} as any,
-      reviewer: {} as any,
-    };
+    const dto: AgreementRegisterRequestDto = { manager: user.userId } as AgreementRegisterRequestDto;
 
     const registerSpy = jest.spyOn(service, 'register').mockResolvedValue(mockAgreement);
 
     await controller.register(user, dto);
 
-    expect(dto.manager).toBe(user.userId);
     expect(registerSpy).toHaveBeenCalledWith(dto);
+    expect(dto.manager).toBe(user.userId);
   });
 
-  // Teste para findById
+  // Teste de chamada do método 'findById' com o id correto
   it('should call findById with correct id [/:id]', async () => {
-    const id = '123';
-    const mockAgreement: AgreementInterface = {
-      register_number: id,
-      register_object: 'Test Object',
-      status: AgreementStatusEnum.concluded, 
-      city: 'São Paulo',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as AssociationModel, 
-      project: {} as ProjectModel,
-      manager: {} as UserModel,
-      workPlan: [],
-      project_id: {} as ProjectModel,
-      reviewer: {} as UserModel,
-    };
-
     const findByIdSpy = jest.spyOn(service, 'findById').mockResolvedValue(mockAgreement);
 
-    const result = await controller.findById(id);
+    const result = await controller.findById('123');
 
-    expect(findByIdSpy).toHaveBeenCalledWith(id);
+    expect(findByIdSpy).toHaveBeenCalledWith('123');
     expect(result.success).toBe(true);
     expect(result.data).toEqual(mockAgreement);
   });
 
-  // Teste para findAgreementByUserId
+  // Teste de chamada do método 'findAgreementByUserId' com o id correto e roles
   it('should call findAgreementByUserId with correct id and roles [/by-user-id/:id]', async () => {
-    const id = '123';
-    const roles: UserRolesEnum = UserRolesEnum.geral;
-    const userRolesDto: UserTypeRequestDto = { roles };
-
-    const mockAgreement: AgreementInterface = {
-      register_number: id,
-      register_object: 'Test Object',
-      status: AgreementStatusEnum.concluded,
-      city: 'São Paulo',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as AssociationModel,
-      project: {} as ProjectModel,
-      manager: {} as UserModel,
-      workPlan: [],
-      project_id: {} as ProjectModel,
-      reviewer: {} as UserModel,
-    };
+    const userRolesDto: UserTypeRequestDto = { roles: UserRolesEnum.geral };
 
     const findAgreementByUserIdSpy = jest
       .spyOn(service, 'findAgreementByUserId')
       .mockResolvedValue([mockAgreement]);
 
-    const result = await controller.findAgreementByUserId(id, userRolesDto);
+    const result = await controller.findAgreementByUserId('123', userRolesDto);
 
-    expect(findAgreementByUserIdSpy).toHaveBeenCalledWith(id, userRolesDto.roles);
+    expect(findAgreementByUserIdSpy).toHaveBeenCalledWith('123', userRolesDto.roles);
     expect(result.success).toBe(true);
     expect(result.data).toEqual([mockAgreement]);
   });
 
-  // Teste para deleteById
+  // Teste de chamada do método 'deleteById' com o id correto
   it('should call deleteById with correct id [/:id]', async () => {
-    const id = '123'; // ID do objeto que será deletado
-  
-    // Mock de um objeto AgreementInterface que será retornado após a exclusão
-    const mockAgreement: AgreementInterface = {
-      register_number: id,
-      register_object: 'Test Object',
-      status: AgreementStatusEnum.concluded,
-      city: 'São Paulo',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as AssociationModel,
-      project: {} as ProjectModel,
-      manager: {} as UserModel,
-      workPlan: [],
-      project_id: {} as ProjectModel,
-      reviewer: {} as UserModel,
-    };
-  
-    // Criando um spy na função deleteById do serviço
     const deleteByIdSpy = jest
       .spyOn(service, 'deleteById')
-      .mockResolvedValue(mockAgreement); // Retorna um objeto AgreementInterface após deleção
-  
-    const result = await controller.deleteById(id); // Chama o controller para deletar o item
-  
-    // Verifica se a função deleteById foi chamada com o ID correto
-    expect(deleteByIdSpy).toHaveBeenCalledWith(id);
-  
-    // Verifica se o resultado retornado é o esperado
+      .mockResolvedValue(mockAgreement);
+
+    const result = await controller.deleteById('123');
+
+    expect(deleteByIdSpy).toHaveBeenCalledWith('123');
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockAgreement); // Verifica os dados retornados
+    expect(result.data).toEqual(mockAgreement);
   });
 
+  // Teste de chamada do método 'update' com o id correto e DTO
   it('should call update with correct id and dto [/update/:id]', async () => {
-    const id = '123'; // ID do acordo que será atualizado
-    const dto: AgreementRegisterRequestDto = {
-      manager: 'new-manager-id',
-    } as AgreementRegisterRequestDto; // DTO com os dados para atualização
-  
-    // Mock do objeto AgreementInterface retornado após atualização
-    const mockAgreement: AgreementInterface = {
-      register_number: id,
-      register_object: 'Updated Agreement',
-      status: AgreementStatusEnum.inExecution,
-      city: 'São Paulo',
-      states: 'SP',
-      value: 20000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as AssociationModel,
-      project: {} as ProjectModel,
-      manager: {} as UserModel,
-      workPlan: [],
-      project_id: {} as ProjectModel,
-      reviewer: {} as UserModel,
-    };
-  
-    // Criando um spy na função update do serviço
-    const updateSpy = jest
-      .spyOn(service, 'update')
-      .mockResolvedValue(mockAgreement); // Retorna o objeto AgreementInterface atualizado
-  
-    const result = await controller.update(id, dto); // Chama o controller para atualizar o acordo
-  
-    // Verifica se a função update foi chamada com o ID e o DTO corretos
-    expect(updateSpy).toHaveBeenCalledWith(id, dto);
-  
-    // Verifica se o resultado retornado é o esperado
-    expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockAgreement); // Verifica os dados retornados
-  });
-  it('should call addWorkPlan when action is "add" [/work-plan/:id/add]', async () => {
-    const id = '123';
-    const action = 'add';
-    const dto: WorkPlanWorkPlanRequestDto = { workPlanId: 'wp123' };
+    const dto: AgreementRegisterRequestDto = { manager: 'new-manager-id' } as AgreementRegisterRequestDto;
 
-    const mockAgreement: AgreementInterface = {
-      register_number: 'ABC123',
-      register_object: 'Agreement Test',
-      status: AgreementStatusEnum.inExecution, 
-      city: 'Sample City',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as any,
-      project: {} as any,
-      manager: {} as any,
-      workPlan: [],
-      project_id: {} as any,
-      reviewer: {} as any,
-    };
+    const updateSpy = jest.spyOn(service, 'update').mockResolvedValue(mockAgreement);
+
+    const result = await controller.update('123', dto);
+
+    expect(updateSpy).toHaveBeenCalledWith('123', dto);
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockAgreement);
+  });
+
+  // Teste de chamada do método 'addWorkPlan' quando a ação é "add"
+  it('should call addWorkPlan when action is "add" [/work-plan/:id/add]', async () => {
+    const dto: WorkPlanWorkPlanRequestDto = { workPlanId: 'wp123' };
 
     const addWorkPlanSpy = jest
       .spyOn(service, 'addWorkPlan')
-      .mockResolvedValue(mockAgreement);  // Retorna um objeto AgreementInterface
+      .mockResolvedValue(mockAgreement);
 
-    const result = await controller.handleWorkPlan(id, action, dto);
+    const result = await controller.handleWorkPlan('123', 'add', dto);
 
-    expect(addWorkPlanSpy).toHaveBeenCalledWith(id, dto.workPlanId);
+    expect(addWorkPlanSpy).toHaveBeenCalledWith('123', dto.workPlanId);
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockAgreement);  // Verifica se o objeto retornado está correto
+    expect(result.data).toEqual(mockAgreement);
   });
 
-it('should call removeWorkPlan when action is "remove" [/work-plan/:id/remove]', async () => {
-    const id = '123';
-    const action = 'remove';
+  // Teste de chamada do método 'removeWorkPlan' quando a ação é "remove"
+  it('should call removeWorkPlan when action is "remove" [/work-plan/:id/remove]', async () => {
     const dto: WorkPlanWorkPlanRequestDto = { workPlanId: 'wp123' };
-
-    const mockAgreement: AgreementInterface = {
-      register_number: 'ABC123',
-      register_object: 'Agreement Test',
-      status: AgreementStatusEnum.inExecution, 
-      city: 'Sample City',
-      states: 'SP',
-      value: 10000,
-      validity_date: new Date(),
-      signature_date: new Date(),
-      association: {} as any,
-      project: {} as any,
-      manager: {} as any,
-      workPlan: [],
-      project_id: {} as any,
-      reviewer: {} as any,
-    };
 
     const removeWorkPlanSpy = jest
       .spyOn(service, 'removeWorkPlan')
-      .mockResolvedValue(mockAgreement);  // Retorna um objeto AgreementInterface
+      .mockResolvedValue(mockAgreement);
 
-    const result = await controller.handleWorkPlan(id, action, dto);
+    const result = await controller.handleWorkPlan('123', 'remove', dto);
 
-    expect(removeWorkPlanSpy).toHaveBeenCalledWith(id, dto.workPlanId);
+    expect(removeWorkPlanSpy).toHaveBeenCalledWith('123', dto.workPlanId);
     expect(result.success).toBe(true);
-    expect(result.data).toEqual(mockAgreement);  // Verifica se o objeto retornado está correto
+    expect(result.data).toEqual(mockAgreement);
   });
-
-
 });
