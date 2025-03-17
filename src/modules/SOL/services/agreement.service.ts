@@ -17,6 +17,7 @@ import { ProjectInterfaceWithId } from "../interfaces/project.interface";
 
 @Injectable()
 export class AgreementService {
+
   constructor(
     private readonly _agreementRepository: AgreementRepository,
     private readonly _userRepository: UserRepository,
@@ -285,3 +286,4 @@ export class AgreementService {
     });
   }
 }
+

@@ -1,10 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AllotmentService } from '../services/allotment.service';
 import { ResponseDto } from 'src/shared/dtos/response.dto';
-import { JwtAuthGuard } from 'src/shared/guards/jwt-auth.guard';
-import { FuncoesGuard } from 'src/shared/guards/funcoes.guard';
 import { HttpStatus, HttpException } from '@nestjs/common';
-import { UserTypeEnum } from '../enums/user-type.enum';
 import { ItemRequestDto } from '../dtos/item-register-request.dto';
 import { AllotUpdateStatusRequestDto } from '../dtos/allotment-update-status-request.dto';
 import { AllotmentController } from '../controllers/allotment.controller';
