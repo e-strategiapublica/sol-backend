@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Logger, Param, Post, Put, Req, UseGuards, NotFoundException  } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpException, Param, Post, Put, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ClassesService } from "../services/classes.service";
@@ -13,75 +13,49 @@ export class ClassesController {
         private readonly classesService: ClassesService,
         private readonly classesModel: ClassesModel
     ) { }
-    
 
-    @Get('list')
+    private async handleRequest(fn: Function, ...params: any) {
+        try {
+            return await fn(...params);
+        } catch (error) {
+            throw ErrorManager.createError(error);
+        }
+    }
+
+    @Get()
     @HttpCode(200)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async list() {
-
-        try {    
-                        
-            const res = await this.classesModel.list();
-
-            return res;            
-
-        } catch (error) {            
-            throw ErrorManager.createError(error)
-        }
+        const classes = await this.handleRequest(this.classesModel.list);
+        return { data: classes };
     }
 
-    @Post("register")
+    @Post()
     @HttpCode(201)
-    @UseGuards(JwtAuthGuard)    
+    @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
     async register(@Body() dto) {
-        try {
-            
-            await this.classesModel.verifyCodeExists(dto.code);                                                           
-            await this.classesModel.saveClass(dto);
-            
-            return {type: "success"}
-
-        } catch (error) {
-            throw ErrorManager.createError(error)
-        }
-    }   
-
-    @Put("update/:id")
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)    
-    @ApiBearerAuth()
-    async update(@Param("id") id: string, @Body() dto: any) {
-        try {            
-
-            await this.classesModel.updateClass(id, dto);
-
-            return { type: "success" }
-
-        } catch (error) {
-            throw ErrorManager.createError(error)
-        }
+        await this.handleRequest(this.classesModel.verifyCodeExists, dto.code);
+        await this.handleRequest(this.classesModel.saveClass, dto);
+        return { message: "Created" };
     }
 
-    @Delete('delete-by-id/:_id')
+    @Put(':id')
     @HttpCode(200)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async deleteById(
-        @Param('_id') _id: string,
-    ) {
-
-        try {                        
-
-            await this.classesModel.deleteById(_id);                                        
-           
-            return { type: "success" }           
-
-        } catch (error) {
-            throw ErrorManager.createError(error)
-        }
+    async update(@Param("id") id: string, @Body() dto: any) {
+        await this.handleRequest(this.classesModel.updateClass, id, dto);
+        return { message: "Updated" };
     }
 
+    @Delete(':id')
+    @HttpCode(204)
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    async deleteById(@Param('id') id: string) {
+        await this.handleRequest(this.classesModel.deleteById, id);
+        return;  // HTTP 204 No Content, no need to return anything
+    }
 }
