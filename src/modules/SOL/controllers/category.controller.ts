@@ -1,4 +1,7 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, BadRequestException, HttpStatus, Logger, Param, Post, Put, Req, UseGuards, NotFoundException  } from "@nestjs/common";
+import { 
+    Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Logger, 
+    Param, Post, Put, Req, UseGuards 
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ResponseDto } from "src/shared/dtos/response.dto";
@@ -6,183 +9,79 @@ import { CategoryService } from "../services/category.service";
 import { CategoryRegisterDto } from "../dtos/category-register-request.dto";
 import { ErrorManager } from "../../../shared/utils/error.manager";
 
-@ApiTags('category')
-@Controller('category')
+@ApiTags('categories')
+@Controller('categories')
 export class CategoryController {
 
     private readonly logger = new Logger(CategoryController.name);
  
-    constructor(
-        private readonly categoryService: CategoryService,
-    ) { }
+    constructor(private readonly categoryService: CategoryService) {}
 
-    @Post('register')
+    @Post()
     @HttpCode(201)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async register(
-        @Req() request,
-        @Body() dto: CategoryRegisterDto,
-    ) {
 
+    async create(@Req() request, @Body() dto: CategoryRegisterDto) {
         try {
-                        
-            const res = await this.categoryService.register(dto);
-            
-            if(res['type'] && res['type'] == "error"){
-                throw new ErrorManager(HttpStatus.BAD_REQUEST, 'Invalid Code', 1);
-            }
-
-            return new ResponseDto(
-                true,
-                res,
-                null,
-            );
-
+            const category = await this.categoryService.register(dto);
+            return new ResponseDto(true, category, null); // ✅ Agora com 3 argumentos
         } catch (error) {
-            throw ErrorManager.createError(error)          
+            throw ErrorManager.createError(error);
         }
     }
 
-    @Get('list')
+    @Get()
     @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
     async list() {
-
         try {
-
-            const response = await this.categoryService.list();
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
+            const categories = await this.categoryService.list();
+            return new ResponseDto(true, categories, null); // ✅ Agora com 3 argumentos
         } catch (error) {
             this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
+            throw ErrorManager.createError(error);
         }
     }
 
-    @Get('listwithAuth')
-    @HttpCode(200)    
-    async listWithAuth() {
-
-        try {
-
-            const response = await this.categoryService.list();
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
-    }
-
-    @Get('get-by-id/:_id')
+    @Get(':id')
     @HttpCode(200)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async getById(
-        @Param('_id') _id: string,
-    ) {
-
+    async getById(@Param('id') id: string) {
         try {
-
-            const response = await this.categoryService.getById(_id);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
+            const category = await this.categoryService.getById(id);
+            return new ResponseDto(true, category, null); // ✅ Agora com 3 argumentos
         } catch (error) {
             this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
+            throw ErrorManager.createError(error);
         }
     }
 
-
-
-
-    @Put('update/:_id')
+    @Put(':id')
     @HttpCode(200)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async updateById(
-        @Param('_id') _id: string,
-        @Body() dto: CategoryRegisterDto,
-    ) {
-
+    async update(@Param('id') id: string, @Body() dto: CategoryRegisterDto) {
         try {
-
-            const response = await this.categoryService.update(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
+            const updatedCategory = await this.categoryService.update(id, dto);
+            return new ResponseDto(true, updatedCategory, null); // ✅ Agora com 3 argumentos
         } catch (error) {
             this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
+            throw ErrorManager.createError(error);
         }
     }
 
-    @Delete('delete-by-id/:_id')
-    @HttpCode(200)
+    @Delete(':id')
+    @HttpCode(204)
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    async deleteById(
-        @Param('_id') _id: string,
-    ) {
-
+    async delete(@Param('id') id: string) {
         try {
-
-            const result = await this.categoryService.deleteById(_id);
-
-            return new ResponseDto(
-                true,
-                result,
-                null,
-            );
-
+            await this.categoryService.deleteById(id);
+            return new ResponseDto(true, null, null); // ✅ Agora com 3 argumentos
         } catch (error) {
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
+            this.logger.error(error.message);
+            throw ErrorManager.createError(error);
         }
     }
-
-
 }

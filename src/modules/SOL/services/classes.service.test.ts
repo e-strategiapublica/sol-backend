@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-
 import { ClassesService } from '../services/classes.service';
 import { ClassesModel } from '../models/database/classes.model';
 import { JwtAuthGuard } from 'src/shared/guards/jwt-auth.guard';
