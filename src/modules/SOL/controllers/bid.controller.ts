@@ -51,7 +51,7 @@ export class BidController {
     private _lacchainModel: LacchainModel,
     private _bidHistoryModel: BidHistoryModel,
     private readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @Post("register")
   @HttpCode(201)
@@ -454,28 +454,47 @@ export class BidController {
     @Res() res: Response
   ) {
     try {
+      this.logger.log(`Recebida requisição para criar documento: _id=${_id}, language=${language}, type=${type}`);
+
       await this.bidsService.createDocument(_id, language, type as any);
-      res.sendFile(
-        path.resolve("src/shared/documents", "output.pdf"),
-        {},
-        (err) => {
-          if (err) {
-            throw new HttpException(
-              new ResponseDto(false, null, [err.message]),
-              HttpStatus.BAD_REQUEST
-            );
-          }
-          fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
+
+      const filePath = path.resolve("src/shared/documents", "output.pdf");
+      this.logger.log(`Tentando enviar arquivo: ${filePath}`);
+
+      if (!fs.existsSync(filePath)) {
+        this.logger.error(`Arquivo não encontrado: ${filePath}`);
+        throw new HttpException(
+          new ResponseDto(false, null, [`Arquivo não encontrado: ${filePath}`]),
+          HttpStatus.BAD_REQUEST
+        );
+      }
+
+      res.sendFile(filePath, {}, (err) => {
+        if (err) {
+          this.logger.error(`Erro ao enviar arquivo: ${err.message}`);
+          throw new HttpException(
+            new ResponseDto(false, null, [err.message]),
+            HttpStatus.BAD_REQUEST
+          );
         }
-      );
+        this.logger.log(`Arquivo enviado com sucesso: ${filePath}`);
+
+        try {
+          fs.unlinkSync(filePath);
+          this.logger.log(`Arquivo deletado após envio: ${filePath}`);
+        } catch (unlinkErr) {
+          this.logger.error(`Erro ao deletar arquivo: ${unlinkErr.message}`);
+        }
+      });
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(`Erro na geração do documento: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST
       );
     }
   }
+
 
   @Get("report")
   @HttpCode(200)
@@ -506,9 +525,9 @@ export class BidController {
       if (bidsHistory.length > 0) {
         for (let i = 0; i < bidsHistory.length; i++) {
           hash = await this.bidsService.calculateHash(bidsHistory[i].data);
-          const sendToBlockchain = this.configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
-          if(sendToBlockchain && sendToBlockchain == 'true'){
-              res = await this._lacchainModel.getBidData(
+          const sendToBlockchain = this.configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);
+          if (sendToBlockchain && sendToBlockchain == 'true') {
+            res = await this._lacchainModel.getBidData(
               bidsHistory[i]._id.toHexString()
             );
           }
