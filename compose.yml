@@ -1,23 +1,17 @@
+version: "3.8"
+
 services:
   database:
-    image: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_DATABASE: sol
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
-      MONGO_SOL_PASSWORD: "${MONGO_SOL_PASSWORD}"
+    image: mongo:latest
+    # restart: always
     ports:
       - "30000:27017"
     volumes:
-      - "${DB_DIR}:/data/db"
-      - "./mongo/init.js:/docker-entrypoint-initdb.d/init.js:ro"
-    networks:
-      - sol-backend
-  # server:
-  #   build: .
-  #   networks:
-  #     - sol-backend
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: sol
+      MONGO_INITDB_ROOT_USERNAME: "${MONGO_USERNAME:-root}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGO_PASSWORD:-example}"
 
-networks:
-  sol-backend:
+volumes:
+  mongo_data:
