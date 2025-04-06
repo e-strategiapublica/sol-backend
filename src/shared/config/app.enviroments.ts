@@ -7,7 +7,7 @@ const enviroments: Record<Env, string | number | boolean> = {
 
   [Env.NOSQL_CONNECTION_STRING]:
     process.env[Env.NOSQL_CONNECTION_STRING] ||
-    "mongodb://root:example@localhost:30000/mydatabase?authSource=admin",
+    "mongodb://root:example@localhost:151515/mydatabase?authSource=admin",
 
   [Env.JWT_KEY]: process.env[Env.JWT_KEY] || "default_jwt_key",
   [Env.JWT_REFRESH_TOKEN_KEY]:

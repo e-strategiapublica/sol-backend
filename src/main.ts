@@ -7,7 +7,6 @@ import { EnviromentVariablesEnum } from "./shared/enums/enviroment.variables.enu
 import BooleanUtil from "./shared/utils/boolean.util";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as bodyParser from "body-parser";
-
 async function bootstrap() {
   const enviroment = process.env.NODE_ENV.toUpperCase();
   console.log("URL DO MONGO:", process.env.NOSQL_CONNECTION_STRING);
