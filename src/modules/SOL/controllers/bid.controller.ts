@@ -495,7 +495,6 @@ export class BidController {
     }
   }
 
-
   @Get("report")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
