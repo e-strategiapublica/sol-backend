@@ -51,7 +51,7 @@ export class BidController {
     private _lacchainModel: LacchainModel,
     private _bidHistoryModel: BidHistoryModel,
     private readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Post("register")
   @HttpCode(201)
@@ -453,7 +453,9 @@ export class BidController {
     @Res() res: Response,
   ) {
     try {
-      this.logger.log(`Recebida requisição para criar documento: _id=${_id}, language=${language}, type=${type}`);
+      this.logger.log(
+        `Recebida requisição para criar documento: _id=${_id}, language=${language}, type=${type}`,
+      );
 
       await this.bidsService.createDocument(_id, language, type as any);
 
@@ -464,7 +466,7 @@ export class BidController {
         this.logger.error(`Arquivo não encontrado: ${filePath}`);
         throw new HttpException(
           new ResponseDto(false, null, [`Arquivo não encontrado: ${filePath}`]),
-          HttpStatus.BAD_REQUEST
+          HttpStatus.BAD_REQUEST,
         );
       }
 
@@ -473,7 +475,7 @@ export class BidController {
           this.logger.error(`Erro ao enviar arquivo: ${err.message}`);
           throw new HttpException(
             new ResponseDto(false, null, [err.message]),
-            HttpStatus.BAD_REQUEST
+            HttpStatus.BAD_REQUEST,
           );
         }
         this.logger.log(`Arquivo enviado com sucesso: ${filePath}`);
@@ -525,7 +527,9 @@ export class BidController {
         for (let i = 0; i < bidsHistory.length; i++) {
           hash = await this.bidsService.calculateHash(bidsHistory[i].data);
 
-          const sendToBlockchain = this.configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);
+          const sendToBlockchain = this.configService.get(
+            EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
+          );
           if (sendToBlockchain && sendToBlockchain == "true") {
             res = await this._lacchainModel.getBidData(
               bidsHistory[i]._id.toHexString(),
