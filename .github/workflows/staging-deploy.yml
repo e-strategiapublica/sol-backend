@@ -43,21 +43,22 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           DEPLOY_PATH: "/root/sol/sol-backend"
         run: |
-          # Adiciona servidor aos known_hosts
+          # Garante que o host remoto está no known_hosts
           ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
 
-          # Transfere arquivos
-          rsync -avz --delete \
-            ./dist/ \
-            ./yarn.lock \
-            ./package.json \
-            ./ecosystem.config.js \
-            $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+          # Envia diretório dist/
+          rsync -avz ./dist/ $SSH_USER@$SSH_HOST:$DEPLOY_PATH/dist/
 
-          # Executa comandos remotos
-          ssh $SSH_USER@$SSH_HOST "cd $DEPLOY_PATH && \
+          # Envia arquivos do projeto
+          rsync -avz yarn.lock package.json ecosystem.config.js $SSH_USER@$SSH_HOST:$DEPLOY_PATH
+
+          # Comandos no servidor remoto
+          ssh $SSH_USER@$SSH_HOST "
+            cd $DEPLOY_PATH && \
             yarn install --production --frozen-lockfile && \
-            pm2 reload ecosystem.config.js"
+            pm2 reload ecosystem.config.js && \
+            echo '✅ Deploy concluído!'
+          "
 
       - name: Notificar deploy
         if: always()
