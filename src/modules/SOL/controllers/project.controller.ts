@@ -31,43 +31,53 @@ import { ErrorManager } from "../../../shared/utils/error.manager";
 export class ProjectController {
   private readonly _logger = new Logger(ProjectController.name);
 
-  constructor(private _projectService: ProjectService) { }
+  constructor(private _projectService: ProjectService) {}
 
   @Get()
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.project_manager, UserTypeEnum.associacao)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.project_manager,
+    UserTypeEnum.associacao,
+  )
   async get() {
     try {
       const response = await this._projectService.findAll();
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-
 
   @Post("register")
   @HttpCode(201)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador,  UserTypeEnum.project_manager)
+  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.project_manager)
   @ApiBearerAuth()
   async register(@Req() request, @Body() dto: ProjectRegisterRequestDto) {
-    try {            
-      const res = await this._projectService.register(dto);      
-      return { type: "success" }
-    } catch (error) {     
-      throw ErrorManager.createError(error)  
+    try {
+      const res = await this._projectService.register(dto);
+      return { type: "success" };
+    } catch (error) {
+      throw ErrorManager.createError(error);
     }
   }
 
   @Get("/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.project_manager, UserTypeEnum.associacao)
- @ApiBearerAuth()
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.project_manager,
+    UserTypeEnum.associacao,
+  )
+  @ApiBearerAuth()
   async findById(@Param("id") id: string) {
     try {
       const response = await this._projectService.findById(id);
@@ -76,82 +86,100 @@ export class ProjectController {
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Get("find-projects-for-associationId/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.associacao,  UserTypeEnum.project_manager)
- @ApiBearerAuth()
+  @Funcoes(UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @ApiBearerAuth()
   async findAllProjectsForAssociationId(@Param("id") id: string) {
     try {
-      const response = await this._projectService.findAllProjectsForAssociationId(id);
+      const response =
+        await this._projectService.findAllProjectsForAssociationId(id);
 
-      return new ResponseDto(true, response, null)
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Get("find-projects-for-viewer/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.associacao,  UserTypeEnum.project_manager)
- @ApiBearerAuth()
+  @Funcoes(UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @ApiBearerAuth()
   async findAllProjectsByViewerId(@Param("id") id: string) {
     try {
       const response = await this._projectService.findAllProjectsByViewerId(id);
 
-      return new ResponseDto(true, response, null)
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Get("find-projects-for-reviewer/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.associacao,  UserTypeEnum.project_manager)
- @ApiBearerAuth()
+  @Funcoes(UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @ApiBearerAuth()
   async findAllProjectsByReviewerId(@Param("id") id: string) {
     try {
-      const response = await this._projectService.findAllProjectsByReviewerId(id);
+      const response =
+        await this._projectService.findAllProjectsByReviewerId(id);
 
-      return new ResponseDto(true, response, null)
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-  
+
   @Get("find-projects-for-manager/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.associacao,  UserTypeEnum.project_manager)
- @ApiBearerAuth()
+  @Funcoes(UserTypeEnum.associacao, UserTypeEnum.project_manager)
+  @ApiBearerAuth()
   async findAllProjectsByManagerId(@Param("id") id: string) {
     try {
-      const response = await this._projectService.findAllProjectsByManagerId(id);
+      const response =
+        await this._projectService.findAllProjectsByManagerId(id);
 
-      return new ResponseDto(true, response, null)
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Delete("/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador,  UserTypeEnum.project_manager)
+  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.project_manager)
   @ApiBearerAuth()
   async deleteById(@Param("id") id: string) {
     try {
@@ -161,7 +189,10 @@ export class ProjectController {
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

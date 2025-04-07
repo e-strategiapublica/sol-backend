@@ -1,4 +1,4 @@
 export interface ValidatorContractInterface {
-    errors: any[];
-    validate(dto: any): boolean;
+  errors: any[];
+  validate(dto: any): boolean;
 }

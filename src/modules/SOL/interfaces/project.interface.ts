@@ -11,9 +11,8 @@ export interface ProjectInterface {
   project_manager: UserModel;
   agreement_list: AgreementInterface[];
   legalRepresentative: LegalRepresentative;
-  viewer_list: User[]
-  reviewer_list: User[]
-
+  viewer_list: User[];
+  reviewer_list: User[];
 }
 
 export interface ProjectInterfaceWithId extends ProjectInterface {

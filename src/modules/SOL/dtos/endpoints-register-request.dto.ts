@@ -15,7 +15,11 @@ export abstract class EndPointsRegisterRequestDto {
   @ApiProperty({ required: false, type: Date, default: null })
   lastRun: Date;
 
-  @ApiProperty({ required: true, enum: Object.keys(EndPointsStatusEnum), default: EndPointsStatusEnum.stopped })
+  @ApiProperty({
+    required: true,
+    enum: Object.keys(EndPointsStatusEnum),
+    default: EndPointsStatusEnum.stopped,
+  })
   status: EndPointsStatusEnum;
 
   @ApiProperty({ required: true, enum: Object.keys(EndPointsTypeEnum) })

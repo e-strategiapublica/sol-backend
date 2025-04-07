@@ -8,9 +8,14 @@
   "scripts": {
     "prebuild": "npx rimraf dist",
     "build": "npx nest build",
-    "start": "npx nest start --env-file .env",
+    "start:prod": "node dist/main.js",
+    "start": "node ./src/main",
+    "start:debug": "nest start --env-file .env --debug --watch",
+    "start:dev": "nest start --env-file .env --watch",
     "test": "npx jest",
-    "coverage": "npx jest --coverage"
+    "coverage": "npx jest --coverage",
+    "lint": "npx prettier --check 'src/**/*.ts'",
+    "type-check": "npx tsc --noEmit"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.0",
@@ -42,7 +47,6 @@
     "moment": "^2.30.1",
     "mongoose": "^8.9.5",
     "mongoose-autopopulate": "^1.1.0",
-    "nestjs-command": "^3.1.4",
     "otplib": "^12.0.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",

@@ -9,53 +9,66 @@ import { GroupAddItemsRequestDto } from "../dtos/group-add-items-request.dto";
 
 @Injectable()
 export class GroupRepository {
+  constructor(
+    @InjectModel(Group.name) private readonly _model: Model<GroupModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(Group.name) private readonly _model: Model<GroupModel>,
-    ) { }
+  async register(dto: GroupRegisterDto): Promise<any> {
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async register(dto: GroupRegisterDto): Promise<any> {
+  async updateName(_id: string, dto: GroupUpdatenameDto): Promise<GroupModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          name: dto.name,
+        },
+      },
+      { new: true },
+    );
+  }
 
-        const data = await new this._model(dto);
-        return data.save();
-    }
+  async addItem(
+    _id: string,
+    dto: GroupAddItemsRequestDto,
+  ): Promise<GroupModel | any> {
+    return await this._model.findByIdAndUpdate(
+      { _id },
+      {
+        $push: {
+          items: dto,
+        },
+      },
+      { new: true },
+    );
+  }
 
-    async updateName(_id: string, dto: GroupUpdatenameDto): Promise<GroupModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                name: dto.name,
-            }
-        }, {new: true });
-    }
+  async removeItem(
+    _id: string,
+    dto: GroupAddItemsRequestDto,
+  ): Promise<GroupModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $pull: {
+          items: { cost_item_id: dto.cost_item_id },
+        },
+      },
+      { new: true },
+    );
+  }
 
-    async addItem(_id: string, dto: GroupAddItemsRequestDto): Promise<GroupModel | any> {
+  async list(): Promise<GroupModel[]> {
+    return await this._model.find();
+  }
 
-        return await this._model.findByIdAndUpdate({ _id }, {
-            $push: {
-                items: dto,
-            }
-        }, {new: true });
-    }
+  async getById(_id: string): Promise<GroupModel> {
+    return await this._model.findOne({ _id });
+  }
 
-    async removeItem(_id: string, dto: GroupAddItemsRequestDto): Promise<GroupModel> {
-
-        return await this._model.findOneAndUpdate({ _id }, {
-            $pull: {
-                items: { cost_item_id: dto.cost_item_id },
-            }
-        }, {new: true });
-    }
-
-    async list(): Promise<GroupModel[]> {
-        return await this._model.find();
-    }
-
-    async getById(_id: string): Promise<GroupModel> {
-        return await this._model.findOne({ _id });
-    }
-
-    async deleteById(_id: string) {
-        return await this._model.findOneAndDelete({ _id });
-    }
-
+  async deleteById(_id: string) {
+    return await this._model.findOneAndDelete({ _id });
+  }
 }

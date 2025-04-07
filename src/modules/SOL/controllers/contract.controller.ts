@@ -47,7 +47,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -63,7 +66,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -79,7 +85,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -95,10 +104,12 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-
 
   @Get("get-by-bid/:_id")
   @HttpCode(200)
@@ -112,7 +123,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -120,7 +134,10 @@ export class ContractController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStatus(@Param("_id") _id: string, @Body() dto: ContractUpdateDto) {
+  async updateStatus(
+    @Param("_id") _id: string,
+    @Body() dto: ContractUpdateDto,
+  ) {
     try {
       const response = await this.contractService.updateStatus(_id, dto);
 
@@ -128,7 +145,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -136,7 +156,10 @@ export class ContractController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStatusItens(@Param("_id") _id: string, @Body() dto: ContractUpdateStatusItemDto) {
+  async updateStatusItens(
+    @Param("_id") _id: string,
+    @Body() dto: ContractUpdateStatusItemDto,
+  ) {
     try {
       const response = await this.contractService.updateStatusItens(_id, dto);
 
@@ -144,7 +167,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -153,7 +179,10 @@ export class ContractController {
   @UseGuards(JwtAuthGuard, FuncoesGuard)
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
   @ApiBearerAuth()
-  async signAssociation(@Param("_id") _id: string, @Body() dto: ContractUpdateDto) {
+  async signAssociation(
+    @Param("_id") _id: string,
+    @Body() dto: ContractUpdateDto,
+  ) {
     try {
       const response = await this.contractService.signAssociation(_id, dto);
 
@@ -161,14 +190,21 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
   @Get("contract-pdf/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
-  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao, UserTypeEnum.fornecedor)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.associacao,
+    UserTypeEnum.fornecedor,
+  )
   @ApiBearerAuth()
   async contractPdf(@Param("_id") _id: string) {
     try {
@@ -178,7 +214,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -187,7 +226,10 @@ export class ContractController {
   @UseGuards(JwtAuthGuard, FuncoesGuard)
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor)
   @ApiBearerAuth()
-  async signSupplier(@Param("_id") _id: string, @Body() dto: ContractUpdateDto) {
+  async signSupplier(
+    @Param("_id") _id: string,
+    @Body() dto: ContractUpdateDto,
+  ) {
     try {
       const response = await this.contractService.signSupplier(_id, dto);
 
@@ -195,7 +237,10 @@ export class ContractController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -210,7 +255,10 @@ export class ContractController {
 
       return new ResponseDto(true, result, null);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -220,20 +268,29 @@ export class ContractController {
     @Param("_id") _id: string,
     @Param("language") language: string,
     @Param("type") type: string,
-    @Res() res: Response
+    @Res() res: Response,
   ) {
     try {
       await this.contractService.createDocument(_id, language, type as any);
-      res.sendFile(path.resolve("src/shared/documents", "output.pdf"), {}, (err) => {
-        if (err) {
-          throw new HttpException(new ResponseDto(false, null, [err.message]), HttpStatus.BAD_REQUEST);
-        }
-        fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
-      });
-
+      res.sendFile(
+        path.resolve("src/shared/documents", "output.pdf"),
+        {},
+        (err) => {
+          if (err) {
+            throw new HttpException(
+              new ResponseDto(false, null, [err.message]),
+              HttpStatus.BAD_REQUEST,
+            );
+          }
+          fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
+        },
+      );
     } catch (error) {
       this.logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

@@ -56,22 +56,28 @@ export class CostItemsService {
   }
 
   async getByProjectManagerId(_id: string): Promise<CostItemsModel[]> {
-    const agreement = await this._agremmentRepository.findAgreementByManagerId(_id)
-    const itens = []
-    for(let i = 0; i < agreement.length; i++) {
-        if(agreement[i].workPlan.length > 0) {
-          for(let j = 0; j < agreement[i].workPlan.length; j ++) {
-             itens.push(await this._constItemsRepository.getById(agreement[i].workPlan[j].product[0].items._id.toString()))  
-              
-            }
-          
+    const agreement =
+      await this._agremmentRepository.findAgreementByManagerId(_id);
+    const itens = [];
+    for (let i = 0; i < agreement.length; i++) {
+      if (agreement[i].workPlan.length > 0) {
+        for (let j = 0; j < agreement[i].workPlan.length; j++) {
+          itens.push(
+            await this._constItemsRepository.getById(
+              agreement[i].workPlan[j].product[0].items._id.toString(),
+            ),
+          );
         }
+      }
     }
- 
+
     return itens;
   }
 
-  async update(_id: string, dto: CostItemsUpdateRequestDto): Promise<CostItemsModel[]> {
+  async update(
+    _id: string,
+    dto: CostItemsUpdateRequestDto,
+  ): Promise<CostItemsModel[]> {
     dto.product = await this._productRepository.getById(dto.productId);
     dto.category = await this._categoryRepository.getById(dto.categoryId);
     const result = await this._constItemsRepository.update(_id, dto);
@@ -87,38 +93,32 @@ export class CostItemsService {
 
   async handlerJob(data: any[]) {
     const costItemsAll = await this.itemsModel.list();
-    
+
     const now = new Date();
 
     for (let item of data) {
-
       const result = await this.itemsModel.saveItem({
-
         group: {
           _id: costItemsAll[0].group._id,
           category_name: costItemsAll[0].group.category_name,
           code: costItemsAll[0].group.code,
-          segment: costItemsAll[0].group.segment
+          segment: costItemsAll[0].group.segment,
         },
         class: {
           _id: costItemsAll[0].class._id,
           code: costItemsAll[0].class.code,
-          description: costItemsAll[0].class.description
+          description: costItemsAll[0].class.description,
         },
         pdm: {
           _id: costItemsAll[0].pdm._id,
           code: costItemsAll[0].pdm.code,
           name: costItemsAll[0].pdm.name,
-          unitList: [ item.unit ]
+          unitList: [item.unit],
         },
         code: item.id,
         name: item.title,
-        propertyListValue: [
-          { property: 'Generic', value: item.quantity }             
-        ]
-
+        propertyListValue: [{ property: "Generic", value: item.quantity }],
       });
-
 
       /*
       const result = await this.register({
@@ -135,8 +135,7 @@ export class CostItemsService {
       });
       */
 
-    //  if (!result) throw new BadRequestException("Não foi possivel criar o item!");
-
+      //  if (!result) throw new BadRequestException("Não foi possivel criar o item!");
     }
   }
 

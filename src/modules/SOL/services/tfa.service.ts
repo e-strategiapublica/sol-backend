@@ -1,13 +1,19 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { TfaGetResponseDto } from "../dtos/tfa-get-response.dto";
 import { TfaRepository } from "../repositories/tfa.repository";
 import { UserRepository } from "../repositories/user.repository";
-import { authenticator } from 'otplib';
+import { authenticator } from "otplib";
 import { TfaModel } from "../models/tfa.model";
 import { TfaRegisterRequestDto } from "../dtos/tfa-register-request.dto";
 import { TfaVerifyRequestDto } from "../dtos/tfa-verify-request.dto";
 import { TfaVerifyAuthRequestDto } from "../dtos/tfa-verify-auth-request.dto";
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from "bcryptjs";
 import { TfaDeleteRequestDto } from "../dtos/tfa-delete-request.dto";
 import { UserStatusEnum } from "../enums/user-status.enum";
 import { AuthenticateResponseDto } from "../dtos/authenticate-responsedto";
@@ -15,118 +21,111 @@ import { AuthenticationService } from "./authentication.service";
 
 @Injectable()
 export class TfaService {
+  constructor(
+    private readonly _tfaRepository: TfaRepository,
+    private readonly _userRepository: UserRepository,
+    private readonly authenticationService: AuthenticationService,
+  ) {}
 
-    constructor(
-        private readonly _tfaRepository: TfaRepository,
-        private readonly _userRepository: UserRepository,
-        private readonly authenticationService: AuthenticationService
-    ) { }
+  async getByUserId(userId: string): Promise<TfaGetResponseDto> {
+    const tfa = await this._tfaRepository.getByUserId(userId);
 
-    async getByUserId(userId: string): Promise<TfaGetResponseDto> {
+    return new TfaGetResponseDto(tfa?.id, tfa?.url, tfa?.user.id, tfa?.secret);
+  }
 
-        const tfa = await this._tfaRepository.getByUserId(userId);
+  async register(dto: TfaRegisterRequestDto) {
+    const tfa: TfaModel = await this._tfaRepository.getByUserId(dto.userId);
 
-        return new TfaGetResponseDto(
-            tfa?.id,
-            tfa?.url,
-            tfa?.user.id,
-            tfa?.secret,
-        );
-    }
+    if (tfa) throw new ForbiddenException("2fa already registered!");
 
-    async register(dto: TfaRegisterRequestDto) {
+    dto.user = await this._userRepository.getById(dto.userId);
 
-        const tfa: TfaModel = await this._tfaRepository.getByUserId(dto.userId);
+    await this._tfaRepository.save(dto);
 
-        if (tfa)
-            throw new ForbiddenException('2fa already registered!');
+    const accessToken = this.authenticationService.createAccessToken(
+      dto.user.id,
+      dto.user.email,
+      dto.user.type,
+      true,
+      true,
+    );
 
-        dto.user = await this._userRepository.getById(dto.userId);
+    const refreshToken = this.authenticationService.createRefreshToken(
+      dto.user.id,
+      dto.user.email,
+      dto.user.type,
+      true,
+      true,
+    );
 
-        await this._tfaRepository.save(dto);
+    return new AuthenticateResponseDto(
+      dto.user.email,
+      dto.user.name,
+      dto.user.id,
+      accessToken.accessToken,
+      refreshToken.accessToken,
+      dto.user.type,
+      dto.user.roles,
+    );
+  }
 
+  async delete(dto: TfaDeleteRequestDto) {
+    dto.user = await this._userRepository.getById(dto.userId);
 
-        const accessToken = this.authenticationService.createAccessToken(
-            dto.user.id,
-            dto.user.email,
-            dto.user.type,
-            true,
-            true,
-        );
+    if (!dto.user) throw new NotFoundException("Email ou senha inválido(s)!");
 
-        const refreshToken = this.authenticationService.createRefreshToken(
-            dto.user.id,
-            dto.user.email,
-            dto.user.type,
-            true,
-            true,
-        );
+    if (dto.user.status === UserStatusEnum.inactive)
+      throw new UnauthorizedException("Erro ao realizar a autenticação!");
 
-        return new AuthenticateResponseDto(
-            dto.user.email,
-            dto.user.name,
-            dto.user.id,
-            accessToken.accessToken,
-            refreshToken.accessToken,
-            dto.user.type,
-            dto.user.roles
-        );
-    }
+    if (dto.user && (await bcrypt.compare(dto.password, dto.user.password)))
+      await this._tfaRepository.delete(dto.userId);
+    else throw new BadRequestException("Erro ao deletar 2fa!");
 
-    async delete(dto: TfaDeleteRequestDto) {
+    const accessToken = this.authenticationService.createAccessToken(
+      dto.user.id,
+      dto.user.email,
+      dto.user.type,
+      true,
+      true,
+    );
 
-        dto.user = await this._userRepository.getById(dto.userId);
+    const refreshToken = this.authenticationService.createRefreshToken(
+      dto.user.id,
+      dto.user.email,
+      dto.user.type,
+      true,
+      true,
+    );
 
-        if (!dto.user)
-            throw new NotFoundException('Email ou senha inválido(s)!');
+    return new AuthenticateResponseDto(
+      dto.user.email,
+      dto.user.name,
+      dto.user.id,
+      accessToken.accessToken,
+      refreshToken.accessToken,
+      dto.user.type,
+      dto.user.roles,
+    );
+  }
 
-        if (dto.user.status === UserStatusEnum.inactive)
-            throw new UnauthorizedException('Erro ao realizar a autenticação!');
+  verify(dto: TfaVerifyRequestDto): boolean {
+    return authenticator.verify({
+      token: dto.code.toString(),
+      secret: dto.secret,
+    });
+  }
 
-        if (dto.user && await bcrypt.compare(dto.password, dto.user.password))
-            await this._tfaRepository.delete(dto.userId);
-        else
-            throw new BadRequestException('Erro ao deletar 2fa!');
+  async verifyAuth(
+    userId: string,
+    dto: TfaVerifyAuthRequestDto,
+  ): Promise<boolean> {
+    const tfa: TfaModel = await this._tfaRepository.getByUserId(userId);
 
-        const accessToken = this.authenticationService.createAccessToken(
-            dto.user.id,
-            dto.user.email,
-            dto.user.type,
-            true,
-            true,
-        );
+    if (!tfa) throw new NotFoundException("2fa not found!");
 
-        const refreshToken = this.authenticationService.createRefreshToken(
-            dto.user.id,
-            dto.user.email,
-            dto.user.type,
-            true,
-            true,
-        );
-
-        return new AuthenticateResponseDto(
-            dto.user.email,
-            dto.user.name,
-            dto.user.id,
-            accessToken.accessToken,
-            refreshToken.accessToken,
-            dto.user.type,
-            dto.user.roles
-        );
-    }
-
-    verify(dto: TfaVerifyRequestDto): boolean {
-        return authenticator.verify({ token: dto.code.toString(), secret: dto.secret });
-    }
-
-
-    async verifyAuth(userId: string, dto: TfaVerifyAuthRequestDto): Promise<boolean> {
-
-        const tfa: TfaModel = await this._tfaRepository.getByUserId(userId);
-
-        if (!tfa)
-            throw new NotFoundException('2fa not found!');
-
-        return authenticator.verify({ token: dto.code.toString(), secret: tfa.secret });
-    }
+    return authenticator.verify({
+      token: dto.code.toString(),
+      secret: tfa.secret,
+    });
+  }
 }

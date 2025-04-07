@@ -12,8 +12,6 @@ import { GroupCostItemRealation } from "../schemas/group-costItem-relation.schem
 import { GroupCostItemRelationDto } from "./group-costItem-relation-register-request.dto";
 
 export abstract class GroupUpdatenameDto {
-
-    @ApiProperty({ type: String })
-    name: string;
-
+  @ApiProperty({ type: String })
+  name: string;
 }

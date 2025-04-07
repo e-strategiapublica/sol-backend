@@ -4,10 +4,10 @@ import {
   HttpException,
   HttpStatus,
   NestInterceptor,
-} from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { ResponseDto } from '../dtos/response.dto';
-import CryptoUtil from '../utils/crypto.util';
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { ResponseDto } from "../dtos/response.dto";
+import CryptoUtil from "../utils/crypto.util";
 
 export class EncryptInterceptor implements NestInterceptor {
   intercept(
@@ -19,20 +19,16 @@ export class EncryptInterceptor implements NestInterceptor {
 
     if (!payload)
       throw new HttpException(
-        new ResponseDto(false, null, ['payload is mandatory!']),
+        new ResponseDto(false, null, ["payload is mandatory!"]),
         HttpStatus.BAD_REQUEST,
       );
 
-    const decryptedBody = JSON.parse(
-      CryptoUtil.decrypt(
-        payloadKey,
-        context.switchToHttp().getRequest().body.payload,
-      ),
-    );
+    const data = CryptoUtil.decrypt(payloadKey, payload);
+    const decryptedBody = JSON.parse(data);
 
     if (!decryptedBody)
       throw new HttpException(
-        new ResponseDto(false, null, ['error trying to decrypt the payload!']),
+        new ResponseDto(false, null, ["error trying to decrypt the payload!"]),
         HttpStatus.BAD_REQUEST,
       );
 

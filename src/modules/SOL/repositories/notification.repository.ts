@@ -9,58 +9,83 @@ import { NotificationTitleUpdateDto } from "../dtos/notification-title-update-re
 
 @Injectable()
 export class NotificationRepository {
+  constructor(
+    @InjectModel(Notification.name)
+    private readonly _model: Model<NotificationModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(Notification.name) private readonly _model: Model<NotificationModel>,
-    ) { }
+  async register(dto: NotificationRegisterDto): Promise<NotificationModel> {
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async register(dto: NotificationRegisterDto): Promise<NotificationModel> {
+  async addUser(
+    _id: string,
+    dto: NotificationUpdateDto,
+  ): Promise<NotificationModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $push: {
+          to_user: dto.to_user,
+        },
+      },
+      { new: true },
+    );
+  }
 
-        const data = await new this._model(dto);
-        return data.save();
-    }
+  async remove(
+    _id: string,
+    dto: NotificationUpdateDto,
+  ): Promise<NotificationModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $pull: {
+          to_user: dto.to_user,
+        },
+      },
+      { new: true },
+    );
+  }
 
-    async addUser(_id: string, dto: NotificationUpdateDto): Promise<NotificationModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $push: {
-                to_user: dto.to_user,
-            }
-        }, {new: true });
-    }
+  async updateTitleDescription(
+    _id: string,
+    dto: NotificationTitleUpdateDto,
+  ): Promise<NotificationModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          title: dto.title,
+          description: dto.description,
+        },
+      },
+      { new: true },
+    );
+  }
 
-    async remove(_id: string, dto: NotificationUpdateDto): Promise<NotificationModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $pull: {
-                to_user: dto.to_user,
-            }
-        }, {new: true });
-    }
+  async list(): Promise<NotificationModel[]> {
+    return await this._model.find();
+  }
 
-    async updateTitleDescription(_id: string, dto: NotificationTitleUpdateDto): Promise<NotificationModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                title: dto.title,
-                description: dto.description
-            }
-        }, {new: true });
-    }
+  async listNonDeleted(): Promise<NotificationModel[]> {
+    return await this._model.find({ deleted: false });
+  }
 
-    async list(): Promise<NotificationModel[]> {
-        return await this._model.find();
-    }
+  async getById(_id: string): Promise<NotificationModel> {
+    return await this._model.findOne({ _id });
+  }
 
-    async listNonDeleted(): Promise<NotificationModel[]> {
-        return await this._model.find({deleted: false});
-    }
-
-    async getById(_id: string): Promise<NotificationModel> {
-        return await this._model.findOne({ _id });
-    }
-
-    async deleteById(_id: string) {
-        return await this._model.findByIdAndUpdate({ _id }, {$set: {
-            deleted: true
-        }}, {new: true});
-    }
-
+  async deleteById(_id: string) {
+    return await this._model.findByIdAndUpdate(
+      { _id },
+      {
+        $set: {
+          deleted: true,
+        },
+      },
+      { new: true },
+    );
+  }
 }

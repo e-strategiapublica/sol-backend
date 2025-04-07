@@ -12,17 +12,15 @@ import { GroupCostItemRealation } from "../schemas/group-costItem-relation.schem
 import { GroupCostItemRelationDto } from "./group-costItem-relation-register-request.dto";
 
 export abstract class GroupAddItemsRequestDto {
+  @ApiProperty({ type: String })
+  name: string;
 
-    @ApiProperty({ type: String })
-    name: string;
+  @ApiProperty({ type: String })
+  cost_item_id: string;
 
-    @ApiProperty({ type: String })
-    cost_item_id: string;
+  @ApiProperty({ type: String })
+  quantity: string;
 
-    @ApiProperty({ type: String })
-    quantity: string;
-
-    @ApiProperty({ type: String })
-    estimated_cost: string;
-
+  @ApiProperty({ type: String })
+  estimated_cost: string;
 }

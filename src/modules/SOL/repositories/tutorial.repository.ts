@@ -6,23 +6,26 @@ import { Tutorial } from "../schemas/tutorial.schema";
 
 @Injectable()
 export class TutorialRepository<TutorialInterface> {
-
   constructor(
-    @InjectModel(Tutorial.name) private readonly model: Model<TutorialInterface>,
-  ) { }
+    @InjectModel(Tutorial.name)
+    private readonly model: Model<TutorialInterface>,
+  ) {}
 
-  async getByScreenLocationWithoutUserId(screenLocation: TutorialLocationEnum, userId: string) {
+  async getByScreenLocationWithoutUserId(
+    screenLocation: TutorialLocationEnum,
+    userId: string,
+  ) {
     return await this.model.findOne({
       screenLocation,
       usersWhoCompleted: {
-        $nin: [userId]
-      }
+        $nin: [userId],
+      },
     });
   }
 
   async getByScreenLocation(screenLocation: TutorialLocationEnum) {
     return this.model.findOne({
-      screenLocation
+      screenLocation,
     });
   }
 
@@ -30,14 +33,14 @@ export class TutorialRepository<TutorialInterface> {
     return await this.model.findByIdAndUpdate(id, {
       //@ts-ignore
       $push: {
-        usersWhoCompleted: userId
-      }
+        usersWhoCompleted: userId,
+      },
     });
   }
 
   async delete(_id: string): Promise<void> {
     await this.model.deleteOne({
-      id: _id
+      id: _id,
     });
   }
 }

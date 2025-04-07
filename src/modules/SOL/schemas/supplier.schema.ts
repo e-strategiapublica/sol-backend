@@ -1,11 +1,13 @@
 import mongoose from "mongoose";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { LegalRepresentative, LegalRepresentativeSchema } from "src/shared/schemas/legal-representative.schema";
+import {
+  LegalRepresentative,
+  LegalRepresentativeSchema,
+} from "src/shared/schemas/legal-representative.schema";
 import { Notification } from "./notification.schema";
 import { Category } from "./category.schema";
 import { SuplierTypeEnum } from "../enums/supplier-type.enum";
 import { Address, AddressSchema } from "src/shared/schemas/address.schema";
-
 
 @Schema({ timestamps: true, collection: Supplier.name.toLowerCase() })
 export class Supplier {
@@ -33,11 +35,17 @@ export class Supplier {
   @Prop({ required: false, type: Array })
   group_id: string[];
 
-  @Prop({ required: false, type: mongoose.Schema.Types.Array, ref: Notification.name })
+  @Prop({
+    required: false,
+    type: mongoose.Schema.Types.Array,
+    ref: Notification.name,
+  })
   notification_list: Notification[];
 
-  @Prop({ required: false, type: [{ type: mongoose.Schema.Types.ObjectId, ref: Category.name }] })
+  @Prop({
+    required: false,
+    type: [{ type: mongoose.Schema.Types.ObjectId, ref: Category.name }],
+  })
   categories: Category[];
-  
 }
 export const SupplierSchema = SchemaFactory.createForClass(Supplier);

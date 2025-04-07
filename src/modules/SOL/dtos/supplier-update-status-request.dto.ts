@@ -6,14 +6,9 @@ import { Address } from "src/shared/schemas/address.schema";
 import { LegalRepresentative } from "src/shared/schemas/legal-representative.schema";
 
 export abstract class SupplierUpdateStatusDto {
+  @ApiProperty({ type: Boolean })
+  blocked: boolean;
 
-    @ApiProperty({ type: Boolean })
-    blocked: boolean
-
-    @ApiProperty({ type: String })
-    blocked_reason: string;
-
-    
-
-
+  @ApiProperty({ type: String })
+  blocked_reason: string;
 }

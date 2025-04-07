@@ -1,4 +1,4 @@
-import {  Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { BidDateUpdateDto } from "../dtos/bid-date-update.dto";
 import { PlataformRepository } from "../repositories/plataform.repository";
 import { PlataformModel } from "../models/plataform.model";
@@ -7,23 +7,19 @@ import { PlataformModel } from "../models/plataform.model";
 export class PlataformService {
   private readonly _logger = new Logger(PlataformService.name);
 
-  constructor(
-    private readonly _plataformRepository: PlataformRepository,
+  constructor(private readonly _plataformRepository: PlataformRepository) {}
 
-  ) { }
-
- async register(dto:BidDateUpdateDto): Promise<PlataformModel>{
-  const config = await this._plataformRepository.findOne()
-  if (config) {
-    return await this._plataformRepository.update(config.id, dto)
+  async register(dto: BidDateUpdateDto): Promise<PlataformModel> {
+    const config = await this._plataformRepository.findOne();
+    if (config) {
+      return await this._plataformRepository.update(config.id, dto);
+    }
+    return await this._plataformRepository.register(dto);
   }
-  return await this._plataformRepository.register(dto)
- }
- async findOne(): Promise<PlataformModel>{
-  return await this._plataformRepository.findOne()
- }
- async update(_id:string, dto:BidDateUpdateDto): Promise<PlataformModel>{
-  return await this._plataformRepository.update(_id,dto)
- }
-
+  async findOne(): Promise<PlataformModel> {
+    return await this._plataformRepository.findOne();
+  }
+  async update(_id: string, dto: BidDateUpdateDto): Promise<PlataformModel> {
+    return await this._plataformRepository.update(_id, dto);
+  }
 }

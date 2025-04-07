@@ -1,7 +1,5 @@
 export enum TutorialTypeEnum {
-
-    quiz = 'quiz',
-    text = 'text',
-    video = 'video'
-
+  quiz = "quiz",
+  text = "text",
+  video = "video",
 }

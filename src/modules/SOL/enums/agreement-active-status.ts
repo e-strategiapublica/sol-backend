@@ -1,4 +1,4 @@
 export enum AgreementActiveStatusEnum {
-    active = "active",
-    inactive = "inactive"
+  active = "active",
+  inactive = "inactive",
 }

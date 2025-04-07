@@ -7,49 +7,53 @@ import { CategoryRegisterDto } from "../dtos/category-register-request.dto";
 
 @Injectable()
 export class CategoryRepository {
+  constructor(
+    @InjectModel(Category.name) private readonly _model: Model<CategoryModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(Category.name) private readonly _model: Model<CategoryModel>,
-    ) { }
-
-    async register(dto: CategoryRegisterDto): Promise<any > {
-        
-        const res = await this._model.findOne({ category_name: dto.category_name, code: dto.code })
-        if(res){
-            return { type: "error", code: 1 };
-        }
-
-        const data = await new this._model(dto);
-        return data.save();
+  async register(dto: CategoryRegisterDto): Promise<any> {
+    const res = await this._model.findOne({
+      category_name: dto.category_name,
+      code: dto.code,
+    });
+    if (res) {
+      return { type: "error", code: 1 };
     }
 
-    async update(_id: string, dto: CategoryRegisterDto): Promise<CategoryModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                category_name: dto.category_name,
-                segment: dto.segment
-            }
-        }, {new: true });
-    }
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async list(): Promise<CategoryModel[]> {
-        return await this._model.find();
-    }
+  async update(_id: string, dto: CategoryRegisterDto): Promise<CategoryModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          category_name: dto.category_name,
+          segment: dto.segment,
+        },
+      },
+      { new: true },
+    );
+  }
 
-    async getById(_id: string): Promise<CategoryModel> {
-        return await this._model.findOne({ _id });
-    }
+  async list(): Promise<CategoryModel[]> {
+    return await this._model.find();
+  }
 
-    async getByIdentifier(identifier: number): Promise<CategoryModel> {
-        return await this._model.findOne({ identifier });
-    }
+  async getById(_id: string): Promise<CategoryModel> {
+    return await this._model.findOne({ _id });
+  }
 
-    async deleteById(_id: string) {
-        return await this._model.findByIdAndDelete({ _id });
-    }
+  async getByIdentifier(identifier: number): Promise<CategoryModel> {
+    return await this._model.findOne({ identifier });
+  }
 
-    async listByIds(ids: string[]): Promise<CategoryModel[]> {
-        return await this._model.find({ _id: { $in: ids } });
-    }
+  async deleteById(_id: string) {
+    return await this._model.findByIdAndDelete({ _id });
+  }
 
+  async listByIds(ids: string[]): Promise<CategoryModel[]> {
+    return await this._model.find({ _id: { $in: ids } });
+  }
 }

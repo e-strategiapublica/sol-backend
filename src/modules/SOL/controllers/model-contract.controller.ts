@@ -1,4 +1,19 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Logger, Param, Post, Put, UploadedFile, UseGuards, UseInterceptors } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ResponseDto } from "src/shared/dtos/response.dto";
@@ -12,196 +27,139 @@ import { ModelContractStatusEnum } from "../enums/model-contract-status.enum";
 import { BidService } from "../services/bid.service";
 import { AnyFilesInterceptor, FileInterceptor } from "@nestjs/platform-express";
 
-@ApiTags('model-contract')
-@Controller('model-contract')
+@ApiTags("model-contract")
+@Controller("model-contract")
 export class ModelContractController {
+  private readonly logger = new Logger(ModelContractController.name);
 
-    private readonly logger = new Logger(ModelContractController.name);
+  constructor(
+    private readonly modelContractService: ModelContractService,
+    private readonly bidsService: BidService,
+  ) {}
 
-    constructor(
-        private readonly modelContractService: ModelContractService,
-        private readonly bidsService: BidService,
-    ) { }
+  @Post("register")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor("file", { limits: { fileSize: 22428800 } }))
+  async register(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() dto: ModelContractRegisterDto,
+  ) {
+    try {
+      dto.status = ModelContractStatusEnum.ativo;
+      const response = await this.modelContractService.register(dto, file);
 
-    @Post('register')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
-    @ApiBearerAuth()
-    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 22428800 } }))
-    async register(
-        @UploadedFile() file: Express.Multer.File,
-        @Body() dto: ModelContractRegisterDto,
-    ) {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-        try {            
-            dto.status = ModelContractStatusEnum.ativo;
-            const response = await this.modelContractService.register(dto, file);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('list')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    async list() {
+  @Get("list")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async list() {
+    try {
+      const response = await this.modelContractService.list();
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.modelContractService.list();
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    
-    @Get('get-by-Bid/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    async getByBidId(
-        @Param('_id') _id: string,
-    ) {
+  @Get("get-by-Bid/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getByBidId(@Param("_id") _id: string) {
+    try {
+      const response = await this.modelContractService.getBidById(_id);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.modelContractService.getBidById(_id);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('get-by-id/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    async getById(
-        @Param('_id') _id: string,
-    ) {
+  @Get("get-by-id/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getById(@Param("_id") _id: string) {
+    try {
+      const response = await this.modelContractService.getById(_id);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.modelContractService.getById(_id);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @UseInterceptors(FileInterceptor('file'))
-    async updateStatus(
-        @Param('_id') _id: string,
-        @Body() dto: ModelContractUpdateDto,
-        @UploadedFile() file: Express.Multer.File,
-    ) {
+  @Put("update/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor("file"))
+  async updateStatus(
+    @Param("_id") _id: string,
+    @Body() dto: ModelContractUpdateDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    try {
+      dto.status = ModelContractStatusEnum.ativo;
 
-        try {
-         
-            dto.status = ModelContractStatusEnum.ativo;
-           
-            const response = await this.modelContractService.update(_id, dto,file);
+      const response = await this.modelContractService.update(_id, dto, file);
 
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
+  @Delete("delete-by-id/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
+  @ApiBearerAuth()
+  async deleteById(@Param("_id") _id: string) {
+    try {
+      const result = await this.modelContractService.deleteById(_id);
 
-    @Delete('delete-by-id/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.associacao)
-    @ApiBearerAuth()
-    async deleteById(
-        @Param('_id') _id: string,
-    ) {
-
-        try {
-
-            const result = await this.modelContractService.deleteById(_id);
-
-            return new ResponseDto(
-                true,
-                result,
-                null,
-            );
-
-        } catch (error) {
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      return new ResponseDto(true, result, null);
+    } catch (error) {
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
-
+  }
 }

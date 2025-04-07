@@ -4,14 +4,14 @@ import { UserInterface } from "../interfaces/user.interface";
 import { AllotmentStatusEnum } from "../enums/allotment-status.enum";
 
 export abstract class BidUpdateStatusRequestDto {
-    @ApiProperty({ type: String, enum: BidStatusEnum })
-    status: BidStatusEnum;
+  @ApiProperty({ type: String, enum: BidStatusEnum })
+  status: BidStatusEnum;
 
-    @ApiProperty({ type: String, required: false })
-    declined_reason: string;
+  @ApiProperty({ type: String, required: false })
+  declined_reason: string;
 
-    proofreader: UserInterface;
+  proofreader: UserInterface;
 
-    @ApiProperty({ type: String, required: false })
-    allomentStatus: AllotmentStatusEnum;
+  @ApiProperty({ type: String, required: false })
+  allomentStatus: AllotmentStatusEnum;
 }
