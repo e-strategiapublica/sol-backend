@@ -451,7 +451,7 @@ export class BidController {
     @Param("language") language: string,
     @Param("type") type: string,
     @Res() res: Response,
-    ) {
+  ) {
     try {
       this.logger.log(`Recebida requisição para criar documento: _id=${_id}, language=${language}, type=${type}`);
 
