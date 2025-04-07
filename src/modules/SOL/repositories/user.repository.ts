@@ -12,176 +12,204 @@ import { UserTypeEnum } from "../enums/user-type.enum";
 import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto";
 import { NotificationInterface } from "../interfaces/notification.interface";
 import { UserRolesEnum } from "../enums/user-roles.enum";
-import { MongoClient, ObjectId } from 'mongodb';
+import { MongoClient, ObjectId } from "mongodb";
 
 @Injectable()
 export class UserRepository {
+  private url: string = process.env.NOSQL_CONNECTION_STRING;
+  private dbName: string = process.env.DATABASE;
+  private collection: string = "user";
 
-    private url: string = process.env.NOSQL_CONNECTION_STRING;
-    private dbName: string = process.env.DATABASE;
-    private collection: string = "user";
+  constructor(
+    @InjectModel(User.name) private readonly _model: Model<UserModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(User.name) private readonly _model: Model<UserModel>,
-    ) { }
+  async getByEmail(email: string): Promise<UserModel> {
+    return await this._model.findOne({ email });
+  }
 
-    async getByEmail(email: string): Promise<UserModel> {
-        return await this._model
-            .findOne({ email });
+  async getByPhone(phone: string): Promise<UserModel> {
+    return await this._model.findOne({ phone });
+  }
+
+  async getByDocument(document: string): Promise<UserModel> {
+    return await this._model.findOne({ document });
+  }
+
+  async getAll(): Promise<UserModel[]> {
+    return await this._model.find();
+  }
+
+  async getById(_id: string): Promise<UserModel> {
+    return await this._model
+      .findById({ _id })
+      .populate("association")
+      .populate("supplier");
+  }
+
+  async getByIdPopulate(_id: string): Promise<UserModel> {
+    return await this._model
+      .findById({ _id })
+      .populate("association")
+      .populate("supplier");
+  }
+
+  async getUserBySupplierId(_id: string): Promise<UserModel[]> {
+    return await this._model.find({ supplier: _id }).populate("association");
+  }
+
+  async listByType(type: UserTypeEnum): Promise<UserModel[]> {
+    return await this._model.find({ type }).populate("association");
+  }
+  async listByRole(role: string): Promise<UserModel[]> {
+    return await this._model.find({ roles: role });
+  }
+  async register(dto: UserRegisterRequestDto): Promise<UserModel> {
+    const client = new MongoClient(this.url);
+    await client.connect();
+    const db = client.db(this.dbName);
+    const collection = db.collection(this.collection);
+    const res = await collection.findOne({ email: dto.email });
+    await client.close();
+
+    if (!res) {
+      const data = await new this._model(dto);
+      return data.save();
     }
+  }
 
-    async getByPhone(phone: string): Promise<UserModel> {
-        return await this._model
-            .findOne({ phone });
-    }
+  async updatePassword(
+    _id: string,
+    dto: UserUpdatePasswordRequestDto,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          password: dto.password,
+        },
+      },
+    );
+  }
 
-    async getByDocument(document: string): Promise<UserModel> {
-        return await this._model
-            .findOne({ document });
-    }
+  async updateNotifications(
+    _id: string,
+    dto: NotificationInterface,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $push: {
+          notification_list: dto,
+        },
+      },
+    );
+  }
 
-    async getAll(): Promise<UserModel[]> {
-        return await this._model
-            .find();
-    }
+  async update(_id: string, dto: UserUpdateRequestDto): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          name: dto.name,
+        },
+      },
+    );
+  }
 
-    async getById(_id: string): Promise<UserModel> {
-        return await this._model
-            .findById({ _id }).populate('association').populate('supplier');
-    }
+  async updateById(
+    _id: string,
+    dto: UserUpdateByIdRequestDto,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          email: dto.email,
+          name: dto.name,
+          phone: dto.phone,
+          type: dto.type,
+          document: dto.document,
+          office: dto.office,
+          association: dto.association,
+          supplier: dto.supplier,
+          roles: dto.roles,
+        },
+      },
+    );
+  }
 
-    async getByIdPopulate(_id: string): Promise<UserModel> {
-        return await this._model
-            .findById({ _id }).populate('association').populate('supplier');
-    }
+  async updateRefreshToken(
+    _id: string,
+    refreshToken: string | null,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          refreshToken,
+        },
+      },
+    );
+  }
 
-    async getUserBySupplierId(_id: string): Promise<UserModel[]> {
-        return await this._model
-            .find({ supplier: _id }).populate('association');
-     
-    }
+  async registerPassword(
+    _id: string,
+    dto: UserRegisterPasswordRequestDto,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          password: dto.password,
+          status: dto.status,
+        },
+      },
+    );
+  }
 
-    async listByType(type: UserTypeEnum): Promise<UserModel[]> {
-        return await this._model.find({ type }).populate('association');
-    }
-    async listByRole(role: string): Promise<UserModel[]> {
-        return await this._model.find({ roles: role })
-    }
-    async register(dto: UserRegisterRequestDto): Promise<UserModel> {
-        
-        const client = new MongoClient(this.url);
-        await client.connect();
-        const db = client.db(this.dbName);
-        const collection = db.collection(this.collection);       
-        const res = await collection.findOne({"email":dto.email});
-        await client.close();
+  async updateStatus(_id: string, status: UserStatusEnum): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          status,
+        },
+      },
+    );
+  }
 
-        if(!res){
-            const data = await new this._model(dto)
-            return data.save();    
-        }
-        
-    }
+  async addDeviceToken(token: string, id: string) {
+    await this._model.findByIdAndUpdate(id, {
+      $push: {
+        pushNotificationToken: token,
+      },
+    });
+  }
 
-    async updatePassword(_id: string, dto: UserUpdatePasswordRequestDto): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                password: dto.password
-            }
-        });
-    }
+  async removeDeviceToken(token: string, id: string) {
+    await this._model.findByIdAndUpdate(id, {
+      $pull: {
+        pushNotificationToken: token,
+      },
+    });
+  }
 
-    async updateNotifications(_id: string, dto: NotificationInterface): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $push: {
-                notification_list: dto
-            }
-        });
-    }
+  async updateProfilePicture(
+    _id: string,
+    profilePicture: string,
+  ): Promise<UserModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          profilePicture,
+        },
+      },
+    );
+  }
 
-    async update(_id: string, dto: UserUpdateRequestDto): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                name: dto.name,
-              
-               
-            }
-        });
-    }
-
-    async updateById(_id: string, dto: UserUpdateByIdRequestDto): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                email: dto.email,
-                name: dto.name,
-                phone: dto.phone,
-                type: dto.type,
-                document: dto.document,
-                office: dto.office,
-                association: dto.association,
-                supplier: dto.supplier,
-                roles: dto.roles
-            }
-        });
-    }
-
-    async updateRefreshToken(_id: string, refreshToken: string | null): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                refreshToken
-            }
-        });
-    }
-
-    async registerPassword(_id: string, dto: UserRegisterPasswordRequestDto): Promise<UserModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                password: dto.password,
-                status: dto.status
-            }
-        });
-    }
-
-    async updateStatus(_id: string, status: UserStatusEnum): Promise<UserModel> {
-        return await this._model.findOneAndUpdate(
-            { _id },
-            {
-                $set: {
-                    status
-                },
-            },
-        );
-    }
-
-    async addDeviceToken(token: string, id: string) {
-        await this._model.findByIdAndUpdate(id, {
-            $push: {
-                pushNotificationToken: token
-            }
-        });
-    }
-
-    async removeDeviceToken(token: string, id: string) {
-        await this._model.findByIdAndUpdate(id, {
-            $pull: {
-                'pushNotificationToken': token
-            }
-        });
-    }
-
-    async updateProfilePicture(_id: string, profilePicture: string): Promise<UserModel> {
-        return await this._model.findOneAndUpdate(
-            { _id },
-            {
-                $set: {
-                    profilePicture
-                },
-            },
-        );
-    }
-
-    async deleteById(_id: string) {
-        return await this._model.findOneAndDelete({ _id });
-    }
-
+  async deleteById(_id: string) {
+    return await this._model.findOneAndDelete({ _id });
+  }
 }

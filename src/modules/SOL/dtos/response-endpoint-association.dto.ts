@@ -46,6 +46,6 @@ export interface ResponseEndpointAssociationDto {
       cpf: string;
       phone: string;
       id: number;
-    }
+    },
   ];
 }

@@ -1,4 +1,4 @@
 export enum AssociationStatusEnum {
-    active = "active",
-    inactive = "inactive"
+  active = "active",
+  inactive = "inactive",
 }

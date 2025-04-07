@@ -1,4 +1,4 @@
 export interface ValueForAllotmentInterface {
-    readonly allotmentId: string;
-    readonly totalValue: number
+  readonly allotmentId: string;
+  readonly totalValue: number;
 }

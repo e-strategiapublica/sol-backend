@@ -43,8 +43,8 @@ export interface ResponseEndpointAgreementDto {
           quantity: number;
           estimated_cost: number;
           id: number;
-        }
+        },
       ];
-    }
+    },
   ];
 }

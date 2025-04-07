@@ -8,8 +8,14 @@ import { Agreement, AgreementSchema } from "../SOL/schemas/agreement.schema";
 
 import { Tfa, TfaSchema } from "../SOL/schemas/tfa-schema";
 import { User, UserSchema } from "../SOL/schemas/user.schema";
-import { Verification, VerificationSchema } from "../SOL/schemas/verification.schema";
-import { Association, AssociationSchema } from "../SOL/schemas/association.schema";
+import {
+  Verification,
+  VerificationSchema,
+} from "../SOL/schemas/verification.schema";
+import {
+  Association,
+  AssociationSchema,
+} from "../SOL/schemas/association.schema";
 import { CostItems, CostItemsSchema } from "../SOL/schemas/cost-items.schema";
 import { Bids, BidsSchema } from "../SOL/schemas/bids.schema";
 import { Group, GroupSchema } from "../SOL/schemas/group.schema";
@@ -21,23 +27,34 @@ import { ContractSchema } from "../SOL/schemas/contract.schema";
 import { Proposal, ProposaltSchema } from "../SOL/schemas/proposal.schema";
 import { WorkPlan, WorkPlanSchema } from "../SOL/schemas/work-plan.schema";
 import { Allotment, AllotmentSchema } from "../SOL/schemas/allotment.schema";
-import { ModelContract, ModelContractSchema } from "../SOL/schemas/model-contract.schemay";
-import { Notification, NotificationSchema } from "../SOL/schemas/notification.schema";
-import { ReportGenerated, ReportGeneratedSchema } from "../SOL/schemas/report-generated.schema";
+import {
+  ModelContract,
+  ModelContractSchema,
+} from "../SOL/schemas/model-contract.schemay";
+import {
+  Notification,
+  NotificationSchema,
+} from "../SOL/schemas/notification.schema";
+import {
+  ReportGenerated,
+  ReportGeneratedSchema,
+} from "../SOL/schemas/report-generated.schema";
 import { EndPoints, EndPointsSchema } from "../SOL/schemas/endpoints.schema";
 import { Plataform, PlataformSchema } from "../SOL/schemas/plataform.schema";
 import { Project, ProjectSchema } from "../SOL/schemas/project.schema";
 import { Registry, RegistrySchema } from "../SOL/schemas/registry.schema";
 import { Items, ItemsSchema } from "../SOL/schemas/items.schema";
-import { Gamification, GamificationSchema } from "../SOL/schemas/gamification.schema";
-
+import {
+  Gamification,
+  GamificationSchema,
+} from "../SOL/schemas/gamification.schema";
 
 @Module({
   imports: [
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get(EnviromentVariablesEnum.NOSQL_CONNECTION_STRING)
+        uri: configService.get(EnviromentVariablesEnum.NOSQL_CONNECTION_STRING),
       }),
       inject: [ConfigService],
     }),
@@ -67,9 +84,9 @@ import { Gamification, GamificationSchema } from "../SOL/schemas/gamification.sc
       { name: Plataform.name, schema: PlataformSchema },
       { name: Project.name, schema: ProjectSchema },
       { name: Registry.name, schema: RegistrySchema },
-      { name: Gamification.name, schema: GamificationSchema}
+      { name: Gamification.name, schema: GamificationSchema },
     ]),
   ],
   exports: [MongooseModule],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

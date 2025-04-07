@@ -1,4 +1,4 @@
-import * as CryptoJS from 'crypto-js';
+import * as CryptoJS from "crypto-js";
 
 export default class CryptoUtil {
   static encrypt(key: string, textToEncrypt: string): string {

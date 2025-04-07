@@ -1,6 +1,4 @@
 export enum ModelContractStatusEnum {
-
-    ativo = 'ativo',
-    inativo = 'inativo',
-
+  ativo = "ativo",
+  inativo = "inativo",
 }

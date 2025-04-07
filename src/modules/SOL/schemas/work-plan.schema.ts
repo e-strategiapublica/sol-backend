@@ -18,7 +18,11 @@ export class WorkPlan {
       },
     ],
   })
-  product: Array<{ quantity: number; unit: string; unitValue: number; items: Items }>;
-
+  product: Array<{
+    quantity: number;
+    unit: string;
+    unitValue: number;
+    items: Items;
+  }>;
 }
 export const WorkPlanSchema = SchemaFactory.createForClass(WorkPlan);

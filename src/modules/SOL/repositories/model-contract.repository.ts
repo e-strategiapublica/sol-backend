@@ -9,51 +9,64 @@ import { ModelContractClassificationEnum } from "../enums/modelContract-classifi
 
 @Injectable()
 export class ModelContractRepository {
+  constructor(
+    @InjectModel(ModelContract.name)
+    private readonly _model: Model<ModelContractModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(ModelContract.name) private readonly _model: Model<ModelContractModel>,
-    ) { }
+  async register(dto: ModelContractRegisterDto): Promise<ModelContractModel> {
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async register(dto: ModelContractRegisterDto): Promise<ModelContractModel> {
+  async update(
+    _id: string,
+    dto: ModelContractUpdateDto,
+  ): Promise<ModelContractModel> {
+    return await this._model.findOneAndUpdate(
+      { _id },
+      {
+        $set: {
+          name: dto.name,
+          status: dto.status,
+          classification: dto.classification,
+          contract: dto.contract,
+          language: dto.language,
+        },
+      },
+      { new: true },
+    );
+  }
 
-        const data = await new this._model(dto);
-        return data.save();
-    }
+  async list(): Promise<ModelContractModel[]> {
+    return await this._model.find();
+  }
 
-    async update(_id: string, dto: ModelContractUpdateDto): Promise<ModelContractModel> {
-        return await this._model.findOneAndUpdate({ _id }, {
-            $set: {
-                name: dto.name,
-                status: dto.status,
-                classification: dto.classification,
-                contract: dto.contract,
-                language: dto.language,
-            }
-        }, {new: true });
-    }
+  async getById(_id: string): Promise<ModelContractModel> {
+    return await this._model.findOne({ _id });
+  }
 
-    async list(): Promise<ModelContractModel[]> {
-        return await this._model.find();
-    }
+  async getByBidId(_id: string): Promise<ModelContractModel> {
+    return await this._model.findOne({ bid: _id });
+  }
 
-    async getById(_id: string): Promise<ModelContractModel> {
-        return await this._model.findOne({ _id });
-    }
+  async getByClassification(
+    classification: string,
+  ): Promise<ModelContractModel> {
+    return await this._model.findOne({ classification: classification });
+  }
 
-    async getByBidId(_id: string): Promise<ModelContractModel> {
-        return await this._model.findOne({ bid: _id });
-    }
+  async deleteById(_id: string) {
+    return await this._model.deleteOne({ _id }, { new: true });
+  }
 
-    async getByClassification(classification: string): Promise<ModelContractModel> {
-        return await this._model.findOne({ classification: classification });
-    }
-
-    async deleteById(_id: string) {
-        return await this._model.deleteOne({ _id }, {new: true});
-    }
-
-    async getByContractAndLanguage(lang:string, classification:ModelContractClassificationEnum): Promise<ModelContractModel> {        
-        return await this._model.findOne({ classification: classification, language: lang });
-    }
-
+  async getByContractAndLanguage(
+    lang: string,
+    classification: ModelContractClassificationEnum,
+  ): Promise<ModelContractModel> {
+    return await this._model.findOne({
+      classification: classification,
+      language: lang,
+    });
+  }
 }

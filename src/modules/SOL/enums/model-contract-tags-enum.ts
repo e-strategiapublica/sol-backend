@@ -1,5 +1,4 @@
 export enum ModelContractTagsEnum {
-
   //supplier
   supplierName = "supplier_name",
   supplierId = "supplier_id",
@@ -12,7 +11,7 @@ export enum ModelContractTagsEnum {
   supplier_legal_representative_address = "supplier_legal_representative_address",
   supplier_legal_representative_supplier_municipality = "supplier_legal_representative_supplier_municipality",
   supplier_legal_representative_supplier_state = "supplier_legal_representative_supplier_state",
-  
+
   //Association
   associationName = "association_name",
   associationId = "association_id",
@@ -27,29 +26,27 @@ export enum ModelContractTagsEnum {
   associationLegalRepresentativeSupplierState = "association_legal_representative_supplier_state",
 
   //Agreement
-  covenantNumber = 'covenant_number',
-  covenantObject = 'covenant_object',
-  municipalityExecutionCovenant = 'municipality_execution_covenant',
+  covenantNumber = "covenant_number",
+  covenantObject = "covenant_object",
+  municipalityExecutionCovenant = "municipality_execution_covenant",
 
   //bid
-  numberYearBidding = 'number_year_bidding',
-  guestSupplier = 'guest_supplier',
-  proposedList = 'proposed_list',
-  winningSupplier = 'winning_supplier',
-  batchList = 'batch_list',
+  numberYearBidding = "number_year_bidding",
+  guestSupplier = "guest_supplier",
+  proposedList = "proposed_list",
+  winningSupplier = "winning_supplier",
+  batchList = "batch_list",
 
   //lots
-  batchCompleteList = 'batch_complete_list',
-  batchSpecificationList = 'batch_specification_list',
+  batchCompleteList = "batch_complete_list",
+  batchSpecificationList = "batch_specification_list",
 
   //contract
-  contractNumber = 'contract_number',
-  signatureAssociation = 'signature_association',
-  signatureSupplier = 'supplier_signature',
-  supplier = 'supplier',
-  documentcontractDate = 'documentcontract_date',
-  documentMinutes = 'document_minutes',
-  documentNoticedate = 'document_notice_date',
-
-
+  contractNumber = "contract_number",
+  signatureAssociation = "signature_association",
+  signatureSupplier = "supplier_signature",
+  supplier = "supplier",
+  documentcontractDate = "documentcontract_date",
+  documentMinutes = "document_minutes",
+  documentNoticedate = "document_notice_date",
 }

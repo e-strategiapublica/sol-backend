@@ -1,4 +1,18 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpException, Req, HttpStatus, Logger, Param, Post, Put, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  Req,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ResponseDto } from "src/shared/dtos/response.dto";
@@ -18,534 +32,466 @@ import { ProposalUpdateValues } from "../dtos/proposal-update-values-request.dto
 import { BidService } from "../services/bid.service";
 import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
 
-@ApiTags('proposal')
-@Controller('proposal')
+@ApiTags("proposal")
+@Controller("proposal")
 export class ProposalController {
+  private readonly logger = new Logger(ProposalController.name);
 
-    private readonly logger = new Logger(ProposalController.name);
+  constructor(
+    private readonly proposalService: ProposalService,
+    private readonly bidService: BidService,
+  ) {}
 
-    constructor(
-        private readonly proposalService: ProposalService,
-        private readonly bidService: BidService,
-    ) { }
+  @Post("register")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async register(@Body() dto: ProposalRegisterDto, @Req() request) {
+    try {
+      const payload: JwtPayload = request.user;
 
-    @Post('register')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async register(
-        @Body() dto: ProposalRegisterDto,
-        @Req() request,
-    ) {
+      const response = await this.proposalService.register(payload.userId, dto);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const payload: JwtPayload = request.user;
-
-            const response = await this.proposalService.register(payload.userId, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
+  @Get("list")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async list() {
+    try {
+      const response = await this.proposalService.list();
 
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-    @Get('list')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async list() {
-
-        try {
-
-            const response = await this.proposalService.list();
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('get-by-id/:_id')
-    @HttpCode(200)
-   @UseGuards(JwtAuthGuard)
-   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-   @ApiBearerAuth()
-    async getById(
-        @Param('_id') _id: string,
-    ) {
+  @Get("get-by-id/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async getById(@Param("_id") _id: string) {
+    try {
+      const response = await this.proposalService.getById(_id);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.getById(_id);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('list-proposal-in-bid/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    // @UseGuards(JwtAuthGuard, FuncoesGuard)
-    // @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor, UserTypeEnum.associacao )
-    @ApiBearerAuth()
-    async listProposalByBid(
-        @Param('_id') _id: string,
-    ) {
+  @Get("list-proposal-in-bid/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard, FuncoesGuard)
+  // @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor, UserTypeEnum.associacao )
+  @ApiBearerAuth()
+  async listProposalByBid(@Param("_id") _id: string) {
+    try {
+      const response = await this.proposalService.listByBid(_id);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.listByBid(_id);
-
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('get-proposal-accepted-bid/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async getProposalAcceptedBid(
-        @Param('_id') _id: string,
-    ) {
+  @Get("get-proposal-accepted-bid/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async getProposalAcceptedBid(@Param("_id") _id: string) {
+    try {
+      let response = await this.proposalService.getProposalAcceptByBid(_id);
 
-        try {
+      if (!response) {
+        response = null;
+      }
 
-            let response = await this.proposalService.getProposalAcceptByBid(_id);
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            if (!response) {
-                response = null
-            }
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Get('verify-proposal-by-user/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    async verifyProposalByUser(
-        @Req() request,
-        @Param('_id') _id: string,
-    ) {
+  @Get("verify-proposal-by-user/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async verifyProposalByUser(@Req() request, @Param("_id") _id: string) {
+    try {
+      const payload: JwtPayload = request.user;
 
-        try {
+      const response = await this.proposalService.getByUserInBid(
+        payload.userId,
+        _id,
+      );
 
-            const payload: JwtPayload = request.user;
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.getByUserInBid(payload.userId, _id);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('status-update/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async updateStatus(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalStatusUpdateDto,
-    ) {
+  @Put("status-update/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async updateStatus(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalStatusUpdateDto,
+  ) {
+    try {
+      const response = await this.proposalService.updateStatus(_id, dto);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.updateStatus(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update-accept-supplier/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async updateAcceptfromSupplier(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalSupplierAcceptUpdateDto,
-    ) {
+  @Put("update-accept-supplier/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async updateAcceptfromSupplier(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalSupplierAcceptUpdateDto,
+  ) {
+    try {
+      const response = await this.proposalService.updateAcceptfromSupplier(
+        _id,
+        dto,
+      );
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.updateAcceptfromSupplier(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update-accept-association/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async updateAcceptfromAssosiation(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalAssociationAcceptUpdateDto,
-    ) {
+  @Put("update-accept-association/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async updateAcceptfromAssosiation(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalAssociationAcceptUpdateDto,
+  ) {
+    try {
+      const response = await this.proposalService.updateAcceptAssociation(
+        _id,
+        dto,
+      );
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.updateAcceptAssociation(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update-accept-reviwer/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async updateAcceptReviewer(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalReviewerAcceptUpdateDto,
-        @Req() request,
-    ) {
+  @Put("update-accept-reviwer/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async updateAcceptReviewer(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalReviewerAcceptUpdateDto,
+    @Req() request,
+  ) {
+    try {
+      const response = await this.proposalService.updateAcceptReviewer(
+        _id,
+        dto,
+        request.user.userId,
+      );
+      // const response = await this.proposalService.updateAcceptReviewer(_id, dto, '648a20c747f9c1bebae97ea9');
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.updateAcceptReviewer(_id, dto, request.user.userId);
-            // const response = await this.proposalService.updateAcceptReviewer(_id, dto, '648a20c747f9c1bebae97ea9');
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update/add-item/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async addItemById(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalAddItemUpdateDto,
-    ) {
+  @Put("update/add-item/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async addItemById(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalAddItemUpdateDto,
+  ) {
+    try {
+      const response = await this.proposalService.addItem(_id, dto);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.addItem(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-  
-    @Put('update/remove-item/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async removeItemById(
-        @Param('_id') _id: string,
-        @Body() dto: ProposalAddItemUpdateDto,
-    ) {
+  @Put("update/remove-item/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async removeItemById(
+    @Param("_id") _id: string,
+    @Body() dto: ProposalAddItemUpdateDto,
+  ) {
+    try {
+      const response = await this.proposalService.removeItem(_id, dto);
 
-        try {
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.removeItem(_id, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Delete('delete-by-id/:_id')
-    @HttpCode(200)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async deleteById(
-        @Param('_id') _id: string,
-    ) {
+  @Delete("delete-by-id/:_id")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async deleteById(@Param("_id") _id: string) {
+    try {
+      const result = await this.proposalService.deleteById(_id);
 
-        try {
-
-            const result = await this.proposalService.deleteById(_id);
-
-            return new ResponseDto(
-                true,
-                result,
-                null,
-            );
-
-        } catch (error) {
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      return new ResponseDto(true, result, null);
+    } catch (error) {
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('refuse/:_id')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager )
-    @ApiBearerAuth()
-    async refused(
-        @Body() dto: ProposalRefusedRequestDto,
-        @Param('_id') _id: string,
-        @Req() request,
-    ) {
+  @Put("refuse/:_id")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+  )
+  @ApiBearerAuth()
+  async refused(
+    @Body() dto: ProposalRefusedRequestDto,
+    @Param("_id") _id: string,
+    @Req() request,
+  ) {
+    try {
+      const payload: JwtPayload = request.user;
 
-        try {
+      const response = await this.proposalService.refusedProposal(
+        _id,
+        payload.userId,
+        dto,
+      );
 
-            const payload: JwtPayload = request.user;
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            const response = await this.proposalService.refusedProposal(_id, payload.userId, dto);
-
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('accept/:_id')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @Funcoes(UserTypeEnum.administrador, UserTypeEnum.fornecedor,UserTypeEnum.project_manager, UserTypeEnum.associacao )
-    @ApiBearerAuth()
-    async accept(
-        @Body() dto: ProposalNotificationInterface,
-        @Param('_id') _id: string,
-        @Req() request,
-    ) {
-        try {
-            const payload: JwtPayload = request.user;
+  @Put("accept/:_id")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @Funcoes(
+    UserTypeEnum.administrador,
+    UserTypeEnum.fornecedor,
+    UserTypeEnum.project_manager,
+    UserTypeEnum.associacao,
+  )
+  @ApiBearerAuth()
+  async accept(
+    @Body() dto: ProposalNotificationInterface,
+    @Param("_id") _id: string,
+    @Req() request,
+  ) {
+    try {
+      const payload: JwtPayload = request.user;
 
-            const response = await this.proposalService.acceptProposal(_id, payload.userId, dto);
+      const response = await this.proposalService.acceptProposal(
+        _id,
+        payload.userId,
+        dto,
+      );
 
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-        } catch (error) {
-            this.logger.error(error.message);
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Put('update-values/:id')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard, FuncoesGuard)
-    @ApiBearerAuth()
-    async updateValues(@Param('id') _id: string, @Body() dto: ProposalUpdateValues) {
-        try {
-            const response = await this.proposalService.updateValues(_id, dto);
+  @Put("update-values/:id")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard, FuncoesGuard)
+  @ApiBearerAuth()
+  async updateValues(
+    @Param("id") _id: string,
+    @Body() dto: ProposalUpdateValues,
+  ) {
+    try {
+      const response = await this.proposalService.updateValues(_id, dto);
 
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-
-        } catch (error) {
-            this.logger.error(error.message);
-
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
+  }
 
-    @Post('send-tie-breaker/:id')
-    @HttpCode(201)
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    async sendTieBreaker(@Param('id') _id: string) {
-        try {
-            const response = await this.bidService.sendTieBreaker(_id);
+  @Post("send-tie-breaker/:id")
+  @HttpCode(201)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async sendTieBreaker(@Param("id") _id: string) {
+    try {
+      const response = await this.bidService.sendTieBreaker(_id);
 
-            return new ResponseDto(
-                true,
-                response,
-                null,
-            );
-        } catch (error) {
-            this.logger.error(error.message);
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
 
-            throw new HttpException(
-                new ResponseDto(false, null, [error.message]),
-                HttpStatus.BAD_REQUEST,
-            );
-        }
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
+  }
 }

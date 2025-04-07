@@ -4,14 +4,14 @@ import { WorkPlanRegisterRequestDto } from "../dtos/work-plan-register-request.d
 import { CostItemsService } from "./cost-items.service";
 import { ItemsModel } from "../models/database/items.model";
 import { WorkPlanModel } from "../models/work-plan.model";
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
 
 @Injectable()
 export class WorkPlanService {
   constructor(
     private readonly _workPlanRepository: WorkPlanRepository,
     private readonly _costItemsService: CostItemsService,
-    private readonly _itemsModel: ItemsModel
+    private readonly _itemsModel: ItemsModel,
   ) {}
 
   async findById(id: string): Promise<WorkPlanModel> {
@@ -23,29 +23,35 @@ export class WorkPlanService {
   }
 
   async register(dto: any): Promise<WorkPlanModel> {
-        
     let itemArray = [];
-    for(let i=0;i<dto.product.length;i++){
-      itemArray.push({ "_id": new ObjectId(dto.product[i].items)});
+    for (let i = 0; i < dto.product.length; i++) {
+      itemArray.push({ _id: new ObjectId(dto.product[i].items) });
     }
-    const costItems = await this._itemsModel.listByIds(itemArray); 
+    const costItems = await this._itemsModel.listByIds(itemArray);
 
     for (let i = 0; i < dto.product.length; i++) {
-      const item = costItems.find(item => item._id.toString() === dto.product[i].items);
+      const item = costItems.find(
+        (item) => item._id.toString() === dto.product[i].items,
+      );
       dto.product[i].items = item as any;
-    }    
+    }
 
     const result = await this._workPlanRepository.register(dto as any);
 
     return result;
-    
   }
 
-  async registerFromIntegration(dto: WorkPlanRegisterRequestDto): Promise<WorkPlanModel> {
-    const costItems = await this._costItemsService.listByIds(dto.product.map(item => item.items));
+  async registerFromIntegration(
+    dto: WorkPlanRegisterRequestDto,
+  ): Promise<WorkPlanModel> {
+    const costItems = await this._costItemsService.listByIds(
+      dto.product.map((item) => item.items),
+    );
 
     for (let i = 0; i < dto.product.length; i++) {
-      const item = costItems.find(item => item._id.toString() === dto.product[i].items);
+      const item = costItems.find(
+        (item) => item._id.toString() === dto.product[i].items,
+      );
       dto.product[i].items = item as any;
     }
 

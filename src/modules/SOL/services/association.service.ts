@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, HttpStatus } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  HttpStatus,
+} from "@nestjs/common";
 import { AssociationRepository } from "../repositories/association.repository";
 import { AssociationRegisterRequestDto } from "../dtos/association-register-request.dto";
 import { AssociationModel } from "../models/association.model";
@@ -18,46 +23,60 @@ export class AssociationService {
   private readonly _logger = new Logger(AssociationService.name);
 
   constructor(
-    private _associationRepository: AssociationRepository, 
+    private _associationRepository: AssociationRepository,
     private _userRepository: UserRepository,
-    private _associationModel: MyAssociationModel
+    private _associationModel: MyAssociationModel,
   ) {}
 
-  async register(dto: AssociationRegisterRequestDto): Promise<AssociationModel> {
-    
-    try{
+  async register(
+    dto: AssociationRegisterRequestDto,
+  ): Promise<AssociationModel> {
+    try {
       // Verifica si la asociación existe
-      
-      const res = await this._associationModel.getAssociation(dto.name, dto.cnpj)      
-      if(res){
-        throw new ErrorManager(HttpStatus.BAD_REQUEST, 'The association exists', 1);
+
+      const res = await this._associationModel.getAssociation(
+        dto.name,
+        dto.cnpj,
+      );
+      if (res) {
+        throw new ErrorManager(
+          HttpStatus.BAD_REQUEST,
+          "The association exists",
+          1,
+        );
       }
-           
-      const result = await this._associationRepository.register(dto);         
-      if (!result) throw new BadRequestException("Não foi possivel criar a associação!");
+
+      const result = await this._associationRepository.register(dto);
+      if (!result)
+        throw new BadRequestException("Não foi possivel criar a associação!");
 
       return result;
-    }catch(e){        
-      throw ErrorManager.createError(e)
+    } catch (e) {
+      throw ErrorManager.createError(e);
     }
   }
 
   async registerFromIntegration(dto: AssociationRegisterRequestDto) {
-    
-    try{
-      // Verifica si la asociación existe      
-      const res = await this._associationModel.getAssociation(dto.name, dto.cnpj)      
-      if(res){
-        return { type: "error" }
-      }           
-      const result = await this._associationRepository.register(dto);               
+    try {
+      // Verifica si la asociación existe
+      const res = await this._associationModel.getAssociation(
+        dto.name,
+        dto.cnpj,
+      );
+      if (res) {
+        return { type: "error" };
+      }
+      const result = await this._associationRepository.register(dto);
       return result;
-    }catch(e){        
-      throw ErrorManager.createError(e)
+    } catch (e) {
+      throw ErrorManager.createError(e);
     }
   }
 
-  async update(_id: string, dto: AssociationUpdateRequestDto): Promise<AssociationModel> {
+  async update(
+    _id: string,
+    dto: AssociationUpdateRequestDto,
+  ): Promise<AssociationModel> {
     const item = await this._associationRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Associação não encontrada!");
@@ -87,13 +106,12 @@ export class AssociationService {
     return await this._associationRepository.getByCnpj(cnpj);
   }
 
-  async handlerJob(data: ResponseEndpointAssociationDto[]) {      
-
+  async handlerJob(data: ResponseEndpointAssociationDto[]) {
     const now = new Date();
     for (let item of data) {
       const result = await this.registerFromIntegration({
         address: {
-          city: '-',
+          city: "-",
           complement: item.address.complement || "",
           latitude: (item.address.latitude || "").toString(),
           longitude: (item.address.longitude || "").toString(),
@@ -110,13 +128,18 @@ export class AssociationService {
           address: {
             city: item.legal_representative.address.city_code || "",
             complement: item.legal_representative.address.complement || "",
-            latitude: (item.legal_representative.address.latitude || "").toString(),
-            longitude: (item.legal_representative.address.longitude || "").toString(),
+            latitude: (
+              item.legal_representative.address.latitude || ""
+            ).toString(),
+            longitude: (
+              item.legal_representative.address.longitude || ""
+            ).toString(),
             neighborhood: item.legal_representative.address.neighborhood || "",
             number: (item.legal_representative.address.number || 0).toString(),
             zipCode: item.legal_representative.address.cep || "",
             publicPlace: item.legal_representative.address.address || "",
-            referencePoint: item.legal_representative.address.reference_point || "",
+            referencePoint:
+              item.legal_representative.address.reference_point || "",
             state: "-",
           },
           cpf: item.legal_representative.cpf || "",
@@ -129,8 +152,8 @@ export class AssociationService {
         },
       });
 
-      if(result['type'] == "error"){
-        item.users.forEach(async user => {
+      if (result["type"] == "error") {
+        item.users.forEach(async (user) => {
           await this._userRepository.register({
             association: result as any,
             document: user.cpf,
@@ -145,10 +168,6 @@ export class AssociationService {
           });
         });
       }
-
-      
-
     }
-
   }
 }
