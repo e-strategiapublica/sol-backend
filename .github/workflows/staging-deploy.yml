@@ -18,22 +18,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-          cache: "npm"
+          cache: "yarn"
 
       - name: Instalar dependências
-        run: npm ci
+        run: yarn install --frozen-lockfile
 
       - name: Lint
-        run: npm run lint
+        run: yarn lint
 
       - name: Type check
-        run: npm run type-check
+        run: yarn type-check
 
       - name: Testes
-        run: npm test
+        run: yarn test
 
       - name: Build
-        run: npm run build
+        run: yarn build
 
       - name: Setup SSH key
         uses: webfactory/ssh-agent@v0.7.0
@@ -52,13 +52,14 @@ jobs:
           # Transfere arquivos
           rsync -avz --delete \
             ./dist/ \
-            ./package*.json \
+            ./yarn.lock \
+            ./package.json \
             ./ecosystem.config.js \
             $SSH_USER@$SSH_HOST:$DEPLOY_PATH
 
           # Executa comandos remotos
           ssh $SSH_USER@$SSH_HOST "cd $DEPLOY_PATH && \
-            npm ci --production && \
+            yarn install --production --frozen-lockfile && \
             pm2 reload ecosystem.config.js"
 
       - name: Notificar deploy
