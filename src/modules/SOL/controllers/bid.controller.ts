@@ -561,3 +561,4 @@ export class BidController {
       throw ErrorManager.createError(error);
     }
   }
+}
