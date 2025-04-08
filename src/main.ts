@@ -9,9 +9,6 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as bodyParser from "body-parser";
 async function bootstrap() {
   const enviroment = process.env.NODE_ENV.toUpperCase();
-  console.log("URL DO MONGO:", process.env.NOSQL_CONNECTION_STRING);
-  console.log("ADMIN_DEFAULT_EMAIL:", process.env.ADMIN_DEFAULT_EMAIL);
-  console.log("ADMIN_DEFAULT_PASSWORD:", process.env.ADMIN_DEFAULT_PASSWORD);
 
   const keyFileExists = fs.existsSync("./../secrets/sol-app.api.key.pem");
   const certFileExists = fs.existsSync("./../secrets/sol-app.api.crt.pem");
