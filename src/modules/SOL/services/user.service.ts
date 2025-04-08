@@ -1,5 +1,5 @@
 import { UserTypeEnum } from "../enums/user-type.enum";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable } from "@nestjs/common";
 import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
 import { UserRegisterResponseDto } from "../dtos/user-register-response.dto";
 import { UserStatusEnum } from "../enums/user-status.enum";
@@ -22,6 +22,7 @@ import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto"
 import { SupplierService } from "./supplier.service";
 import { AssociationService } from "./association.service";
 import { UserRolesEnum } from "../enums/user-roles.enum";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class UserService {
@@ -81,8 +82,11 @@ export class UserService {
 
   async getByEmailFirstAccess(email: string): Promise<UserGetResponseDto> {
     const result = await this._userRepository.getByEmail(email);
-
-    if (!result) throw new BadRequestException("Email não encontrado!");
+    if (!result)
+      throw new CustomHttpException(
+        "Email não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
 
     if (result.status == UserStatusEnum.active)
       throw new BadRequestException("Você já realizou o primeiro acesso!");

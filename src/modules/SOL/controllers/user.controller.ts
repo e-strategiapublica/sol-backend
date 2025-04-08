@@ -16,7 +16,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiParam, ApiTags } from "@nestjs/swagger";
-import { ResponseDto } from "src/shared/dtos/response.dto";
+import { ResponseDto, ResponseDtoV2 } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ValidatorInterceptor } from "src/shared/interceptors/validator.interceptor";
 import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
@@ -41,6 +41,7 @@ import { UserUpdatePasswordValidator } from "../validators/user-update-password.
 import { UserUpdateValidator } from "../validators/user-update.validator";
 import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto";
 import { UserRolesEnum } from "../enums/user-roles.enum";
+import { VerificationRegisterResponseDto } from "../dtos/vertification-register-response.dto";
 
 @ApiTags("user")
 @Controller("user")
@@ -383,18 +384,12 @@ export class UserController {
 
   @Post("first-access")
   @HttpCode(200)
-  async firstAccess(@Body() dto: UserResetPasswordRequestDto) {
-    try {
-      const user = await this.userService.getByEmailFirstAccess(dto.email);
-      const result = await this.verificationService.sendFirstAcess(user);
-
-      return new ResponseDto(true, result, null);
-    } catch (error) {
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  async firstAccess(
+    @Body() dto: UserResetPasswordRequestDto,
+  ): Promise<ResponseDtoV2<VerificationRegisterResponseDto>> {
+    const user = await this.userService.getByEmailFirstAccess(dto.email);
+    const result = await this.verificationService.sendFirstAcess(user);
+    return { success: true, data: result };
   }
 
   @Put("reset-password-confirmation")
@@ -430,8 +425,6 @@ export class UserController {
     try {
       const result =
         await this.verificationService.resendResetPasswordEmail(dto);
-
-      return new ResponseDto(true, result, null);
     } catch (error) {
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
