@@ -453,22 +453,43 @@ export class BidController {
     @Res() res: Response,
   ) {
     try {
-      await this.bidsService.createDocument(_id, language, type as any);
-      res.sendFile(
-        path.resolve("src/shared/documents", "output.pdf"),
-        {},
-        (err) => {
-          if (err) {
-            throw new HttpException(
-              new ResponseDto(false, null, [err.message]),
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-          fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
-        },
+      this.logger.log(
+        `Recebida requisição para criar documento: _id=${_id}, language=${language}, type=${type}`,
       );
+
+      await this.bidsService.createDocument(_id, language, type as any);
+
+      const filePath = path.resolve("src/shared/documents", "output.pdf");
+      this.logger.log(`Tentando enviar arquivo: ${filePath}`);
+
+      if (!fs.existsSync(filePath)) {
+        this.logger.error(`Arquivo não encontrado: ${filePath}`);
+        throw new HttpException(
+          new ResponseDto(false, null, [`Arquivo não encontrado: ${filePath}`]),
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      res.sendFile(filePath, {}, (err) => {
+        if (err) {
+          this.logger.error(`Erro ao enviar arquivo: ${err.message}`);
+          throw new HttpException(
+            new ResponseDto(false, null, [err.message]),
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+        this.logger.log(`Arquivo enviado com sucesso: ${filePath}`);
+
+        // Deletar o arquivo após envio
+        try {
+          fs.unlinkSync(filePath);
+          this.logger.log(`Arquivo deletado após envio: ${filePath}`);
+        } catch (unlinkErr) {
+          this.logger.error(`Erro ao deletar arquivo: ${unlinkErr.message}`);
+        }
+      });
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(`Erro na geração do documento: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST,
@@ -500,11 +521,12 @@ export class BidController {
     try {
       const bidsHistory = await this._bidHistoryModel.listByBidId(bidId);
       let hash;
-
       let res, fieldSaved;
+
       if (bidsHistory.length > 0) {
         for (let i = 0; i < bidsHistory.length; i++) {
           hash = await this.bidsService.calculateHash(bidsHistory[i].data);
+
           const sendToBlockchain = this.configService.get(
             EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
           );
@@ -513,7 +535,9 @@ export class BidController {
               bidsHistory[i]._id.toHexString(),
             );
           }
+
           bidsHistory[i].hash = hash;
+
           if (!res) {
             bidsHistory[i].verifiedByLacchain = { result: false, hash: "" };
           } else if (res[0] == true) {
@@ -533,7 +557,7 @@ export class BidController {
           }
         }
       } else {
-        return { type: "error", message: "A licitação existe" };
+        return { type: "error", message: "A licitação não existe" }; // Ajustei a mensagem de erro
       }
 
       return bidsHistory;
