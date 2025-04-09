@@ -677,7 +677,7 @@ export class BidService {
       for (let j = 0; j < result.add_allotment[i].proposals.length; j++) {
         result.add_allotment[i].proposals[j].proposal.proposedBy =
           await this._userRepository.getById(
-            String(result.add_allotment[i].proposals[j].proposal.proposedBy._id)
+            String(result.add_allotment[i].proposals[j].proposal.proposedBy._id) //Linha alterada
           );
   
         const proposalDetails = await this._proposalRepository.getById(

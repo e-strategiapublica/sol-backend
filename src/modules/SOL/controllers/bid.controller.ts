@@ -153,24 +153,24 @@ export class BidController {
   }
 
 
-  //Alterando aqui
+  //Alterando aqui - fix/37-provider-field-wrongly-using-user-id
   @Get("get-by-id/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getById(@Param("_id") _id: string) {
-    this.logger.log(`GET /get-by-id/${_id} - Iniciando requisição`);
+    // this.logger.log(`GET /get-by-id/${_id} - Iniciando requisição`);
   
     try {
-      this.logger.debug(`Buscando bid com ID: ${_id}`);
+      // this.logger.debug(`Buscando bid com ID: ${_id}`);
   
       const response = await this.bidsService.getById(_id);
   
-      this.logger.debug(`Bid encontrado: ${JSON.stringify(response)}`);
+      // this.logger.debug(`Bid encontrado: ${JSON.stringify(response)}`);
   
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(`Erro ao buscar bid com ID ${_id}: ${error.message}`, error.stack);
+      // this.logger.error(`Erro ao buscar bid com ID ${_id}: ${error.message}`, error.stack);
   
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
