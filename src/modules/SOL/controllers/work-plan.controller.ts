@@ -1,10 +1,21 @@
-import { Body, Controller, Get, HttpCode, HttpException, HttpStatus, Logger, Param, Post, Put, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { WorkPlanService } from "../services/work-plan.service";
 import { ResponseDto } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { WorkPlanRegisterRequestDto } from "../dtos/work-plan-register-request.dto";
-
 
 @ApiTags("workplan")
 @Controller("workplan")
@@ -24,7 +35,10 @@ export class WorkPlanController {
       return new ResponseDto(true, response, null);
     } catch (error) {
       this._logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -37,34 +51,41 @@ export class WorkPlanController {
       const response = await this._workPlanService.findById(id);
 
       return new ResponseDto(true, response, null);
-    }catch (error) {
+    } catch (error) {
       this._logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
-  @Post('register')
+  @Post("register")
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async register( @Body() dto: any) {
+  async register(@Body() dto: any) {
     try {
-
       const response = await this._workPlanService.register(dto);
-      
+
       return new ResponseDto(true, response, null);
     } catch (error) {
-
       this._logger.error(error.message);
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
-  @Put('update/:id')
+  @Put("update/:id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async update(@Param('id') id: string, @Body() dto: WorkPlanRegisterRequestDto) {
+  async update(
+    @Param("id") id: string,
+    @Body() dto: WorkPlanRegisterRequestDto,
+  ) {
     try {
       const response = await this._workPlanService.update(id, dto);
 
@@ -72,8 +93,10 @@ export class WorkPlanController {
     } catch (error) {
       this._logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
-
 }

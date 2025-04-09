@@ -10,32 +10,32 @@ import {
   Req,
   UseGuards,
   UseInterceptors,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { ResponseDto } from 'src/shared/dtos/response.dto';
-import { JwtAuthGuard } from 'src/shared/guards/jwt-auth.guard';
-import { ValidatorInterceptor } from 'src/shared/interceptors/validator.interceptor';
-import { JwtPayload } from 'src/shared/interfaces/jwt-payload.interface';
-import { AuthenticateResponseDto } from '../dtos/authenticate-responsedto';
-import { TfaDeleteRequestDto } from '../dtos/tfa-delete-request.dto';
-import { TfaRegisterRequestDto } from '../dtos/tfa-register-request.dto';
-import { TfaVerifyAuthRequestDto } from '../dtos/tfa-verify-auth-request.dto';
-import { TfaVerifyRequestDto } from '../dtos/tfa-verify-request.dto';
-import { UserRepository } from '../repositories/user.repository';
-import { AuthenticationService } from '../services/authentication.service';
-import { TfaService } from '../services/tfa.service';
-import { TfaRegisterValidator } from '../validators/tfa-register.validator';
-import { TfaVerifyAuthValidator } from '../validators/tfa-verify-auth.validator';
-import { TfaVerifyValidator } from '../validators/tfa-verify.validator';
+} from "@nestjs/common";
+import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
+import { ResponseDto } from "src/shared/dtos/response.dto";
+import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
+import { ValidatorInterceptor } from "src/shared/interceptors/validator.interceptor";
+import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
+import { AuthenticateResponseDto } from "../dtos/authenticate-responsedto";
+import { TfaDeleteRequestDto } from "../dtos/tfa-delete-request.dto";
+import { TfaRegisterRequestDto } from "../dtos/tfa-register-request.dto";
+import { TfaVerifyAuthRequestDto } from "../dtos/tfa-verify-auth-request.dto";
+import { TfaVerifyRequestDto } from "../dtos/tfa-verify-request.dto";
+import { UserRepository } from "../repositories/user.repository";
+import { AuthenticationService } from "../services/authentication.service";
+import { TfaService } from "../services/tfa.service";
+import { TfaRegisterValidator } from "../validators/tfa-register.validator";
+import { TfaVerifyAuthValidator } from "../validators/tfa-verify-auth.validator";
+import { TfaVerifyValidator } from "../validators/tfa-verify.validator";
 
-@ApiTags('2fa')
-@Controller('2fa')
+@ApiTags("2fa")
+@Controller("2fa")
 export class TfaController {
   constructor(
     private readonly _tfaService: TfaService,
     private readonly _userRepository: UserRepository,
     private readonly authenticationService: AuthenticationService,
-  ) { }
+  ) {}
 
   @Get()
   @HttpCode(200)
@@ -56,8 +56,7 @@ export class TfaController {
     }
   }
 
-
-  @Post('register')
+  @Post("register")
   @HttpCode(201)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -78,7 +77,7 @@ export class TfaController {
     }
   }
 
-  @Post('delete')
+  @Post("delete")
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -90,7 +89,7 @@ export class TfaController {
 
       const isValid = this._tfaService.verify(dto);
 
-      if (!isValid) throw new BadRequestException('Código inválido!');
+      if (!isValid) throw new BadRequestException("Código inválido!");
 
       const result = await this._tfaService.delete(dto);
 
@@ -103,7 +102,7 @@ export class TfaController {
     }
   }
 
-  @Post('verify')
+  @Post("verify")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(new ValidatorInterceptor(new TfaVerifyValidator()))
@@ -126,7 +125,7 @@ export class TfaController {
     }
   }
 
-  @Post('verify/auth')
+  @Post("verify/auth")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -165,12 +164,12 @@ export class TfaController {
             accessToken.accessToken,
             refreshToken.accessToken,
             user.type,
-            user.roles
+            user.roles,
           ),
           null,
         );
       } else {
-        throw new BadRequestException('Invalid code');
+        throw new BadRequestException("Invalid code");
       }
     } catch (error) {
       throw new HttpException(

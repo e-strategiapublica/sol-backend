@@ -33,12 +33,10 @@ export class AssociationController {
   @ApiBearerAuth()
   async register(@Body() dto: AssociationRegisterRequestDto) {
     try {
-
       const response = await this.associationService.register(dto);
       return new ResponseDto(true, response, null);
-      
     } catch (error) {
-       throw ErrorManager.createError(error) 
+      throw ErrorManager.createError(error);
     }
   }
 
@@ -54,7 +52,10 @@ export class AssociationController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -70,7 +71,10 @@ export class AssociationController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -78,7 +82,10 @@ export class AssociationController {
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateById(@Param("_id") _id: string, @Body() dto: AssociationRegisterRequestDto) {
+  async updateById(
+    @Param("_id") _id: string,
+    @Body() dto: AssociationRegisterRequestDto,
+  ) {
     try {
       const response = await this.associationService.update(_id, dto);
 
@@ -86,7 +93,10 @@ export class AssociationController {
     } catch (error) {
       this.logger.error(error.message);
 
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
@@ -100,7 +110,10 @@ export class AssociationController {
 
       return new ResponseDto(true, result, null);
     } catch (error) {
-      throw new HttpException(new ResponseDto(false, null, [error.message]), HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }

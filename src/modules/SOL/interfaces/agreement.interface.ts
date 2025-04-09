@@ -29,5 +29,9 @@ export interface AgreementInterfaceWithId extends AgreementInterface {
 
 export interface WorkPlanInterface {
   name: string;
-  product: Array<{ quantity: string; unitValue: number; items: ItemsInterfaceWithId }>;
+  product: Array<{
+    quantity: string;
+    unitValue: number;
+    items: ItemsInterfaceWithId;
+  }>;
 }

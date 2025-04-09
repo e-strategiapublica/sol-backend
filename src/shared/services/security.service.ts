@@ -1,28 +1,19 @@
-import * as CryptoJS from 'crypto-js';
+import * as CryptoJS from "crypto-js";
 
 export class SecurityService {
+  encrypt(data) {
+    const key = process.env.ENCRYPT_KEY;
 
-    encrypt(data) {
+    const encryptData = CryptoJS.AES.encrypt(JSON.stringify(data), key);
 
-        const key = process.env.ENCRYPT_KEY;
+    return encryptData.toString();
+  }
 
-        const encryptData = CryptoJS.AES.encrypt(
-            JSON.stringify(data),
-            key,
-        );
+  decypt(data) {
+    const bytes = CryptoJS.AES.decrypt(data, process.env.ENCRYPT_KEY);
 
-        return encryptData.toString();
-    }
+    if (bytes.toString()) return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
 
-    decypt(data) {
-        const bytes = CryptoJS.AES.decrypt(
-            data,
-            process.env.ENCRYPT_KEY
-        );
-
-        if (bytes.toString())
-            return JSON.parse(bytes.toString(CryptoJS.enc.Utf8));
-
-        return data;
-    }
+    return data;
+  }
 }

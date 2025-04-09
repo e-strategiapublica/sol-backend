@@ -1,5 +1,5 @@
 export enum EndPointsTypeEnum {
-    association = "association",
-    agreement = "agreement",
-    costItems = "costItems",
+  association = "association",
+  agreement = "agreement",
+  costItems = "costItems",
 }

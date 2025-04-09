@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger, StreamableFile } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  StreamableFile,
+} from "@nestjs/common";
 import { AllotmentRepository } from "../repositories/allotment.repository";
 import { AllotmentModel } from "../models/allotment.model";
 import { AllotmentRegisterDto } from "../dtos/allotment-register-request.dto";
@@ -15,14 +20,17 @@ export class AllotmentService {
   constructor(
     private readonly _allotmentRepository: AllotmentRepository,
     private readonly _fileRepository: FileRepository,
-  ) { }
+  ) {}
 
   async register(dto: AllotmentRegisterDto): Promise<AllotmentModel> {
     dto.status = AllotmentStatusEnum.rascunho;
 
     const result = await this._allotmentRepository.register(dto);
 
-    if (!result) throw new BadRequestException("Não foi possivel cadastrar essa essa proposta!");
+    if (!result)
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa essa proposta!",
+      );
 
     return result;
   }
@@ -35,36 +43,53 @@ export class AllotmentService {
   async listById(_id: string): Promise<AllotmentModel> {
     const result = await this._allotmentRepository.listById(_id);
     if (!result) {
-      throw new BadRequestException("Não foi possivel cadastrar essa essa proposta!");
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa essa proposta!",
+      );
     }
 
     return result;
   }
 
-  async updateStatus(_id: string, status: AllotmentStatusEnum): Promise<AllotmentModel> {
-    const item: MutableObject<AllotmentModel> = await this._allotmentRepository.listById(_id);
+  async updateStatus(
+    _id: string,
+    status: AllotmentStatusEnum,
+  ): Promise<AllotmentModel> {
+    const item: MutableObject<AllotmentModel> =
+      await this._allotmentRepository.listById(_id);
     if (!item) {
-      throw new BadRequestException("Não foi possivel cadastrar essa essa proposta!");
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa essa proposta!",
+      );
     }
-   
+
     item.status = status;
-    const result = await this._allotmentRepository.updateStauts(_id, item.status);
+    const result = await this._allotmentRepository.updateStauts(
+      _id,
+      item.status,
+    );
     return result;
   }
 
-
-  async updateProposal(_id: string, dto: AllotAddProposalDto): Promise<AllotmentModel> {
+  async updateProposal(
+    _id: string,
+    dto: AllotAddProposalDto,
+  ): Promise<AllotmentModel> {
     const item = await this._allotmentRepository.listById(_id);
     if (!item) {
-      throw new BadRequestException('Não foi possivel cadastrar essa essa proposta!');
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa essa proposta!",
+      );
     }
-    return
+    return;
   }
 
   async downloadAllotmentById(_id: string): Promise<any> {
     const result = await this._allotmentRepository.listById(_id);
     if (!result) {
-      throw new BadRequestException('Não foi possivel cadastrar essa essa proposta!');
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa essa proposta!",
+      );
     }
     return this._fileRepository.download(result.files);
   }
@@ -73,5 +98,4 @@ export class AllotmentService {
     const result = await this._allotmentRepository.updateItem(_id, dto);
     return result;
   }
-
 }

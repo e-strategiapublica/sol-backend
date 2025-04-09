@@ -5,14 +5,12 @@ import { UserUpdateRequestDto } from "../dtos/user-update-request.dto";
 
 @Injectable()
 export class UserUpdateValidator implements ValidatorContractInterface {
+  errors: any[];
 
-    errors: any[];
+  validate(dto: UserUpdateRequestDto): boolean {
+    const validator = new ValidatorsUtil();
 
-    validate(dto: UserUpdateRequestDto): boolean {
-
-        const validator = new ValidatorsUtil();
-
-        this.errors = validator.errors;
-        return validator.isValid();
-    }
+    this.errors = validator.errors;
+    return validator.isValid();
+  }
 }

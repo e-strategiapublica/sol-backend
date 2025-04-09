@@ -1,43 +1,48 @@
 import {
-  BadRequestException, Controller, Get,
+  BadRequestException,
+  Controller,
+  Get,
   HttpCode,
   HttpException,
   HttpStatus,
-  Param, UseGuards
-} from '@nestjs/common';
-import { Put, Req } from '@nestjs/common/decorators';
-import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
-import { JwtPayload } from 'src/shared/interfaces/jwt-payload.interface';
-import { ResponseDto } from '../../../shared/dtos/response.dto';
-import { JwtAuthGuard } from '../../../shared/guards/jwt-auth.guard';
-import { TutorialLocationEnum } from '../enums/tutorial-location.enum';
-import { TutorialService } from '../services/tutorial.service';
+  Param,
+  UseGuards,
+} from "@nestjs/common";
+import { Put, Req } from "@nestjs/common/decorators";
+import { ApiBearerAuth, ApiParam, ApiTags } from "@nestjs/swagger";
+import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
+import { ResponseDto } from "../../../shared/dtos/response.dto";
+import { JwtAuthGuard } from "../../../shared/guards/jwt-auth.guard";
+import { TutorialLocationEnum } from "../enums/tutorial-location.enum";
+import { TutorialService } from "../services/tutorial.service";
 
-@ApiTags('translate')
-@Controller('translate')
+@ApiTags("translate")
+@Controller("translate")
 export class TutorialController {
-  constructor(private readonly _tutorialService: TutorialService) { }
+  constructor(private readonly _tutorialService: TutorialService) {}
 
-  @Get('select/:translate')
+  @Get("select/:translate")
   @HttpCode(200)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @ApiParam({
-    name: 'screenLocation',
+    name: "screenLocation",
     allowEmptyValue: false,
     enum: TutorialLocationEnum,
-    required: true
+    required: true,
   })
   async getByScreenLocation(
-    @Param('screenLocation') screenLocation: TutorialLocationEnum,
+    @Param("screenLocation") screenLocation: TutorialLocationEnum,
     @Req() request: any,
   ) {
     try {
-
       if (!Object.keys(TutorialLocationEnum).includes(screenLocation)) {
-        throw new BadRequestException('Screen location not reconized.');
+        throw new BadRequestException("Screen location not reconized.");
       }
-      let result = await this._tutorialService.getByScreenLocationWithUserId(screenLocation);
+      let result =
+        await this._tutorialService.getByScreenLocationWithUserId(
+          screenLocation,
+        );
 
       return new ResponseDto(true, result, null);
     } catch (error) {
@@ -48,17 +53,17 @@ export class TutorialController {
     }
   }
 
-  @Put('add-translate/translate-id/:id')
+  @Put("add-translate/translate-id/:id")
   @HttpCode(201)
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
-  async addCompletion(
-    @Req() request: any,
-    @Param('id') id: string
-  ) {
+  async addCompletion(@Req() request: any, @Param("id") id: string) {
     try {
       const payload: JwtPayload = request.user;
-      const result = await this._tutorialService.addCompletion(id, payload.userId);
+      const result = await this._tutorialService.addCompletion(
+        id,
+        payload.userId,
+      );
       return new ResponseDto(true, result, null);
     } catch (error) {
       throw new HttpException(
@@ -67,5 +72,4 @@ export class TutorialController {
       );
     }
   }
-
 }

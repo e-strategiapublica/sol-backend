@@ -10,7 +10,7 @@ export abstract class WorkPlanRegisterRequestDto {
     items: {
       type: "object",
       properties: {
-        quantity: { type: "number" },        
+        quantity: { type: "number" },
         unitValue: { type: "number" },
         items: { type: "string" },
       },

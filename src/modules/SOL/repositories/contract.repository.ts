@@ -11,12 +11,18 @@ import { BidStatusEnum } from "../enums/bid-status.enum";
 
 @Injectable()
 export class ContractRepository {
-  constructor(@InjectModel(Contract.name) private readonly _model: Model<ContractModel>) {}
+  constructor(
+    @InjectModel(Contract.name) private readonly _model: Model<ContractModel>,
+  ) {}
 
   async register(dto: ContractRegisterDto): Promise<ContractModel> {
     const data = await new this._model(dto);
     const saveResult = await data.save();
-    await this._model.findOneAndUpdate({ _id: saveResult._id }, { $inc: { sequencial_number: 1 } }, { new: true });
+    await this._model.findOneAndUpdate(
+      { _id: saveResult._id },
+      { $inc: { sequencial_number: 1 } },
+      { new: true },
+    );
     return saveResult;
   }
 
@@ -25,7 +31,10 @@ export class ContractRepository {
     return await data.save();
   }
 
-  async updateStatus(_id: string, dto: ContractUpdateDto): Promise<ContractModel> {
+  async updateStatus(
+    _id: string,
+    dto: ContractUpdateDto,
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -33,11 +42,14 @@ export class ContractRepository {
           status: dto.status,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async updateContractNumber(_id: string, sequencial: number): Promise<ContractModel> {
+  async updateContractNumber(
+    _id: string,
+    sequencial: number,
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -45,11 +57,14 @@ export class ContractRepository {
           contract_number: `${sequencial}/${new Date().getFullYear()}`,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async signAssociation(_id: string, dto: ContractUpdateDto): Promise<ContractModel> {
+  async signAssociation(
+    _id: string,
+    dto: ContractUpdateDto,
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -59,11 +74,14 @@ export class ContractRepository {
           association_sign_date: new Date().toDateString(),
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async signSupplier(_id: string, dto: ContractUpdateDto): Promise<ContractModel> {
+  async signSupplier(
+    _id: string,
+    dto: ContractUpdateDto,
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -73,7 +91,7 @@ export class ContractRepository {
           supplier_sign_date: new Date().toDateString(),
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -85,7 +103,7 @@ export class ContractRepository {
           status: ContractStatusEnum.assinado,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -99,9 +117,9 @@ export class ContractRepository {
       .populate("proposal_id");
   }
 
-  async listByAssociationId(_id:string): Promise<ContractModel[]> {
+  async listByAssociationId(_id: string): Promise<ContractModel[]> {
     return await this._model
-      .find({association_id: _id })
+      .find({ association_id: _id })
       .populate("bid_number")
       .populate({ path: "bid_number", populate: { path: "agreement" } })
       .populate("association_id")
@@ -140,7 +158,7 @@ export class ContractRepository {
           { path: "agreement", populate: { path: "association" } },
           { path: "add_allotment" },
           { path: "association", populate: [{ path: "association" }] },
-          { path: "invited_suppliers"}
+          { path: "invited_suppliers" },
         ],
       })
       .populate("association_id")
@@ -154,7 +172,11 @@ export class ContractRepository {
       .populate("bid_number")
       .populate({
         path: "bid_number",
-        populate: [{ path: "agreement" }, { path: "add_allotment" }, { path: "association" }],
+        populate: [
+          { path: "agreement" },
+          { path: "add_allotment" },
+          { path: "association" },
+        ],
       })
       .populate("association_id")
       .populate("supplier_id")
@@ -169,11 +191,14 @@ export class ContractRepository {
           delete: true,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async updateStatusAndItens(_id: string, dto: ContractUpdateStatusItemDto): Promise<ContractModel> {
+  async updateStatusAndItens(
+    _id: string,
+    dto: ContractUpdateStatusItemDto,
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -181,11 +206,14 @@ export class ContractRepository {
           status: dto.status,
           items_received: dto.items_received,
         },
-      }
+      },
     );
   }
 
-  async updateValueAndProposal(_id: string, dto: { value: string; proposal: any[] }): Promise<ContractModel> {
+  async updateValueAndProposal(
+    _id: string,
+    dto: { value: string; proposal: any[] },
+  ): Promise<ContractModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -193,11 +221,13 @@ export class ContractRepository {
           value: dto.value,
           proposal_id: dto.proposal,
         },
-      }
+      },
     );
   }
 
   async listByBidIds(_ids: string[]): Promise<ContractModel[]> {
-    return await this._model.find({ bid_number: { $in: _ids } }).populate("proposal_id");
+    return await this._model
+      .find({ bid_number: { $in: _ids } })
+      .populate("proposal_id");
   }
 }

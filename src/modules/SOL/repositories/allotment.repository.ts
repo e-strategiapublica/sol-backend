@@ -11,7 +11,9 @@ import { AllotmentStatusEnum } from "../enums/allotment-status.enum";
 
 @Injectable()
 export class AllotmentRepository {
-  constructor(@InjectModel(Allotment.name) private readonly _model: Model<AllotmentModel>) { }
+  constructor(
+    @InjectModel(Allotment.name) private readonly _model: Model<AllotmentModel>,
+  ) {}
 
   async register(dto: AllotmentRegisterDto): Promise<AllotmentModel> {
     const data = await new this._model(dto);
@@ -42,7 +44,7 @@ export class AllotmentRepository {
       {
         $set: { dto },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -52,11 +54,14 @@ export class AllotmentRepository {
       {
         $set: { allotment_name: dto.allotment_name },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async updateStauts(_id, status: AllotmentStatusEnum): Promise<AllotmentModel> {
+  async updateStauts(
+    _id,
+    status: AllotmentStatusEnum,
+  ): Promise<AllotmentModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -65,13 +70,16 @@ export class AllotmentRepository {
     );
   }
 
-  async addProposal(_id, dto: ProposalInAllotmentRequestDto[]): Promise<AllotmentModel> {
+  async addProposal(
+    _id,
+    dto: ProposalInAllotmentRequestDto[],
+  ): Promise<AllotmentModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
         $set: { proposals: dto },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -83,7 +91,7 @@ export class AllotmentRepository {
           proposals: dto,
         },
       },
-      { new: true }
+      { new: true },
     );
     return item;
   }
@@ -96,7 +104,7 @@ export class AllotmentRepository {
           add_item: dto,
         },
       },
-      { new: true }
+      { new: true },
     );
     return item;
   }
@@ -107,11 +115,17 @@ export class AllotmentRepository {
       {
         $set: { proposals: [] },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async updateStatusByIds(_ids: string[], status: AllotmentStatusEnum): Promise<any> {
-    return await this._model.updateMany({ _id: { $in: _ids } }, { $set: { status } });
+  async updateStatusByIds(
+    _ids: string[],
+    status: AllotmentStatusEnum,
+  ): Promise<any> {
+    return await this._model.updateMany(
+      { _id: { $in: _ids } },
+      { $set: { status } },
+    );
   }
 }

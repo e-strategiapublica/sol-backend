@@ -9,7 +9,9 @@ import { PlataformModel } from "../models/plataform.model";
 
 @Injectable()
 export class PlataformRepository {
-  constructor(@InjectModel(Plataform.name) private readonly _model: Model<BidModel>) {}
+  constructor(
+    @InjectModel(Plataform.name) private readonly _model: Model<BidModel>,
+  ) {}
 
   async register(dto: BidDateUpdateDto): Promise<PlataformModel> {
     const data = await new this._model(dto);
@@ -17,8 +19,7 @@ export class PlataformRepository {
   }
 
   async findOne(): Promise<PlataformModel> {
-     return await  this._model.findOne();
-    
+    return await this._model.findOne();
   }
 
   async update(_id: string, dto: BidDateUpdateDto): Promise<PlataformModel> {
@@ -27,11 +28,10 @@ export class PlataformRepository {
       {
         $set: {
           start_at: dto.start_at,
-          end_at: dto.end_at
+          end_at: dto.end_at,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
-
 }

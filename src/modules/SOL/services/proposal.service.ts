@@ -48,22 +48,34 @@ export class ProposalService {
     private readonly _userRepository: UserRepository,
     private readonly _contractService: ContractService,
     private readonly _notificationService: NotificationService,
-    private readonly _bidService: BidService
-  ) { }
+    private readonly _bidService: BidService,
+  ) {}
 
-  async register(proposedById: string, dto: ProposalRegisterDto): Promise<ProposalModel> {
+  async register(
+    proposedById: string,
+    dto: ProposalRegisterDto,
+  ): Promise<ProposalModel> {
     const proposedBy = await this._userRepository.getById(proposedById);
 
     let bid = await this._bidRepository.getById(dto.licitacaoId);
     if (bid.bid_type !== "globalPrice") {
-      const allotment = await this._allotmentRepository.listById(dto.allotmentIds[0]);
+      const allotment = await this._allotmentRepository.listById(
+        dto.allotmentIds[0],
+      );
       dto.allotment = [allotment];
     } else {
-      const allotment = await this._allotmentRepository.listByIds(dto.allotmentIds);
+      const allotment = await this._allotmentRepository.listByIds(
+        dto.allotmentIds,
+      );
       dto.allotment = allotment;
     }
-    if (BidStatusEnum.open !== bid.status && BidStatusEnum.reopened !== bid.status)
-      throw new BadRequestException("Não é possivel cadastrar proposta para licitação fechada!");
+    if (
+      BidStatusEnum.open !== bid.status &&
+      BidStatusEnum.reopened !== bid.status
+    )
+      throw new BadRequestException(
+        "Não é possivel cadastrar proposta para licitação fechada!",
+      );
 
     dto.bid = bid;
 
@@ -71,55 +83,78 @@ export class ProposalService {
 
     dto.status = ProposalStatusEnum["aguardando1"];
 
-    const proposalList: MutableObject<ProposalModel>[] = await this._proposalRepository.listByBid(dto.licitacaoId);
+    const proposalList: MutableObject<ProposalModel>[] =
+      await this._proposalRepository.listByBid(dto.licitacaoId);
 
     if (!proposalList.length) {
       dto.proposalWin = true;
       const result = await this._proposalRepository.register(dto);
       for (let iterator of dto.allotment) {
-        const allotmentAddProposal = await this._allotmentRepository.addProposal(iterator._id, [
-          {
-            proposal: result,
-            proposalWin: dto.proposalWin,
-          },
-        ]);
+        const allotmentAddProposal =
+          await this._allotmentRepository.addProposal(iterator._id, [
+            {
+              proposal: result,
+              proposalWin: dto.proposalWin,
+            },
+          ]);
       }
-      if (!result) throw new BadRequestException("Não foi possivel cadastrar essa proposta!");
+      if (!result)
+        throw new BadRequestException(
+          "Não foi possivel cadastrar essa proposta!",
+        );
 
       return result;
     }
 
     if (bid.bid_type === "globalPrice") {
-      const verify = proposalList.some(
-        el => extractAndCompareContent(el.proposedBy.supplier._id.toString(), proposedBy.supplier._id.toString())
+      const verify = proposalList.some((el) =>
+        extractAndCompareContent(
+          el.proposedBy.supplier._id.toString(),
+          proposedBy.supplier._id.toString(),
+        ),
       );
       if (verify) {
-        throw new BadRequestException("Já foi enviado uma proposta para essa licitação!");
+        throw new BadRequestException(
+          "Já foi enviado uma proposta para essa licitação!",
+        );
       }
     }
 
     if (bid.bid_type !== "globalPrice") {
       let verify: boolean = false;
 
-      dto.allotment.forEach(el => {
-        el.proposals.forEach(item => {
-          const proposal = proposalList.find(pro => extractAndCompareContent(pro._id.toString(), item.proposal._id.toString()));
+      dto.allotment.forEach((el) => {
+        el.proposals.forEach((item) => {
+          const proposal = proposalList.find((pro) =>
+            extractAndCompareContent(
+              pro._id.toString(),
+              item.proposal._id.toString(),
+            ),
+          );
 
-          if (proposal && extractAndCompareContent(proposal.proposedBy.supplier._id.toString(), proposedBy.supplier._id.toString())) {
+          if (
+            proposal &&
+            extractAndCompareContent(
+              proposal.proposedBy.supplier._id.toString(),
+              proposedBy.supplier._id.toString(),
+            )
+          ) {
             verify = true;
           }
         });
 
-
         if (verify) {
-          throw new BadRequestException("Já foi enviado uma proposta para essa licitação!");
+          throw new BadRequestException(
+            "Já foi enviado uma proposta para essa licitação!",
+          );
         }
       });
     }
 
-    const allotment: MutableObject<AllotmentModel> = await this._allotmentRepository.listById(dto.allotmentIds[0]);
+    const allotment: MutableObject<AllotmentModel> =
+      await this._allotmentRepository.listById(dto.allotmentIds[0]);
     const newProposal: ProposalInAllotmentInterface[] = [];
-    allotment.proposals.forEach(el => {
+    allotment.proposals.forEach((el) => {
       if (el.proposal) {
         el.proposal.proposalWin = false;
         newProposal.push({
@@ -131,29 +166,41 @@ export class ProposalService {
 
     if (bid.bid_type === "globalPrice") {
       await this._proposalRepository.updateListProposedWin(
-        proposalList.map(item => item._id.toString()),
-        { proposalWin: false }
+        proposalList.map((item) => item._id.toString()),
+        { proposalWin: false },
       );
 
-      const objectWithSmallestValue = proposalList.reduce((prev: any, current: any) => {
-        return (current.total_value + (current.freight ?? 0)) < (prev.total_value + (prev.freight ?? 0)) ? current : prev;
-      });
+      const objectWithSmallestValue = proposalList.reduce(
+        (prev: any, current: any) => {
+          return current.total_value + (current.freight ?? 0) <
+            prev.total_value + (prev.freight ?? 0)
+            ? current
+            : prev;
+        },
+      );
 
       if (dto.total_value === objectWithSmallestValue.total_value) {
         dto.proposalWin = true;
-        const anotherWithSameValue = proposalList.filter(el => el.total_value === objectWithSmallestValue.total_value);
+        const anotherWithSameValue = proposalList.filter(
+          (el) => el.total_value === objectWithSmallestValue.total_value,
+        );
         if (anotherWithSameValue.length > 0) {
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(item => item._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((item) => item._id.toString()),
+            { proposalWin: true },
           );
         }
 
         if (newProposal.length > 0)
           for (let data of anotherWithSameValue) {
-            const index = newProposal.findIndex(el => extractAndCompareContent(el.proposal._id.toString(), data._id.toString()));
-            
-            if(newProposal[index]){
+            const index = newProposal.findIndex((el) =>
+              extractAndCompareContent(
+                el.proposal._id.toString(),
+                data._id.toString(),
+              ),
+            );
+
+            if (newProposal[index]) {
               data.proposalWin = true;
               newProposal[index].proposalWin = true;
               newProposal[index].proposal = data;
@@ -166,18 +213,22 @@ export class ProposalService {
       if (dto.total_value > objectWithSmallestValue.total_value) {
         dto.proposalWin = false;
 
-        const anotherWithSameValue = proposalList.filter(el => el.total_value === objectWithSmallestValue.total_value);
+        const anotherWithSameValue = proposalList.filter(
+          (el) => el.total_value === objectWithSmallestValue.total_value,
+        );
         if (anotherWithSameValue.length > 0) {
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(item => item._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((item) => item._id.toString()),
+            { proposalWin: true },
           );
         }
         if (newProposal.length > 0)
           for (let data of anotherWithSameValue) {
-            const index = newProposal.findIndex(el => extractAndCompareContent(el.proposal.id, data.id));
-            
-            if(newProposal[index]){
+            const index = newProposal.findIndex((el) =>
+              extractAndCompareContent(el.proposal.id, data.id),
+            );
+
+            if (newProposal[index]) {
               data.proposalWin = true;
               newProposal[index].proposalWin = true;
               newProposal[index].proposal = data;
@@ -188,38 +239,48 @@ export class ProposalService {
 
     if (bid.bid_type !== "globalPrice" && newProposal.length > 0) {
       await this._proposalRepository.updateListProposedWin(
-        newProposal.map(item => item.proposal._id.toString()),
-        { proposalWin: false }
+        newProposal.map((item) => item.proposal._id.toString()),
+        { proposalWin: false },
       );
 
       const proposalWithSmallValue = newProposal.reduce((prev, current) => {
-        return (current.proposal.total_value + (current.proposal.freight ?? 0)) < (prev.proposal.total_value + (prev.proposal.freight ?? 0)) ? current : prev;
-
+        return current.proposal.total_value + (current.proposal.freight ?? 0) <
+          prev.proposal.total_value + (prev.proposal.freight ?? 0)
+          ? current
+          : prev;
       });
 
       if (dto.total_value === proposalWithSmallValue.proposal.total_value) {
         dto.proposalWin = true;
         const anotherWithSameValue = newProposal.filter(
-          el => el.proposal.total_value === proposalWithSmallValue.proposal.total_value
+          (el) =>
+            el.proposal.total_value ===
+            proposalWithSmallValue.proposal.total_value,
         );
         if (anotherWithSameValue.length > 0) {
           anotherWithSameValue.forEach((el, index) => {
-            const proposalIndex = newProposal.findIndex(
-              item => extractAndCompareContent(item.proposal._id.toString(), el.proposal._id.toString())
+            const proposalIndex = newProposal.findIndex((item) =>
+              extractAndCompareContent(
+                item.proposal._id.toString(),
+                el.proposal._id.toString(),
+              ),
             );
             if (proposalIndex != -1) {
-              if(newProposal[proposalIndex]){
+              if (newProposal[proposalIndex]) {
                 newProposal[proposalIndex].proposalWin = true;
-                newProposal[proposalIndex].proposal = proposalList.find(
-                  a => extractAndCompareContent(a._id.toString(), el.proposal._id.toString())
+                newProposal[proposalIndex].proposal = proposalList.find((a) =>
+                  extractAndCompareContent(
+                    a._id.toString(),
+                    el.proposal._id.toString(),
+                  ),
                 );
                 newProposal[proposalIndex].proposal.proposalWin = true;
               }
             }
           });
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(el => el.proposal._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((el) => el.proposal._id.toString()),
+            { proposalWin: true },
           );
         }
       }
@@ -230,26 +291,34 @@ export class ProposalService {
         dto.proposalWin = false;
 
         const anotherWithSameValue = newProposal.filter(
-          el => el.proposal.total_value === proposalWithSmallValue.proposal.total_value
+          (el) =>
+            el.proposal.total_value ===
+            proposalWithSmallValue.proposal.total_value,
         );
         if (anotherWithSameValue.length > 0) {
           anotherWithSameValue.forEach((el, index) => {
-            const proposalIndex = newProposal.findIndex(
-              item => extractAndCompareContent(item.proposal._id.toString(), el.proposal._id.toString())
+            const proposalIndex = newProposal.findIndex((item) =>
+              extractAndCompareContent(
+                item.proposal._id.toString(),
+                el.proposal._id.toString(),
+              ),
             );
             if (proposalIndex != -1) {
-              if(newProposal[proposalIndex]){
+              if (newProposal[proposalIndex]) {
                 newProposal[proposalIndex].proposalWin = true;
-                newProposal[proposalIndex].proposal = proposalList.find(
-                  a => extractAndCompareContent(a._id.toString(), el.proposal._id.toString())
+                newProposal[proposalIndex].proposal = proposalList.find((a) =>
+                  extractAndCompareContent(
+                    a._id.toString(),
+                    el.proposal._id.toString(),
+                  ),
                 );
                 newProposal[proposalIndex].proposal.proposalWin = true;
               }
             }
           });
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(el => el.proposal._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((el) => el.proposal._id.toString()),
+            { proposalWin: true },
           );
         }
       }
@@ -260,7 +329,10 @@ export class ProposalService {
     }
 
     const result = await this._proposalRepository.register(dto);
-    if (!result) throw new BadRequestException("Não foi possivel cadastrar essa proposta!");
+    if (!result)
+      throw new BadRequestException(
+        "Não foi possivel cadastrar essa proposta!",
+      );
 
     newProposal.push({ proposal: result, proposalWin: dto.proposalWin });
 
@@ -276,13 +348,19 @@ export class ProposalService {
     return result;
   }
 
-  async updateAcceptfromSupplier(_id: string, dto: ProposalSupplierAcceptUpdateDto): Promise<ProposalModel> {
+  async updateAcceptfromSupplier(
+    _id: string,
+    dto: ProposalSupplierAcceptUpdateDto,
+  ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
     }
 
-    const result = await this._proposalRepository.updateAcceptSupplier(_id, dto);
+    const result = await this._proposalRepository.updateAcceptSupplier(
+      _id,
+      dto,
+    );
     if (result.supplier_accept === true && result.association_accept === true) {
       const newDto = {
         status: ProposalStatusEnum.aceitoRevisor,
@@ -292,13 +370,19 @@ export class ProposalService {
     return result;
   }
 
-  async updateAcceptAssociation(_id: string, dto: ProposalAssociationAcceptUpdateDto): Promise<ProposalModel> {
+  async updateAcceptAssociation(
+    _id: string,
+    dto: ProposalAssociationAcceptUpdateDto,
+  ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
     }
 
-    const result = await this._proposalRepository.updateAcceptAssociation(_id, dto);
+    const result = await this._proposalRepository.updateAcceptAssociation(
+      _id,
+      dto,
+    );
     if (result.supplier_accept === true && result.association_accept === true) {
       const newDto = {
         status: ProposalStatusEnum.aceitoAssociacao,
@@ -312,21 +396,29 @@ export class ProposalService {
   async updateAcceptReviewer(
     _id: string,
     dto: ProposalReviewerAcceptUpdateDto,
-    userId: string
+    userId: string,
   ): Promise<ProposalModel | any> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
     }
-    const result = await this._proposalRepository.updateAcceptReviewer(_id, dto);
+    const result = await this._proposalRepository.updateAcceptReviewer(
+      _id,
+      dto,
+    );
     if (dto.reviewer_accept === false) {
-      await this._allotmentService.updateStatus(result.allotment[0].id, AllotmentStatusEnum.fracassado);
+      await this._allotmentService.updateStatus(
+        result.allotment[0].id,
+        AllotmentStatusEnum.fracassado,
+      );
       result.allotment[0].status = AllotmentStatusEnum.fracassado;
-
     }
 
     if (result.association_accept && result.reviewer_accept) {
-      await this._allotmentService.updateStatus(result.allotment[0].id, AllotmentStatusEnum.adjudicado);
+      await this._allotmentService.updateStatus(
+        result.allotment[0].id,
+        AllotmentStatusEnum.adjudicado,
+      );
       return await this.acceptProposal(result._id.toString(), userId);
     }
     return result;
@@ -335,7 +427,7 @@ export class ProposalService {
   async refusedProposal(
     proposalId: string,
     refusedById: string,
-    dto: ProposalRefusedRequestDto
+    dto: ProposalRefusedRequestDto,
   ): Promise<ProposalModel> {
     const refusedBy = await this._userRepository.getById(refusedById);
 
@@ -346,15 +438,27 @@ export class ProposalService {
     if (refusedBy.type !== "administrador") {
       if (list.length > 1) {
         const listOrder = await list
-          .filter(proposal => proposal.total_value !== null && Number(proposal.total_value) > 0)
+          .filter(
+            (proposal) =>
+              proposal.total_value !== null && Number(proposal.total_value) > 0,
+          )
           .sort((a, b) => Number(a.total_value) - Number(b.total_value));
-        await this._proposalRepository.updateProposedWin(listOrder[1].id, { proposalWin: true });
-        await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
+        await this._proposalRepository.updateProposedWin(listOrder[1].id, {
+          proposalWin: true,
+        });
+        await this._proposalRepository.updateProposedWin(proposal.id, {
+          proposalWin: false,
+        });
       } else {
-        await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
+        await this._proposalRepository.updateProposedWin(proposal.id, {
+          proposalWin: false,
+        });
       }
     } else {
-      const result = await this._proposalRepository.updateProposedWin(proposal.id, { proposalWin: false });
+      const result = await this._proposalRepository.updateProposedWin(
+        proposal.id,
+        { proposalWin: false },
+      );
     }
 
     dto.refusedAt = new Date();
@@ -367,7 +471,10 @@ export class ProposalService {
     }
 
     for (let iterator of proposal.allotment) {
-      await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.cancelado);
+      await this._allotmentService.updateStatus(
+        iterator._id.toString(),
+        AllotmentStatusEnum.cancelado,
+      );
     }
     return await this._proposalRepository.refusedProposal(proposalId, dto);
   }
@@ -375,7 +482,7 @@ export class ProposalService {
   async acceptProposal(
     proposalId: string,
     acceptById: string,
-    dto?: ProposalNotificationInterface
+    dto?: ProposalNotificationInterface,
   ): Promise<ProposalModel> {
     const acceptBy = await this._userRepository.getById(acceptById);
     let obj: ProposalAcceptedRequestDto = {
@@ -388,24 +495,35 @@ export class ProposalService {
       obj.status = ProposalStatusEnum.aceitoAssociacao;
       const proposal = await this._proposalRepository.getById(proposalId);
       const dto = {
-        association_accept: true
-      }
-      await this._proposalRepository.updateAcceptAssociation(proposal._id.toString(), dto)
+        association_accept: true,
+      };
+      await this._proposalRepository.updateAcceptAssociation(
+        proposal._id.toString(),
+        dto,
+      );
       // await this._allotmentRepository.updateStatusByIds(
       //   proposal.allotment.map(item => item._id.toString()),
       //   AllotmentStatusEnum.
       // );
 
       for (let iterator of proposal.allotment) {
-        await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.adjudicado);
+        await this._allotmentService.updateStatus(
+          iterator._id.toString(),
+          AllotmentStatusEnum.adjudicado,
+        );
       }
 
-      await this._proposalRepository.acceptForFornecedorProposal(proposalId, obj);
+      await this._proposalRepository.acceptForFornecedorProposal(
+        proposalId,
+        obj,
+      );
 
       for (let iterator of proposal.allotment) {
         const proposalSave = await this._proposalRepository.getById(proposalId);
 
-        const index = iterator.proposals.findIndex(i => i.proposal._id.toString() === proposalSave._id.toString());
+        const index = iterator.proposals.findIndex(
+          (i) => i.proposal._id.toString() === proposalSave._id.toString(),
+        );
 
         iterator.proposals[index].proposal = proposalSave;
 
@@ -437,32 +555,43 @@ export class ProposalService {
         supplier_id: proposal.proposedBy.supplier.id,
       };
 
-      await this._bidRepository.changeStatus(proposal.bid.id, { status: BidStatusEnum["completed"] });
+      await this._bidRepository.changeStatus(proposal.bid.id, {
+        status: BidStatusEnum["completed"],
+      });
 
       await this._allotmentRepository.updateStatusByIds(
-        proposal.allotment.map(item => item._id.toString()),
-        AllotmentStatusEnum.adjudicado
+        proposal.allotment.map((item) => item._id.toString()),
+        AllotmentStatusEnum.adjudicado,
       );
 
       for (let iterator of proposal.allotment) {
         const proposalSave = await this._proposalRepository.getById(proposalId);
 
-        const index = iterator.proposals.findIndex(i => i.proposal._id.toString() === proposalSave._id.toString());
+        const index = iterator.proposals.findIndex(
+          (i) => i.proposal._id.toString() === proposalSave._id.toString(),
+        );
 
         iterator.proposals[index].proposal = proposalSave;
 
         const teste = await this._allotmentRepository.register(iterator as any);
       }
 
-      const result = await this._proposalRepository.acceptForRevisorProposal(proposalId, obj);
+      const result = await this._proposalRepository.acceptForRevisorProposal(
+        proposalId,
+        obj,
+      );
 
-      const responseContract = await this._contractService.register(contractDto);
+      const responseContract =
+        await this._contractService.register(contractDto);
 
       return result;
     }
   }
 
-  async updateStatus(_id: string, dto: ProposalStatusUpdateDto): Promise<ProposalModel> {
+  async updateStatus(
+    _id: string,
+    dto: ProposalStatusUpdateDto,
+  ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
@@ -478,10 +607,14 @@ export class ProposalService {
   //     verify = true;
   //   }
   // });
-  async getByUserInBid(proposedById: string, allotmentId: string): Promise<boolean> {
-    const proposalList = await this._proposalRepository.listByUser(proposedById);
-    const verify = await proposalList.filter(el =>
-      el.allotment.find(elemento => elemento._id.toString() === allotmentId)
+  async getByUserInBid(
+    proposedById: string,
+    allotmentId: string,
+  ): Promise<boolean> {
+    const proposalList =
+      await this._proposalRepository.listByUser(proposedById);
+    const verify = await proposalList.filter((el) =>
+      el.allotment.find((elemento) => elemento._id.toString() === allotmentId),
     );
 
     if (verify.length !== 0) {
@@ -491,7 +624,10 @@ export class ProposalService {
     }
   }
 
-  async addItem(_id: string, dto: ProposalAddItemUpdateDto): Promise<ProposalModel> {
+  async addItem(
+    _id: string,
+    dto: ProposalAddItemUpdateDto,
+  ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
@@ -500,7 +636,10 @@ export class ProposalService {
     return result;
   }
 
-  async removeItem(_id: string, dto: ProposalAddItemUpdateDto): Promise<ProposalModel> {
+  async removeItem(
+    _id: string,
+    dto: ProposalAddItemUpdateDto,
+  ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
       throw new BadRequestException("Proposta não encontrada!");
@@ -546,13 +685,15 @@ export class ProposalService {
     const list = await this._proposalRepository.listByBidsWaiting(bidId);
     if (list) {
       if (list.length >= 1) {
-        const objectWithSmallestValue = list.reduce((prev: any, current: any) => {
-          if (current.total_value < prev.total_value) {
-            return current;
-          } else {
-            return prev;
-          }
-        });
+        const objectWithSmallestValue = list.reduce(
+          (prev: any, current: any) => {
+            if (current.total_value < prev.total_value) {
+              return current;
+            } else {
+              return prev;
+            }
+          },
+        );
         return objectWithSmallestValue;
       } else {
         return list[0];
@@ -563,27 +704,37 @@ export class ProposalService {
   }
 
   private async proposalWinUpdate(bidId) {
-    const proposalWinAtMoment = await this._proposalRepository.getProposalWin(bidId);
+    const proposalWinAtMoment =
+      await this._proposalRepository.getProposalWin(bidId);
     if (proposalWinAtMoment) {
       let request: ProposalWinRequestDto = {
         proposalWin: false,
       };
-      return await this._proposalRepository.updateProposedWin(proposalWinAtMoment.id, request);
+      return await this._proposalRepository.updateProposedWin(
+        proposalWinAtMoment.id,
+        request,
+      );
     } else {
       return undefined;
     }
   }
 
-  async updateValues(id: string, dto: ProposalUpdateValues): Promise<ProposalModel> {
+  async updateValues(
+    id: string,
+    dto: ProposalUpdateValues,
+  ): Promise<ProposalModel> {
     const newProposal = await this._proposalRepository.updateValues(id, dto);
 
-    const list: MutableObject<ProposalModel>[] = await this._proposalRepository.listByBid(newProposal.bid.id);
+    const list: MutableObject<ProposalModel>[] =
+      await this._proposalRepository.listByBid(newProposal.bid.id);
 
-    const allotment = await this._allotmentRepository.listByIds(newProposal.allotment.map(item => item._id.toString()));
+    const allotment = await this._allotmentRepository.listByIds(
+      newProposal.allotment.map((item) => item._id.toString()),
+    );
 
     const newAllotmentProposal: updateProposalInAllotmentInterface[] = [];
-    allotment.forEach(item => {
-      item.proposals.forEach(el => {
+    allotment.forEach((item) => {
+      item.proposals.forEach((el) => {
         el.proposal.proposalWin = false;
         newAllotmentProposal.push({
           allomentId: item._id.toString(),
@@ -596,50 +747,70 @@ export class ProposalService {
     if (list) {
       if (list[0].bid.bid_type === "globalPrice") {
         await this._proposalRepository.updateListProposedWin(
-          list.map(item => item._id.toString()),
-          { proposalWin: false }
+          list.map((item) => item._id.toString()),
+          { proposalWin: false },
         );
 
-        const objectWithSmallestValue = list.reduce((prev: any, current: any) => {
-          return current.total_value < prev.total_value ? current : prev;
-        });
+        const objectWithSmallestValue = list.reduce(
+          (prev: any, current: any) => {
+            return current.total_value < prev.total_value ? current : prev;
+          },
+        );
 
-        const anotherWithSameValue = list.filter(el => el.total_value === objectWithSmallestValue.total_value);
+        const anotherWithSameValue = list.filter(
+          (el) => el.total_value === objectWithSmallestValue.total_value,
+        );
 
         if (anotherWithSameValue.length >= 1) {
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(item => item._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((item) => item._id.toString()),
+            { proposalWin: true },
           );
           if (newAllotmentProposal.length > 0)
             for (let data of anotherWithSameValue) {
-              const index = newAllotmentProposal.findIndex(el => el.proposal._id.toString() === data._id.toString());
+              const index = newAllotmentProposal.findIndex(
+                (el) => el.proposal._id.toString() === data._id.toString(),
+              );
               data.proposalWin = true;
               newAllotmentProposal[index].proposalWin = true;
               newAllotmentProposal[index].proposal = data;
             }
         }
       }
-      if (list[0].bid.bid_type !== "globalPrice" && newAllotmentProposal.length > 0) {
+      if (
+        list[0].bid.bid_type !== "globalPrice" &&
+        newAllotmentProposal.length > 0
+      ) {
         await this._proposalRepository.updateListProposedWin(
-          newAllotmentProposal.map(item => item.proposal._id.toString()),
-          { proposalWin: false }
+          newAllotmentProposal.map((item) => item.proposal._id.toString()),
+          { proposalWin: false },
         );
 
-        const proposalWithSmallValue = newAllotmentProposal.reduce((prev, current) => {
-          return (current.proposal.total_value + (current.proposal.freight ?? 0)) < (prev.proposal.total_value + (prev.proposal.freight ?? 0)) ? current : prev;
-        });
+        const proposalWithSmallValue = newAllotmentProposal.reduce(
+          (prev, current) => {
+            return current.proposal.total_value +
+              (current.proposal.freight ?? 0) <
+              prev.proposal.total_value + (prev.proposal.freight ?? 0)
+              ? current
+              : prev;
+          },
+        );
 
         const anotherWithSameValue = newAllotmentProposal.filter(
-          el => el.proposal.total_value === proposalWithSmallValue.proposal.total_value
+          (el) =>
+            el.proposal.total_value ===
+            proposalWithSmallValue.proposal.total_value,
         );
 
         if (anotherWithSameValue.length > 0) {
-          anotherWithSameValue.forEach(el => {
+          anotherWithSameValue.forEach((el) => {
             const proposalIndex = newAllotmentProposal.findIndex(
-              item => item.proposal._id.toString() === el.proposal._id.toString()
+              (item) =>
+                item.proposal._id.toString() === el.proposal._id.toString(),
             );
-            const data = list.find(a => a._id.toString() === el.proposal._id.toString());
+            const data = list.find(
+              (a) => a._id.toString() === el.proposal._id.toString(),
+            );
             if (proposalIndex != -1 && data) {
               newAllotmentProposal[proposalIndex].proposalWin = true;
               newAllotmentProposal[proposalIndex].proposal = data;
@@ -648,8 +819,8 @@ export class ProposalService {
           });
 
           await this._proposalRepository.updateListProposedWin(
-            anotherWithSameValue.map(el => el.proposal._id.toString()),
-            { proposalWin: true }
+            anotherWithSameValue.map((el) => el.proposal._id.toString()),
+            { proposalWin: true },
           );
         }
       }
@@ -657,8 +828,8 @@ export class ProposalService {
 
     for (let iterator of allotment) {
       const array = newAllotmentProposal
-        .filter(el => el.allomentId === iterator._id.toString())
-        .map(item => {
+        .filter((el) => el.allomentId === iterator._id.toString())
+        .map((item) => {
           return { proposal: item.proposal, proposalWin: item.proposalWin };
         });
 

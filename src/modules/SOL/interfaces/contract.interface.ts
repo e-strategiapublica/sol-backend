@@ -5,30 +5,28 @@ import { SupplierModel } from "../models/supplier.model";
 import { UserModel } from "../models/user.model";
 
 export interface ContractInterface {
+  readonly sequencial_number: number;
+  readonly contract_number: string;
+  readonly bid_number: BidModel;
+  readonly supplier_accept: ContractStatusEnum;
+  readonly association_accept: ContractStatusEnum;
 
-    readonly sequencial_number: number;
-    readonly contract_number: string;
-    readonly bid_number: BidModel;
-    readonly supplier_accept: ContractStatusEnum;
-    readonly association_accept: ContractStatusEnum;
+  readonly deleted: boolean;
+  readonly contract_document: string;
+  readonly value: string;
+  readonly status: ContractStatusEnum;
 
-    readonly deleted: boolean;
-    readonly contract_document: string
-    readonly value: string;
-    readonly status: ContractStatusEnum;
+  readonly association_sign_date: string;
 
-    readonly association_sign_date: string;
+  readonly supplier_sign_date: string;
 
-    readonly supplier_sign_date: string;
+  readonly proposal_id: ProposalModel[];
 
-    readonly proposal_id: ProposalModel[];
+  readonly supplier_id: SupplierModel;
 
-    readonly supplier_id: SupplierModel;
+  readonly association_id: UserModel;
 
-    readonly association_id: UserModel;
+  readonly items_received: number;
 
-    readonly items_received: number;
-
-    readonly createdAt: Date;
-
+  readonly createdAt: Date;
 }

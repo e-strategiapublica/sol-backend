@@ -8,82 +8,99 @@ import { BidModel } from "../models/bid.model";
 const fs = require("fs");
 const path = require("path");
 
-
 @Injectable()
 export class ModelContractService {
+  private readonly _logger = new Logger(ModelContractService.name);
 
-    private readonly _logger = new Logger(ModelContractService.name);
+  constructor(
+    private readonly _modelContractRepository: ModelContractRepository,
+    private readonly _bidsRepository: BidRepository,
+  ) {}
 
-    constructor(
-        private readonly _modelContractRepository: ModelContractRepository,
-        private readonly _bidsRepository: BidRepository,
-       
-    ) { }
+  async register(
+    dto: ModelContractRegisterDto,
+    file: Express.Multer.File,
+  ): Promise<ModelContractModel> {
+    const modelContract =
+      await this._modelContractRepository.getByContractAndLanguage(
+        dto.language,
+        dto.classification,
+      );
 
-    async register(dto: ModelContractRegisterDto, file:Express.Multer.File): Promise<ModelContractModel> {
-
-        const modelContract = await this._modelContractRepository.getByContractAndLanguage(dto.language, dto.classification);
-
-        if (modelContract) {
-            throw new BadRequestException('Já existe um modelo de contrato cadastrado com essas informações!');
-        }
-
-        await fs.writeFileSync(path.resolve("src/shared/documents", file.originalname), file.buffer);
-
-        dto.contract = file.originalname;
-      
-        const result = await this._modelContractRepository.register(dto);
-        if (!result)
-            throw new BadRequestException('Não foi possivel cadastrar esse modelo de contrato!');
-
-        return result;
-
+    if (modelContract) {
+      throw new BadRequestException(
+        "Já existe um modelo de contrato cadastrado com essas informações!",
+      );
     }
 
-    async list(): Promise<ModelContractModel[]> {
-        const result = await this._modelContractRepository.list();
-        return result;
-    }
-    
-    async update(_id: string, dto: ModelContractUpdateDto, file: Express.Multer.File): Promise<ModelContractModel> {
-        const modelContract = await this._modelContractRepository.getByContractAndLanguage(dto.language, dto.classification);
+    await fs.writeFileSync(
+      path.resolve("src/shared/documents", file.originalname),
+      file.buffer,
+    );
 
-        if (modelContract) {
-            if(modelContract._id != _id)
-                throw new BadRequestException('Já existe um modelo de contrato cadastrado com essas informações!');
-        }
+    dto.contract = file.originalname;
 
-        if(fs.existsSync(path.resolve("src/shared/documents", dto.contract)))
-            await fs.unlinkSync(path.resolve("src/shared/documents", dto.contract));
+    const result = await this._modelContractRepository.register(dto);
+    if (!result)
+      throw new BadRequestException(
+        "Não foi possivel cadastrar esse modelo de contrato!",
+      );
 
-        await fs.writeFileSync(path.resolve("src/shared/documents", file.originalname), file.buffer);
+    return result;
+  }
 
-        dto.contract = file.originalname;
+  async list(): Promise<ModelContractModel[]> {
+    const result = await this._modelContractRepository.list();
+    return result;
+  }
 
-        const result = await this._modelContractRepository.update(_id, dto);
-        return result
-        
-      }
+  async update(
+    _id: string,
+    dto: ModelContractUpdateDto,
+    file: Express.Multer.File,
+  ): Promise<ModelContractModel> {
+    const modelContract =
+      await this._modelContractRepository.getByContractAndLanguage(
+        dto.language,
+        dto.classification,
+      );
 
-
-    async getById(_id: string): Promise<ModelContractModel> {
-        const result = await this._modelContractRepository.getById(_id);
-      
-        return result;
-    }
-
-    async getBidById(_id: string): Promise<BidModel> {
-        const result = await this._bidsRepository.getBidById(_id);
-        if (!result) {
-          throw new BadRequestException("Licitação não encontrada!");
-        }
-        return result;
-      }
-  
-      
-    async deleteById(_id: string) {
-        return await this._modelContractRepository.deleteById(_id);
+    if (modelContract) {
+      if (modelContract._id != _id)
+        throw new BadRequestException(
+          "Já existe um modelo de contrato cadastrado com essas informações!",
+        );
     }
 
+    if (fs.existsSync(path.resolve("src/shared/documents", dto.contract)))
+      await fs.unlinkSync(path.resolve("src/shared/documents", dto.contract));
 
+    await fs.writeFileSync(
+      path.resolve("src/shared/documents", file.originalname),
+      file.buffer,
+    );
+
+    dto.contract = file.originalname;
+
+    const result = await this._modelContractRepository.update(_id, dto);
+    return result;
+  }
+
+  async getById(_id: string): Promise<ModelContractModel> {
+    const result = await this._modelContractRepository.getById(_id);
+
+    return result;
+  }
+
+  async getBidById(_id: string): Promise<BidModel> {
+    const result = await this._bidsRepository.getBidById(_id);
+    if (!result) {
+      throw new BadRequestException("Licitação não encontrada!");
+    }
+    return result;
+  }
+
+  async deleteById(_id: string) {
+    return await this._modelContractRepository.deleteById(_id);
+  }
 }

@@ -7,31 +7,28 @@ import { LegalRepresentative } from "src/shared/schemas/legal-representative.sch
 import { CategoryInterface } from "../interfaces/category.interface";
 
 export abstract class SupplierRegisterDto {
+  @ApiProperty({ type: String })
+  name: string;
 
-    @ApiProperty({ type: String })
-    name: string
+  @ApiProperty({ type: String })
+  cpf: string;
 
-    @ApiProperty({ type: String })
-    cpf: string;
+  @ApiProperty({ type: String, enum: SuplierTypeEnum })
+  type: SuplierTypeEnum;
 
-    @ApiProperty({ type: String, enum: SuplierTypeEnum })
-    type: SuplierTypeEnum;
+  @ApiProperty({ type: AddressRegisterDto })
+  address: Address;
 
-    @ApiProperty({ type: AddressRegisterDto })
-    address: Address;
+  @ApiProperty({ type: LegalRepresentativeRegisterDto })
+  legal_representative: LegalRepresentative;
 
-    @ApiProperty({ type: LegalRepresentativeRegisterDto })
-    legal_representative: LegalRepresentative;
+  @ApiProperty({ type: Array })
+  group_id: string[];
 
-    @ApiProperty({ type: Array })
-    group_id: string[];
+  @ApiProperty({ type: Array })
+  categoriesId: string[];
 
-    @ApiProperty({ type: Array })
-    categoriesId: string[];
+  categories: CategoryInterface[];
 
-    categories: CategoryInterface[];
-
-    blocked: boolean;
-
-
+  blocked: boolean;
 }
