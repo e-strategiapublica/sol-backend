@@ -668,20 +668,25 @@ export class BidService {
 
   async getById(_id: string): Promise<BidModel> {
     const result = await this._bidsRepository.getById(_id);
-
+  
+    if (!result) {
+      throw new BadRequestException("Licitação não encontrada!");
+    }
+  
     for (let i = 0; i < result.add_allotment.length; i++) {
       for (let j = 0; j < result.add_allotment[i].proposals.length; j++) {
         result.add_allotment[i].proposals[j].proposal.proposedBy =
           await this._userRepository.getById(
-            result.add_allotment[i].proposals[j].proposal.proposedBy.id
+            String(result.add_allotment[i].proposals[j].proposal.proposedBy._id)
           );
+  
         const proposalDetails = await this._proposalRepository.getById(
           result.add_allotment[i].proposals[j].proposal.id
         );
-
+  
         if (proposalDetails) {
           const { reviewer_accept, acceptedRevisorAt } = proposalDetails;
-
+  
           if (reviewer_accept !== null) {
             result.add_allotment[i].proposals[j].proposal.reviewer_accept =
               reviewer_accept;
@@ -693,12 +698,10 @@ export class BidService {
         }
       }
     }
-
-    if (!result) {
-      throw new BadRequestException("Licitação não encontrada!");
-    }
+  
     return result;
   }
+  
 
   async deleteById(_id: string) {
     const result = await this._bidsRepository.deleteById(_id);
