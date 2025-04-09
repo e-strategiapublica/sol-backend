@@ -53,7 +53,7 @@ describe("UserController", () => {
   });
 
   describe("POST 'user/first-access'", () => {
-    it("should be throw not found, because email not found in database", async () => {
+    it("should be throw NOT FOUND, because email not found in database", async () => {
       const response = await firstAccessRequest(app, {
         payload: {
           email: "teste@teste.com",
@@ -68,7 +68,7 @@ describe("UserController", () => {
       });
     });
 
-    it("should be throw bad request, because user is active", async () => {
+    it("should be throw BAD REQUEST, because user is active", async () => {
       const userModel = app.get(getModelToken(User.name));
       const email = faker.internet.email();
       await userModel.create({
@@ -91,7 +91,7 @@ describe("UserController", () => {
       });
     });
 
-    it("should throw bad request because a verification already exists and is still valid", async () => {
+    it("should throw UNAUTHORIZED because a verification already exists and is still valid", async () => {
       const userModel = app.get(getModelToken(User.name));
       const email = faker.internet.email();
       const user = await userModel.create({
@@ -124,7 +124,7 @@ describe("UserController", () => {
       });
     });
 
-    it("should be successfully sent the email, recreating verification", async () => {
+    it("should be SUCCESSFULLY sent the email, recreating verification", async () => {
       const userModel = app.get<Model<User>>(getModelToken(User.name));
       const email = faker.internet.email();
       const user = await userModel.create({
@@ -178,7 +178,7 @@ describe("UserController", () => {
       expect(sendMock).toHaveBeenCalledTimes(1);
     });
 
-    it("should be successfully sent the email, creating a verification", async () => {
+    it("should be SUCCESSFULLY sent the email, creating a verification", async () => {
       const userModel = app.get<Model<User>>(getModelToken(User.name));
       const email = faker.internet.email();
       const user = await userModel.create({
@@ -220,7 +220,7 @@ describe("UserController", () => {
       expect(sendMock).toHaveBeenCalledTimes(1);
     });
 
-    it("throw bad request when send invalid body", async () => {
+    it("throw BAD REQUEST when send invalid body", async () => {
       const response = await firstAccessRequest(app, {
         payload: {} as UserResetPasswordRequestDto,
         expectedStatus: HttpStatus.UNPROCESSABLE_ENTITY,
@@ -230,6 +230,32 @@ describe("UserController", () => {
         success: false,
         data: null,
         errors: ["Email inválido"],
+      });
+    });
+
+    it("validates that when an error occurs while sending the email", async () => {
+      const userModel = app.get<Model<User>>(getModelToken(User.name));
+      const email = faker.internet.email();
+      await userModel.create({
+        name: faker.person.fullName(),
+        email,
+        status: UserStatusEnum.inactive,
+        type: UserTypeEnum.fornecedor,
+      });
+
+      sendMock.mockRejectedValueOnce(new Error("Email sending error"));
+
+      const response = await firstAccessRequest(app, {
+        payload: {
+          email,
+        },
+        expectedStatus: HttpStatus.BAD_GATEWAY,
+      });
+
+      expect(response.body).toEqual({
+        success: false,
+        data: null,
+        errors: ["Erro ao enviar email, tente novamente mais tarde!"],
       });
     });
   });
