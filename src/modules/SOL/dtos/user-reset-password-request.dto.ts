@@ -1,6 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-
-export abstract class UserResetPasswordRequestDto {
+import { IsEmail, IsNotEmpty } from "class-validator";
+export class UserResetPasswordRequestDto {
   @ApiProperty({ type: String })
+  @IsEmail({}, { message: "Email inválido" })
   email: string;
 }

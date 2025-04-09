@@ -89,7 +89,10 @@ export class UserService {
       );
 
     if (result.status == UserStatusEnum.active)
-      throw new BadRequestException("Você já realizou o primeiro acesso!");
+      throw new CustomHttpException(
+        "Você já realizou o primeiro acesso!",
+        HttpStatus.BAD_REQUEST,
+      );
 
     return new UserGetResponseDto(
       result.id,

@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -17,6 +18,7 @@ import { UserResetPasswordResendEmailRequestDto } from "../dtos/user-reset-passw
 import { UserResetPasswordResendEmailResponseDto } from "../dtos/user-reset-password-resend-email-response.dto";
 import { UserConfirmationRegisterSendRequestDto } from "../dtos/user-confirmation-register-request.dto";
 import { UserRegisterResendEmailRequestDto } from "../dtos/user-register-resend-email-request.dto";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class VerificationService {
@@ -263,19 +265,16 @@ export class VerificationService {
     if (now > verification.deadline) {
       await this.verificationRepository.delete(verification.id);
       throw new UnauthorizedException("Código expirado!");
-      response = false;
     }
 
     if (verification.attempt == 5) {
       await this.verificationRepository.delete(verification.id);
       throw new UnauthorizedException("Você excedeu o limite de 5 tentativas!");
-      response = false;
     }
 
     if (verification.code != code) {
       this.incrementAttempt(verification._id);
       throw new UnauthorizedException("Código inválido!");
-      response = false;
     }
 
     await this.verificationRepository.delete(verification.id);
@@ -292,15 +291,17 @@ export class VerificationService {
 
     let verification = await this.verificationRepository.getByUser(userModel);
 
+    const alreadyHasValidVerification =
+      verification && new Date() < verification.deadline;
+    if (alreadyHasValidVerification) {
+      throw new CustomHttpException(
+        "Um código já foi enviado e está válido!",
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     if (verification) {
-      const now = new Date();
-      if (now < verification.deadline) {
-        throw new UnauthorizedException(
-          "Um código já foi enviado e está válido!",
-        );
-      } else {
-        await this.verificationRepository.delete(verification.id);
-      }
+      await this.verificationRepository.delete(verification.id);
     }
 
     let deadline: Date = new Date();
