@@ -253,35 +253,41 @@ export class VerificationService {
   //     );
   // }
 
-  async verifyCode(user: UserModel, code: number) {
+  async verifyCode(user: UserModel, code: number): Promise<void> {
     const verification = await this.verificationRepository.getByUser(user);
 
-    let response;
-
-    if (!verification) throw new NotFoundException("Código expirado!");
-    response = false;
+    if (!verification)
+      throw new CustomHttpException(
+        "Código não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
 
     const now = new Date();
     if (now > verification.deadline) {
       await this.verificationRepository.delete(verification.id);
-      throw new UnauthorizedException("Código expirado!");
+      throw new CustomHttpException(
+        "Código expirado!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (verification.attempt == 5) {
       await this.verificationRepository.delete(verification.id);
-      throw new UnauthorizedException("Você excedeu o limite de 5 tentativas!");
+      throw new CustomHttpException(
+        "Você excedeu o limite de 5 tentativas!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (verification.code != code) {
       this.incrementAttempt(verification._id);
-      throw new UnauthorizedException("Código inválido!");
+      throw new CustomHttpException(
+        "Código inválido!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     await this.verificationRepository.delete(verification.id);
-
-    response = true;
-
-    return response;
   }
 
   async sendFirstAcess(

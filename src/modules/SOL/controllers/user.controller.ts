@@ -218,12 +218,9 @@ export class UserController {
     try {
       const user = await this.userRepository.getByEmail(dto.email);
 
-      const response = await this.verificationService.verifyCode(
-        user,
-        dto.code,
-      );
+      await this.verificationService.verifyCode(user, dto.code);
 
-      return new ResponseDto(true, response, null);
+      return new ResponseDto(true, true, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -394,24 +391,11 @@ export class UserController {
 
   @Put("reset-password-confirmation")
   @HttpCode(200)
-  @UseInterceptors(
-    new ValidatorInterceptor(new UserResetPasswordConfirmationValidator()),
-  )
   async resetPasswordConfirmation(
     @Body() dto: UserResetPasswordConfirmationRequestDto,
-  ) {
-    try {
-      const response = await this.userService.updatePasswordWithCode(dto);
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this.logger.error(JSON.stringify(error));
-
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  ): Promise<ResponseDtoV2<VerificationRegisterResponseDto>> {
+    const data = await this.userService.updatePasswordWithCode(dto);
+    return { success: true, data };
   }
 
   @Post("reset-password-resend-email")

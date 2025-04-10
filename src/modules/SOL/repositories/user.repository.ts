@@ -25,7 +25,7 @@ export class UserRepository {
   ) {}
 
   async getByEmail(email: string): Promise<UserModel> {
-    return await this._model.findOne({ email });
+    return this._model.findOne({ email });
   }
 
   async getByPhone(phone: string): Promise<UserModel> {
@@ -78,18 +78,8 @@ export class UserRepository {
     }
   }
 
-  async updatePassword(
-    _id: string,
-    dto: UserUpdatePasswordRequestDto,
-  ): Promise<UserModel> {
-    return await this._model.findOneAndUpdate(
-      { _id },
-      {
-        $set: {
-          password: dto.password,
-        },
-      },
-    );
+  async updatePassword(_id: string, password: string): Promise<UserModel> {
+    return this._model.findOneAndUpdate({ _id }, { password });
   }
 
   async updateNotifications(
