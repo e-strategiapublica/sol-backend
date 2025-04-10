@@ -2,11 +2,12 @@ import { ConfigService } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import * as fs from "fs";
-import { Logger } from "@nestjs/common";
+import { Logger, ValidationPipe } from "@nestjs/common";
 import { EnviromentVariablesEnum } from "./shared/enums/enviroment.variables.enum";
 import BooleanUtil from "./shared/utils/boolean.util";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as bodyParser from "body-parser";
+import { UnprocessableEntityException } from "./shared/exceptions/unprocessable-entity.exception";
 async function bootstrap() {
   const enviroment = process.env.NODE_ENV.toUpperCase();
 
@@ -25,6 +26,14 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const logger = new Logger("main");
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      exceptionFactory: (validationErrors = []) => {
+        return new UnprocessableEntityException(validationErrors);
+      },
+    }),
+  );
   app.use(bodyParser.json({ limit: "100mb" }));
   app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 

@@ -16,7 +16,7 @@
     "start": "node ./src/main",
     "start:debug": "nest start --env-file .env --debug --watch",
     "start:dev": "nest start --env-file .env --watch",
-    "test": "npx jest",
+    "test": "npx jest --config ./tests/jest-e2e.json --detectOpenHandles --forceExit",
     "coverage": "npx jest --coverage",
     "lint": "npx prettier --check 'src/**/*.ts'",
     "type-check": "npx tsc --noEmit"
@@ -37,6 +37,8 @@
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.7",
     "cheerio": "^1.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
     "cron": "^3.5.0",
     "crypto-js": "^4.2.0",
     "custom-soffice-to-pdf": "^1.0.0",
@@ -66,9 +68,10 @@
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^9.6.0",
     "@nestjs/cli": "^11.0.1",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.0.3",
+    "@nestjs/testing": "^11.0.13",
     "@types/bcryptjs": "^2.4.6",
     "@types/express": "^5.0.0",
     "@types/jest": "29.5.14",
@@ -86,22 +89,5 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "^5.7.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "src",
-    "testRegex": ".*\\.test\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s"
-    ],
-    "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
   }
 }
