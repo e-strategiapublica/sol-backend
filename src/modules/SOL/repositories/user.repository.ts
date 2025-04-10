@@ -25,7 +25,7 @@ export class UserRepository {
   ) {}
 
   async getByEmail(email: string): Promise<UserModel> {
-    return this._model.findOne({ email });
+    return this._model.findOne({ email: { $eq: email } });
   }
 
   async getByPhone(phone: string): Promise<UserModel> {
