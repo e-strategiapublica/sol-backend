@@ -1,5 +1,3 @@
 export class UserUpdateProfilePictureResponseDto {
-    constructor(
-        public profilePicture: string,
-    ) { }
+  constructor(public profilePicture: string) {}
 }

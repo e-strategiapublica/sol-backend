@@ -1,14 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
 export abstract class CategoryRegisterDto {
+  @ApiProperty({ type: String })
+  category_name: string;
 
-    @ApiProperty({ type: String })
-    category_name: string;
+  @ApiProperty({ type: String })
+  segment: string;
 
-    @ApiProperty({ type: String })
-    segment: string;
+  identifier: number;
 
-    identifier: number;
-
-    code: number;
-
+  code: number;
 }

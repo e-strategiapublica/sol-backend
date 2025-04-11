@@ -1,7 +1,7 @@
 export class DashboardResponseDto {
-    constructor(
-        public bidInProgress: number,
-        public associationRegister: number,
-        public supplierRegister: number
-    ) { }
+  constructor(
+    public bidInProgress: number,
+    public associationRegister: number,
+    public supplierRegister: number,
+  ) {}
 }

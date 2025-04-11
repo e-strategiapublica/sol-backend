@@ -1,4 +1,4 @@
 export enum UserConfirmationRegisterTypeEnum {
-    sms = 'sms',
-    email = 'email'
+  sms = "sms",
+  email = "email",
 }

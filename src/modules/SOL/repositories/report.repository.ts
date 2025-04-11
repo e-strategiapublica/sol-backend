@@ -7,24 +7,21 @@ import { ReportGeneratedRegisterRequestDto } from "../dtos/report-generated-regi
 
 @Injectable()
 export class ReportRepository {
+  constructor(
+    @InjectModel(ReportGenerated.name)
+    private readonly _model: Model<ReportGeneratedModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(ReportGenerated.name) private readonly _model: Model<ReportGeneratedModel>,
-    ) { }
+  async register(dto: ReportGeneratedRegisterRequestDto): Promise<any> {
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async register(dto: ReportGeneratedRegisterRequestDto): Promise<any> {
-        const data = await new this._model(dto);
-        return data.save();
-    }
+  async list(): Promise<ReportGeneratedModel[]> {
+    return await this._model.find().populate("generatedBy");
+  }
 
-    async list(): Promise<ReportGeneratedModel[]> {
-        return await this._model
-            .find()
-            .populate("generatedBy")
-    }
-
-    async getById(_id: string): Promise<ReportGeneratedModel> {
-        return await this._model
-            .findById({ _id })
-    }
+  async getById(_id: string): Promise<ReportGeneratedModel> {
+    return await this._model.findById({ _id });
+  }
 }

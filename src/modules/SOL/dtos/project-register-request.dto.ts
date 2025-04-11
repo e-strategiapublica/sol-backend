@@ -6,27 +6,25 @@ import { LegalRepresentativeRegisterDto } from "src/shared/dtos/legal-representa
 import { LegalRepresentative } from "src/shared/schemas/legal-representative.schema";
 import { User } from "../schemas/user.schema";
 
-
 export abstract class ProjectRegisterRequestDto {
-    
-    @ApiProperty({ required: true, type: String })
-    name: string;
+  @ApiProperty({ required: true, type: String })
+  name: string;
 
-    @ApiProperty({ required: true, type: String })
-    project_manager: string;
-    
-    @ApiProperty({ type: Array })
-    agreement: string[];
+  @ApiProperty({ required: true, type: String })
+  project_manager: string;
 
-    @ApiProperty({ required: false, type: Array })
-    agreement_list?: string[]
+  @ApiProperty({ type: Array })
+  agreement: string[];
 
-    activeStatus: AgreementActiveStatusEnum.active
+  @ApiProperty({ required: false, type: Array })
+  agreement_list?: string[];
 
-    @ApiProperty({ type: LegalRepresentativeRegisterDto })
-    legal_representative: LegalRepresentative
+  activeStatus: AgreementActiveStatusEnum.active;
 
-    viewer_list: User[]
+  @ApiProperty({ type: LegalRepresentativeRegisterDto })
+  legal_representative: LegalRepresentative;
 
-    reviewer_list: User[]
+  viewer_list: User[];
+
+  reviewer_list: User[];
 }

@@ -77,7 +77,7 @@ export class BidService {
     private _lacchainModel: LacchainModel,
     private _myBidModel: MyBidModel,
     private _bidHistoryModel: BidHistoryModel,
-    private readonly itemsModel: ItemsModel
+    private readonly itemsModel: ItemsModel,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
@@ -101,18 +101,18 @@ export class BidService {
         if (date.getTime() < now.getTime()) {
           try {
             const proposal = await this._proposalRepository.listByBid(
-              bid._id.toString()
+              bid._id.toString(),
             );
 
             if (!proposal.length) {
               this._logger.debug("update to deserted " + bid._id);
               await this._bidsRepository.rotineStatus(
                 bid.id,
-                BidStatusEnum.deserted
+                BidStatusEnum.deserted,
               );
               await this._allotmentRepository.updateStatusByIds(
                 bid.add_allotment.map((ele) => ele._id.toString()),
-                AllotmentStatusEnum.deserto
+                AllotmentStatusEnum.deserto,
               );
               continue;
             }
@@ -120,11 +120,11 @@ export class BidService {
             this._logger.debug("update to analysis " + bid._id);
             await this._bidsRepository.rotineStatus(
               bid.id,
-              BidStatusEnum.analysis
+              BidStatusEnum.analysis,
             );
             await this._allotmentRepository.updateStatusByIds(
               bid.add_allotment.map((ele) => ele._id.toString()),
-              AllotmentStatusEnum.emAnalise
+              AllotmentStatusEnum.emAnalise,
             );
             continue;
           } catch (error) {
@@ -139,13 +139,10 @@ export class BidService {
         if (date.getTime() < now.getTime()) {
           try {
             this._logger.debug("update to open " + bid._id);
-            await this._bidsRepository.rotineStatus(
-              bid.id,
-              BidStatusEnum.open
-            );
+            await this._bidsRepository.rotineStatus(bid.id, BidStatusEnum.open);
             await this._allotmentRepository.updateStatusByIds(
               bid.add_allotment.map((ele) => ele._id.toString()),
-              AllotmentStatusEnum.aberta
+              AllotmentStatusEnum.aberta,
             );
             continue;
           } catch (error) {
@@ -168,7 +165,7 @@ export class BidService {
             });
             await this._allotmentRepository.updateStatusByIds(
               bid.add_allotment.map((ele) => ele._id.toString()),
-              AllotmentStatusEnum.deserto
+              AllotmentStatusEnum.deserto,
             );
           }
         }
@@ -180,7 +177,7 @@ export class BidService {
     token: string,
     associationId: string,
     dto: any,
-    files: Array<Express.Multer.File>
+    files: Array<Express.Multer.File>,
   ): Promise<BidModel> {
     const count = await this._bidsRepository.count();
 
@@ -208,7 +205,7 @@ export class BidService {
         `${dto.bid_count}-${now.getFullYear()}-edital-${now.getFullYear()}-${
           now.getMonth() + 1
         }-${now.getDate()}.pdf`,
-        dto.editalFile
+        dto.editalFile,
       );
     }
 
@@ -228,8 +225,8 @@ export class BidService {
           }-${now.getFullYear()}-arquivo-complementar-${now.getFullYear()}-${
             now.getMonth() + 1
           }-${now.getDate()}.pdf`,
-          item
-        )
+          item,
+        ),
       );
     });
 
@@ -237,11 +234,11 @@ export class BidService {
     for (let i = 0; i < dto.add_allotment.length; i++) {
       dto.add_allotment[i].files = this._fileRepository.upload(
         `product_${new Date().getTime()}.pdf`,
-        dto.add_allotment[i].files
+        dto.add_allotment[i].files,
       );
       dto.add_allotment[i].status = AllotmentStatusEnum.rascunho;
       newArray.push(
-        await this._allotmentRepository.register(dto.add_allotment[i])
+        await this._allotmentRepository.register(dto.add_allotment[i]),
       );
     }
 
@@ -251,13 +248,13 @@ export class BidService {
 
     if (!dto.add_allotment)
       throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!"
+        "Não foi possivel cadastrar essa licitação!",
       );
     dto._id = new ObjectId();
     const result = await this._bidsRepository.register(dto);
     if (!result) {
       throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!"
+        "Não foi possivel cadastrar essa licitação!",
       );
     }
 
@@ -269,13 +266,15 @@ export class BidService {
 
     const data = await this.createData(dto);
     const hash = await this.calculateHash(data);
-        
-    const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
-    if(sendToBlockchain && sendToBlockchain == 'true'){
-        const txHash = await this._lacchainModel.setBidData(
+
+    const sendToBlockchain = this._configService.get(
+      EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
+    );
+    if (sendToBlockchain && sendToBlockchain == "true") {
+      const txHash = await this._lacchainModel.setBidData(
         token,
         bidHistoryId,
-        hash
+        hash,
       );
       await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
     }
@@ -291,7 +290,7 @@ export class BidService {
     await this._notificationService.registerForRealese(
       result.agreement.manager?._id.toString(),
       result.association?._id.toString(),
-      result._id.toString()
+      result._id.toString(),
     );
 
     if (dto.modality === BidModalityEnum.openClosed) {
@@ -303,7 +302,7 @@ export class BidService {
       for (let j = 0; j < suppliers.length; j++) {
         await this._notificationService.registerByBidCreation(
           suppliers[j],
-          obj
+          obj,
         );
       }
       return result;
@@ -312,7 +311,7 @@ export class BidService {
         for (let j = 0; j < result.invited_suppliers.length; j++) {
           await this._notificationService.registerByBidCreation(
             result.invited_suppliers[j]?.id,
-            obj
+            obj,
           );
         }
 
@@ -325,29 +324,26 @@ export class BidService {
       await this._agreementService.findAgreementByReviewerOrManagerId(_id);
     const results: BidModel[] = [];
     for (let i = 0; i < agreements.length; i++) {
-      const bid = await this._bidsRepository.getByAgreementId(
-        agreements[i].id
-      );
+      const bid = await this._bidsRepository.getByAgreementId(agreements[i].id);
       if (bid) results.push(...bid);
     }
     return results;
   }
 
   async findAgreementByReviewerId(_id: string): Promise<BidModel[] | void> {
-    const projects = await this._projectService.findAllProjectsByReviewerId(
-      _id
-    );
+    const projects =
+      await this._projectService.findAllProjectsByReviewerId(_id);
     const agreement_list: AgreementInterfaceWithId[] = [];
     for (let i = 0; i < projects.length; i++) {
       const agreement = await this._agreementService.findAgreementByProjectrId(
-        projects[i]._id.toString()
+        projects[i]._id.toString(),
       );
       if (agreement) agreement_list.push(agreement);
     }
     const results: BidModel[] = [];
     for (let i = 0; i < agreement_list.length; i++) {
       const bid = await this._bidsRepository.getByAgreementId(
-        agreement_list[i]._id.toString()
+        agreement_list[i]._id.toString(),
       );
       if (bid) results.push(...bid);
     }
@@ -363,34 +359,34 @@ export class BidService {
     const agreement_list: AgreementInterfaceWithId[] = [];
     for (let i = 0; i < projects.length; i++) {
       const agreement = await this._agreementService.findAgreementByProjectrId(
-        projects[i]._id.toString()
+        projects[i]._id.toString(),
       );
       if (agreement) agreement_list.push(agreement);
     }
     const results: BidModel[] = [];
     for (let i = 0; i < agreement_list.length; i++) {
       const bid = await this._bidsRepository.getByAgreementId(
-        agreement_list[i]._id.toString()
+        agreement_list[i]._id.toString(),
       );
       if (bid) results.push(...bid);
     }
     return results;
   }
   async findAgreementByProjectManagerId(
-    _id: string
+    _id: string,
   ): Promise<BidModel[] | void> {
     const projects = await this._projectService.findAllProjectsByManagerId(_id);
     const agreement_list: AgreementInterfaceWithId[] = [];
     for (let i = 0; i < projects.length; i++) {
       const agreement = await this._agreementService.findAgreementByProjectrId(
-        projects[i]._id.toString()
+        projects[i]._id.toString(),
       );
       if (agreement) agreement_list.push(agreement);
     }
     const results: BidModel[] = [];
     for (let i = 0; i < agreement_list.length; i++) {
       const bid = await this._bidsRepository.getByAgreementId(
-        agreement_list[i]._id.toString()
+        agreement_list[i]._id.toString(),
       );
 
       if (bid) results.push(...bid);
@@ -399,14 +395,13 @@ export class BidService {
   }
 
   async findAgreementByManagerId(_id: string): Promise<BidModel[]> {
-    const agreements = await this._agreementService.findAgreementByManagerId(
-      _id
-    );
+    const agreements =
+      await this._agreementService.findAgreementByManagerId(_id);
     const bd = await this._bidsRepository.list();
     const results: BidModel[] = [];
     for (let i = 0; i < agreements.length; i++) {
       const bid = await this._bidsRepository.getByAgreementId(
-        agreements[i]._id.toString()
+        agreements[i]._id.toString(),
       );
       if (bid) results.push(...bid);
     }
@@ -456,7 +451,7 @@ export class BidService {
     for (let i = 0; i < dto.add_allotment.length; i++) {
       if (dto.add_allotment[i]?._id) {
         const old = await this._allotmentRepository.listById(
-          dto.add_allotment[i]?._id
+          dto.add_allotment[i]?._id,
         );
         if (old) {
           newArray.push(old);
@@ -465,11 +460,11 @@ export class BidService {
       }
       dto.add_allotment[i].files = this._fileRepository.upload(
         `product_${new Date().getTime()}.pdf`,
-        dto.add_allotment[i].files
+        dto.add_allotment[i].files,
       );
       dto.add_allotment[i].status = AllotmentStatusEnum.rascunho;
       newArray.push(
-        await this._allotmentRepository.register(dto.add_allotment[i])
+        await this._allotmentRepository.register(dto.add_allotment[i]),
       );
     }
 
@@ -477,7 +472,7 @@ export class BidService {
       for (let i = 0; i < dto.add_allotment.length; i++) {
         await this._allotmentRepository.editUpdate(
           dto.add_allotment[i]._id,
-          dto.add_allotment[i]
+          dto.add_allotment[i],
         );
       }
     }
@@ -492,7 +487,7 @@ export class BidService {
     const item = await this._bidsRepository.getById(_id);
     if (!item) {
       throw new BadRequestException(
-        "Não foi possivel atualizar a adicionar proposta na licitação!"
+        "Não foi possivel atualizar a adicionar proposta na licitação!",
       );
     }
     const result = await this._bidsRepository.addProposal(_id, dto);
@@ -503,7 +498,7 @@ export class BidService {
     token: string,
     userId: string,
     _id: string,
-    dto: BidUpdateStatusRequestDto
+    dto: BidUpdateStatusRequestDto,
   ): Promise<BidModel | any> {
     const user = await this._userRepository.getById(userId);
 
@@ -521,12 +516,12 @@ export class BidService {
 
       if (!configs)
         throw new BadRequestException(
-          "Não foi possivel encontrar as configurações da plataforma!"
+          "Não foi possivel encontrar as configurações da plataforma!",
         );
 
       const { start_at } = await this._bidsRepository.addStartHour(
         _id,
-        `${nextDay}T${configs.start_at}`
+        `${nextDay}T${configs.start_at}`,
       );
       const slicedData = start_at.slice(0, 10);
       const unix = new Date(slicedData);
@@ -536,13 +531,13 @@ export class BidService {
 
       await this._bidsRepository.addEndHour(
         _id,
-        `${endDate}T${configs.end_at}`
+        `${endDate}T${configs.end_at}`,
       );
       const result = await this._bidsRepository.updateStatus(_id, dto);
 
       await this._allotmentRepository.updateStatusByIds(
         result.add_allotment.map((el) => el._id.toString()),
-        AllotmentStatusEnum.lancada
+        AllotmentStatusEnum.lancada,
       );
 
       const registry = new RegistrySendRequestDto(
@@ -565,7 +560,7 @@ export class BidService {
         bid.city,
         bid.status,
         bid.association,
-        bid.createdAt
+        bid.createdAt,
       );
 
       bid.status = dto.status;
@@ -576,12 +571,14 @@ export class BidService {
 
       const newData = await this.createData(bid);
       const hash = await this.calculateHash(newData);
-      const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
-      if(sendToBlockchain && sendToBlockchain == 'true'){
+      const sendToBlockchain = this._configService.get(
+        EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
+      );
+      if (sendToBlockchain && sendToBlockchain == "true") {
         const txHash = await this._lacchainModel.setBidData(
           token,
           bidHistoryId,
-          hash
+          hash,
         );
         await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
       }
@@ -602,7 +599,7 @@ export class BidService {
 
       await this._allotmentRepository.updateStatusByIds(
         bid.add_allotment.map((el) => el._id.toString()),
-        dto.allomentStatus
+        dto.allomentStatus,
       );
     }
 
@@ -617,13 +614,15 @@ export class BidService {
 
     const newData = await this.createData(bid);
     const hash = await this.calculateHash(newData);
-    
-    const sendToBlockchain = this._configService.get(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
-    if(sendToBlockchain && sendToBlockchain == 'true'){
-        const txHash = await this._lacchainModel.setBidData(
+
+    const sendToBlockchain = this._configService.get(
+      EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
+    );
+    if (sendToBlockchain && sendToBlockchain == "true") {
+      const txHash = await this._lacchainModel.setBidData(
         token,
         bidHistoryId,
-        hash
+        hash,
       );
       await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
     }
@@ -633,7 +632,7 @@ export class BidService {
 
   async updateOpenDate(dto: BidDateUpdateDto): Promise<BidModel | any> {
     const awaitingBids = await this._bidsRepository.listBidByStatus(
-      BidStatusEnum.awaiting
+      BidStatusEnum.awaiting,
     );
     const returnArray = [];
     for (let i = 0; i < awaitingBids.length; i++) {
@@ -642,14 +641,14 @@ export class BidService {
       if (awaitingBids[i].start_at) {
         await this._bidsRepository.addStartHour(
           awaitingBids[i].id,
-          `${awaitingBids[i].start_at}-T:${dto.start_at}`
+          `${awaitingBids[i].start_at}-T:${dto.start_at}`,
         );
       }
 
       if (awaitingBids[i].end_at) {
         const unix = new Date(awaitingBids[i].start_at);
         let unixTimeStamp = unix.setDate(
-          unix.getDate() + Number(awaitingBids[i].days_to_delivery)
+          unix.getDate() + Number(awaitingBids[i].days_to_delivery),
         );
         let data = new Date(unixTimeStamp);
         let endDate = data.toISOString().slice(0, 10);
@@ -657,8 +656,8 @@ export class BidService {
         returnArray.push(
           await this._bidsRepository.addEndHour(
             awaitingBids[i].id,
-            `${endDate}-T:${dto.end_at}`
-          )
+            `${endDate}-T:${dto.end_at}`,
+          ),
         );
       }
     }
@@ -669,14 +668,21 @@ export class BidService {
   async getById(_id: string): Promise<BidModel> {
     const result = await this._bidsRepository.getById(_id);
 
+    if (!result) {
+      throw new BadRequestException("Licitação não encontrada!");
+    }
+
     for (let i = 0; i < result.add_allotment.length; i++) {
       for (let j = 0; j < result.add_allotment[i].proposals.length; j++) {
         result.add_allotment[i].proposals[j].proposal.proposedBy =
           await this._userRepository.getById(
-            result.add_allotment[i].proposals[j].proposal.proposedBy.id
+            String(
+              result.add_allotment[i].proposals[j].proposal.proposedBy._id,
+            ), //Linha alterada
           );
+
         const proposalDetails = await this._proposalRepository.getById(
-          result.add_allotment[i].proposals[j].proposal.id
+          result.add_allotment[i].proposals[j].proposal.id,
         );
 
         if (proposalDetails) {
@@ -694,9 +700,6 @@ export class BidService {
       }
     }
 
-    if (!result) {
-      throw new BadRequestException("Licitação não encontrada!");
-    }
     return result;
   }
 
@@ -730,7 +733,7 @@ export class BidService {
     const user = await this._userRepository.getByIdPopulate(userId);
     if (user.type === UserTypeEnum.associacao) {
       const list = await this._bidsRepository.listForSupplier(
-        user.association.id
+        user.association.id,
       );
 
       return list;
@@ -775,12 +778,12 @@ export class BidService {
       }
 
       const list = await this._bidsRepository.listByIds(
-        filteredList.map((ele) => ele.bid?.id ? ele.bid?.id : ele.bid)
+        filteredList.map((ele) => (ele.bid?.id ? ele.bid?.id : ele.bid)),
       );
       return list;
     } else {
       throw new BadRequestException(
-        "Fornecedor não tem nenhuma licitação vinculada!"
+        "Fornecedor não tem nenhuma licitação vinculada!",
       );
     }
   }
@@ -792,7 +795,7 @@ export class BidService {
     }
     return cnpjSemPontuacao.replace(
       /^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,
-      "$1.$2.$3/$4-$5"
+      "$1.$2.$3/$4-$5",
     );
   }
 
@@ -806,13 +809,12 @@ export class BidService {
       throw new BadRequestException("Licitação não está em analise!");
     }
 
-    const proposalTie = await this._proposalRepository.listProposalByBidTie(
-      _id
-    );
+    const proposalTie =
+      await this._proposalRepository.listProposalByBidTie(_id);
 
     if (!proposalTie.length) {
       throw new BadRequestException(
-        "Não foi encontrado propostas para desempate!"
+        "Não foi encontrado propostas para desempate!",
       );
     }
 
@@ -824,8 +826,8 @@ export class BidService {
     const uniqueSuppliers = suppliers.filter(
       (ele, index) =>
         suppliers.findIndex(
-          (item) => item._id.toString() === ele._id.toString()
-        ) === index
+          (item) => item._id.toString() === ele._id.toString(),
+        ) === index,
     );
 
     return await this._bidsRepository.sendTieBreaker(_id, uniqueSuppliers);
@@ -845,7 +847,7 @@ export class BidService {
       await this._modelContractRepository.getByClassification(type);
 
     const respondeAssociation = await this._associationRepository.getById(
-      respondseBids.association.association.id
+      respondseBids.association.association.id,
     );
 
     const responseProposal = await this._proposalRepository.listByBid(_id);
@@ -858,7 +860,7 @@ export class BidService {
               responseProposal[p].proposedBy.name +
               ", inscrita no cnpj " +
               responseProposal[p].proposedBy.document +
-              " "
+              " ",
           );
         } else {
           propostas.push(
@@ -866,7 +868,7 @@ export class BidService {
               responseProposal[p].proposedBy.name +
               ", inscrita no cnpj " +
               responseProposal[p].proposedBy.document +
-              " "
+              " ",
           );
         }
       }
@@ -876,7 +878,7 @@ export class BidService {
       // console.log('modal response', respondseBids.invited_suppliers)
       for (let q = 0; q < respondseBids.invited_suppliers.length; q++) {
         const suppliers = await this._supplierRepository.listById(
-          respondseBids.invited_suppliers[q]._id.toString()
+          respondseBids.invited_suppliers[q]._id.toString(),
         );
 
         if (q == 0) {
@@ -885,7 +887,7 @@ export class BidService {
               suppliers.name +
               ", inscrita no cnpj " +
               suppliers.cpf +
-              " "
+              " ",
           );
         } else {
           convidados.push(
@@ -893,7 +895,7 @@ export class BidService {
               suppliers.name +
               ", inscrita no cnpj " +
               suppliers.cpf +
-              " "
+              " ",
           );
         }
       }
@@ -906,7 +908,7 @@ export class BidService {
       //  }
       if (l == 0) {
         lotes.push(
-          "lote " + respondseBids.add_allotment[l].allotment_name + " "
+          "lote " + respondseBids.add_allotment[l].allotment_name + " ",
         );
         for (let item of respondseBids.add_allotment[l].add_item) {
           lotes.push(
@@ -915,12 +917,12 @@ export class BidService {
               " grupo " +
               item.group +
               " quantidade " +
-              item.quantity
+              item.quantity,
           );
         }
       } else {
         lotes.push(
-          "lote " + respondseBids.add_allotment[l].allotment_name + " "
+          "lote " + respondseBids.add_allotment[l].allotment_name + " ",
         );
         for (let item of respondseBids.add_allotment[l].add_item) {
           lotes.push(
@@ -929,7 +931,7 @@ export class BidService {
               " grupo " +
               item.group +
               " quantidade " +
-              item.quantity
+              item.quantity,
           );
         }
       }
@@ -967,11 +969,11 @@ export class BidService {
       .replace(/\[association_name\]/g, respondeAssociation.name)
       .replace(
         /\[association_id\]/g,
-        "" + this.formatCNPJ(respondeAssociation.cnpj) + " "
+        "" + this.formatCNPJ(respondeAssociation.cnpj) + " ",
       )
       .replace(
         /\[association_zip_code\]/g,
-        "" + respondeAssociation.address.zipCode + " "
+        "" + respondeAssociation.address.zipCode + " ",
       )
       .replace(
         /\[association_address\]/g,
@@ -983,23 +985,23 @@ export class BidService {
           respondeAssociation.address.neighborhood +
           " " +
           respondeAssociation.address.complement +
-          " "
+          " ",
       )
       .replace(
         /\[association_municipality\]/g,
-        "" + respondeAssociation.address.city + ""
+        "" + respondeAssociation.address.city + "",
       )
       .replace(
         /\[association_state\]/g,
-        "" + respondeAssociation.address.state + " "
+        "" + respondeAssociation.address.state + " ",
       )
       .replace(
         /\[association_legal_representative_name\]/g,
-        "" + respondeAssociation.legalRepresentative.name + " "
+        "" + respondeAssociation.legalRepresentative.name + " ",
       )
       .replace(
         /\[association_legal_representative_id\]/g,
-        "" + respondeAssociation.legalRepresentative.cpf + " "
+        "" + respondeAssociation.legalRepresentative.cpf + " ",
       )
       .replace(
         /\[association_legal_representative_address\]/g,
@@ -1011,15 +1013,15 @@ export class BidService {
           respondeAssociation.legalRepresentative.address.neighborhood +
           " " +
           respondeAssociation.legalRepresentative.address.complement +
-          " "
+          " ",
       )
       .replace(
         /\[association_legal_representative_supplier_municipality\]/g,
-        "" + respondeAssociation.legalRepresentative.address.city + " "
+        "" + respondeAssociation.legalRepresentative.address.city + " ",
       )
       .replace(
         /\[association_legal_representative_supplier_state\]/g,
-        "" + respondeAssociation.legalRepresentative.address.state + " "
+        "" + respondeAssociation.legalRepresentative.address.state + " ",
       )
       //
 
@@ -1027,7 +1029,7 @@ export class BidService {
       .replace("[association_id]", "" + respondeAssociation.cnpj + " ")
       .replace(
         "[association_zip_code]",
-        "" + respondeAssociation.address.zipCode + " "
+        "" + respondeAssociation.address.zipCode + " ",
       )
       .replace(
         "[association_address]",
@@ -1039,23 +1041,23 @@ export class BidService {
           respondeAssociation.address.neighborhood +
           " " +
           respondeAssociation.address.complement +
-          " "
+          " ",
       )
       .replace(
         "[association_municipality]",
-        "" + respondeAssociation.address.city + ""
+        "" + respondeAssociation.address.city + "",
       )
       .replace(
         "[association_state]",
-        "" + respondeAssociation.address.state + " "
+        "" + respondeAssociation.address.state + " ",
       )
       .replace(
         "[association_legal_representative_name]",
-        "" + respondeAssociation.legalRepresentative.name + " "
+        "" + respondeAssociation.legalRepresentative.name + " ",
       )
       .replace(
         "[association_legal_representative_id]",
-        "" + respondeAssociation.legalRepresentative.cpf + " "
+        "" + respondeAssociation.legalRepresentative.cpf + " ",
       )
       .replace(
         "[association_legal_representative_address]",
@@ -1067,29 +1069,29 @@ export class BidService {
           respondeAssociation.legalRepresentative.address.neighborhood +
           " " +
           respondeAssociation.legalRepresentative.address.complement +
-          " "
+          " ",
       )
       .replace(
         "[association_legal_representative_supplier_municipality]",
-        "" + respondeAssociation.legalRepresentative.address.city + " "
+        "" + respondeAssociation.legalRepresentative.address.city + " ",
       )
       .replace(
         "[association_legal_representative_supplier_state]",
-        "" + respondeAssociation.legalRepresentative.address.state + " "
+        "" + respondeAssociation.legalRepresentative.address.state + " ",
       )
       //
       ////CONVENIO
       .replace(
         /\[covenant_number\]/g,
-        " " + respondseBids.agreement.register_number.toString() + " "
+        " " + respondseBids.agreement.register_number.toString() + " ",
       )
       .replace(
         /\[covenant_object\]/g,
-        " " + respondseBids.agreement.register_object.toString() + " "
+        " " + respondseBids.agreement.register_object.toString() + " ",
       )
       .replace(
         /\[municipality_execution_covenant\]/g,
-        " " + respondseBids.local_to_delivery.toString() + " "
+        " " + respondseBids.local_to_delivery.toString() + " ",
       )
 
       //LICITACAO
@@ -1098,7 +1100,7 @@ export class BidService {
         " " +
           respondseBids.bid_count.toString() +
           "/" +
-          moment(respondseBids.start_at).format("YYYY").toString()
+          moment(respondseBids.start_at).format("YYYY").toString(),
       )
       .replace("[guest_supplier]", "" + convidados + " ")
       .replace("[proposed_list]", " " + propostas)
@@ -1106,11 +1108,11 @@ export class BidService {
       //.replace('[document_contract_date]', ' ' + moment(contract['createdAt']).format('dd/mm/YYYY').toString() + ' ')
       .replace(
         "[document_minutes]",
-        " " + moment(respondseBids.start_at).format("DD/MM/YYYY").toString()
+        " " + moment(respondseBids.start_at).format("DD/MM/YYYY").toString(),
       )
       .replace(
         "[document_notice_ date]",
-        " " + moment(respondseBids.start_at).format("DD/MM/YYYY").toString()
+        " " + moment(respondseBids.start_at).format("DD/MM/YYYY").toString(),
       )
       //lote é so nome do lote
       .replace("[batch_list]", "" + lotes + " ");
@@ -1121,7 +1123,7 @@ export class BidService {
   async createDocument(
     _id: string,
     lang: string = LanguageContractEnum.english,
-    type: ModelContractClassificationEnum
+    type: ModelContractClassificationEnum,
   ): Promise<any> {
     const modelContract =
       await this._modelContractRepository.getByContractAndLanguage(lang, type);
@@ -1130,7 +1132,7 @@ export class BidService {
 
     const content = fs.readFileSync(
       path.resolve("src/shared/documents", modelContract.contract),
-      "binary"
+      "binary",
     );
 
     const zip = new PizZip(content);
@@ -1171,9 +1173,9 @@ export class BidService {
           a +
           b.product?.reduce(
             (acc, curr) => acc + Number(curr.quantity) * curr.unitValue,
-            0
+            0,
           ),
-        0
+        0,
       ) ||
       0;
 
@@ -1212,7 +1214,7 @@ export class BidService {
     if (proposalArray)
       proposalArray
         .sort(
-          (a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0)
+          (a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0),
         )
         .forEach((proposal) => {
           listOfBidPrices.push({
@@ -1323,7 +1325,7 @@ export class BidService {
       estimated_value:
         listOfItems?.reduce(
           (acc, item) => acc + Number(item?.total_value || 0),
-          0
+          0,
         ) || 0,
       list_of_supplier: contractArray.map((contract) => {
         return {
@@ -1345,7 +1347,8 @@ export class BidService {
             : "Não tem endereço fornecido",
           supplier_country:
             contract?.supplier_id?.address.state || "Não tem pais fornecido",
-          name_supplier: contract?.supplier_id?.name || "Não tem nome fornecido",
+          name_supplier:
+            contract?.supplier_id?.name || "Não tem nome fornecido",
         };
       }),
     });
@@ -1354,7 +1357,7 @@ export class BidService {
 
     await fs.writeFileSync(
       path.resolve("src/shared/documents", "output.docx"),
-      buf
+      buf,
     );
 
     await this.callPythonFile()
@@ -1366,21 +1369,21 @@ export class BidService {
       .catch((err) => {
         console.log(err);
         throw new BadRequestException(
-          "Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto"
+          "Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto",
         );
       });
   }
 
   private async costItensGet(
     allotment: AllotmentModel[],
-    proposal?: ProposalModel[]
+    proposal?: ProposalModel[],
   ): Promise<any[]> {
     let listOfItems = [];
     for (let allot of allotment) {
       let el = proposal.find((proposal) =>
         proposal.allotment.find(
-          (all) => all._id.toString() === allot._id.toString()
-        )
+          (all) => all._id.toString() === allot._id.toString(),
+        ),
       );
       let price = 0;
       let quantity = 0;
@@ -1477,12 +1480,12 @@ export class BidService {
       ) {
         const bids = bidsByStatus[bid.status];
         const proposals = await this._proposalRepository.listBiBidsIds(
-          bids.map((bid: BidModel) => bid._id.toString())
+          bids.map((bid: BidModel) => bid._id.toString()),
         );
         bid["value"] =
           (proposals?.reduce(
             (acc, proposal) => acc + +proposal.total_value,
-            0
+            0,
           ) || 0) / (proposals?.length || 1);
         continue;
       }
@@ -1490,7 +1493,7 @@ export class BidService {
       if (bid.status === BidStatusEnum.completed) {
         const bids = bidsByStatus[bid.status];
         const contracts = await this._contractRepository.listByBidIds(
-          bids.map((bid: BidModel) => bid._id.toString())
+          bids.map((bid: BidModel) => bid._id.toString()),
         );
         bid["value"] =
           contracts.reduce((acc, contract) => acc + +contract.value, 0) /
@@ -1507,9 +1510,9 @@ export class BidService {
               curr.product?.reduce(
                 (acc2, curr2) =>
                   acc2 + curr2.unitValue * Number(curr2.quantity),
-                0
+                0,
               ),
-            0
+            0,
           ) || 0;
       });
     }

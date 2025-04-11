@@ -7,22 +7,21 @@ import { Tfa } from "../schemas/tfa-schema";
 
 @Injectable()
 export class TfaRepository {
+  constructor(
+    @InjectModel(Tfa.name) private readonly _model: Model<TfaModel>,
+  ) {}
 
-    constructor(
-        @InjectModel(Tfa.name) private readonly _model: Model<TfaModel>,
-    ) { }
+  async save(dto: TfaRegisterRequestDto): Promise<TfaModel> {
+    const data = await new this._model(dto);
+    return data.save();
+  }
 
-    async save(dto: TfaRegisterRequestDto): Promise<TfaModel> {
-        const data = await new this._model(dto);
-        return data.save();
-    }
+  async getByUserId(userId: string): Promise<TfaModel> {
+    return await this._model.findOne({ user: userId });
+  }
 
-    async getByUserId(userId: string): Promise<TfaModel> {
-        return await this._model.findOne({ 'user': userId });
-    }
-
-    async delete(userId: string): Promise<TfaModel> {
-        const tfa = await this._model.findOne({ 'user': userId });
-        return await this._model.findByIdAndDelete(tfa._id);
-    }
+  async delete(userId: string): Promise<TfaModel> {
+    const tfa = await this._model.findOne({ user: userId });
+    return await this._model.findByIdAndDelete(tfa._id);
+  }
 }

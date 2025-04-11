@@ -12,14 +12,12 @@ import { GroupCostItemRealation } from "../schemas/group-costItem-relation.schem
 import { GroupCostItemRelationDto } from "./group-costItem-relation-register-request.dto";
 
 export abstract class GroupRegisterDto {
+  @ApiProperty({ type: String })
+  name: string;
 
-    @ApiProperty({ type: String })
-    name: string;
+  @ApiProperty({ type: String })
+  idAgreements: string;
 
-    @ApiProperty({ type: String })
-    idAgreements: string;
-
-    @ApiProperty({ type: GroupCostItemRelationDto })
-    items: GroupCostItemRelationDto[];
-
+  @ApiProperty({ type: GroupCostItemRelationDto })
+  items: GroupCostItemRelationDto[];
 }

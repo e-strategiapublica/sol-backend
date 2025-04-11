@@ -1,12 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export abstract class ProductRegisterDto {
+  @ApiProperty({ type: String })
+  product_name: string;
 
-    @ApiProperty({ type: String })
-    product_name: string
-
-    identifier?: number;
-    @ApiProperty({ type: String })
-    pdm?: string;
-
+  identifier?: number;
+  @ApiProperty({ type: String })
+  pdm?: string;
 }

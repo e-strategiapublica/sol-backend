@@ -7,22 +7,27 @@ import { ModelContractClassificationEnum } from "../enums/modelContract-classifi
 
 @Schema({ timestamps: true, collection: ModelContract.name.toLowerCase() })
 export class ModelContract {
+  @Prop({ required: true, type: String })
+  name: string;
 
-    @Prop({ required: true, type: String })
-    name: string;
+  @Prop({
+    required: true,
+    enum: Object.keys(ModelContractStatusEnum),
+    default: ModelContractStatusEnum.ativo,
+  })
+  status: ModelContractStatusEnum;
 
-    @Prop({ required: true, enum: Object.keys(ModelContractStatusEnum), default: ModelContractStatusEnum.ativo })
-    status: ModelContractStatusEnum;
+  @Prop({ enum: Object.values(ModelContractClassificationEnum) })
+  classification: ModelContractClassificationEnum;
 
-    @Prop({ enum:Object.values(ModelContractClassificationEnum)})
-    classification: ModelContractClassificationEnum;
+  @Prop({ type: String })
+  contract: string;
 
-    @Prop({ type: String })
-    contract: string;
-
-    @Prop({ enum: Object.keys(LanguageContractEnum), default: LanguageContractEnum.portuguese })
-    language: LanguageContractEnum;
-
+  @Prop({
+    enum: Object.keys(LanguageContractEnum),
+    default: LanguageContractEnum.portuguese,
+  })
+  language: LanguageContractEnum;
 }
 
 export const ModelContractSchema = SchemaFactory.createForClass(ModelContract);

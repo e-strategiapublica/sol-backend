@@ -5,17 +5,15 @@ import { TfaRegisterRequestDto } from "../dtos/tfa-register-request.dto";
 
 @Injectable()
 export class TfaRegisterValidator implements ValidatorContractInterface {
+  errors: any[];
 
-    errors: any[];
+  validate(dto: TfaRegisterRequestDto): boolean {
+    const validator = new ValidatorsUtil();
 
-    validate(dto: TfaRegisterRequestDto): boolean {
+    validator.isRequired(dto.secret, "secret is required!");
+    validator.isRequired(dto.url, "url is required!");
 
-        const validator = new ValidatorsUtil();
-
-        validator.isRequired(dto.secret, 'secret is required!');
-        validator.isRequired(dto.url, 'url is required!');
-
-        this.errors = validator.errors;
-        return validator.isValid();
-    }
+    this.errors = validator.errors;
+    return validator.isValid();
+  }
 }

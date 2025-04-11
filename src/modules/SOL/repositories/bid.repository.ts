@@ -14,8 +14,10 @@ import { AgreementRepository } from "./agreement.repository";
 
 @Injectable()
 export class BidRepository {
-  constructor(@InjectModel(Bids.name) private readonly _model: Model<BidModel>,
-  private readonly _agreementRepository: AgreementRepository) {}
+  constructor(
+    @InjectModel(Bids.name) private readonly _model: Model<BidModel>,
+    private readonly _agreementRepository: AgreementRepository,
+  ) {}
 
   async register(dto: BideRegisterDto): Promise<BidModel> {
     const data = await new this._model(dto);
@@ -23,18 +25,16 @@ export class BidRepository {
   }
 
   async getByAgreementId(_id: string): Promise<BidModel[]> {
-    return await  this._model.find({agreement: {_id}})
-   
+    return await this._model.find({ agreement: { _id } });
   }
-  async getByReviewerId(_id: string): Promise<BidModel[]> {  
+  async getByReviewerId(_id: string): Promise<BidModel[]> {
     const agreements = await this._agreementRepository.findForReviewer(_id);
-    const agreementIds = agreements.map(agreement => agreement._id);
-  
+    const agreementIds = agreements.map((agreement) => agreement._id);
+
     return await this._model.find({ agreement: { $in: agreementIds } }).exec();
   }
 
   async update(_id: string, dto: BidUpdateDto): Promise<BidModel> {
-    
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -53,11 +53,14 @@ export class BidRepository {
           invited_suppliers: dto.invited_suppliers,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
-  async updateStatus(_id: string, dto: BidUpdateStatusRequestDto): Promise<BidModel> {
+  async updateStatus(
+    _id: string,
+    dto: BidUpdateStatusRequestDto,
+  ): Promise<BidModel> {
     return await this._model
       .findOneAndUpdate(
         { _id },
@@ -68,14 +71,17 @@ export class BidRepository {
             declined_reason: dto.declined_reason,
           },
         },
-        { new: true }
+        { new: true },
       )
       .populate("agreement")
       .populate("association")
-      .populate({ path: "agreement", populate: { path: "manager" } })
+      .populate({ path: "agreement", populate: { path: "manager" } });
   }
 
-  async changeStatus(_id: string, dto: BidChangeStatusRequestDto): Promise<BidModel> {
+  async changeStatus(
+    _id: string,
+    dto: BidChangeStatusRequestDto,
+  ): Promise<BidModel> {
     if (dto.status === BidStatusEnum.completed) {
       return await this._model.findOneAndUpdate(
         { _id },
@@ -85,7 +91,7 @@ export class BidRepository {
             concludedAt: new Date(),
           },
         },
-        { new: true }
+        { new: true },
       );
     }
 
@@ -96,7 +102,7 @@ export class BidRepository {
           status: dto.status,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -108,7 +114,7 @@ export class BidRepository {
           proposal_list: dto.proposal_id,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
@@ -123,7 +129,10 @@ export class BidRepository {
   }
 
   async listNonDeletedBids(): Promise<BidModel[]> {
-    return await this._model.find({ deleted: false }).populate("agreement").populate("association");
+    return await this._model
+      .find({ deleted: false })
+      .populate("agreement")
+      .populate("association");
   }
   async listBidByStatus(status: BidStatusEnum): Promise<BidModel[]> {
     return await this._model.find({ status: BidStatusEnum[status] });
@@ -159,23 +168,42 @@ export class BidRepository {
   }
 
   async getBidById(_id: string): Promise<BidModel> {
-    return await this._model.findOne({ _id }).populate("invited_suppliers").populate("association");
+    return await this._model
+      .findOne({ _id })
+      .populate("invited_suppliers")
+      .populate("association");
   }
 
   async deleteById(_id: string) {
-    return await this._model.findByIdAndUpdate({ _id }, { $set: { deleted: true } }, { new: true });
+    return await this._model.findByIdAndUpdate(
+      { _id },
+      { $set: { deleted: true } },
+      { new: true },
+    );
   }
 
   async rotineStatus(_id: string, status: string) {
-    return await this._model.findByIdAndUpdate({ _id }, { $set: { status: status } }, { new: true });
+    return await this._model.findByIdAndUpdate(
+      { _id },
+      { $set: { status: status } },
+      { new: true },
+    );
   }
 
   async addStartHour(_id: string, hour: string) {
-    const ele = await this._model.findByIdAndUpdate({ _id }, { $set: { start_at: hour } }, { new: true });
+    const ele = await this._model.findByIdAndUpdate(
+      { _id },
+      { $set: { start_at: hour } },
+      { new: true },
+    );
     return ele;
   }
   async addEndHour(_id: string, hour: string) {
-    return await this._model.findByIdAndUpdate({ _id }, { $set: { end_at: hour } }, { new: true });
+    return await this._model.findByIdAndUpdate(
+      { _id },
+      { $set: { end_at: hour } },
+      { new: true },
+    );
   }
 
   async listForSupplier(_id: string): Promise<BidModel[]> {
@@ -226,7 +254,10 @@ export class BidRepository {
       .populate("invited_suppliers");
   }
 
-  async sendTieBreaker(_id: string, suppliers: SupplierModel[]): Promise<BidModel> {
+  async sendTieBreaker(
+    _id: string,
+    suppliers: SupplierModel[],
+  ): Promise<BidModel> {
     return await this._model.findOneAndUpdate(
       { _id },
       {
@@ -235,13 +266,16 @@ export class BidRepository {
           invited_suppliers: suppliers,
         },
       },
-      { new: true }
+      { new: true },
     );
   }
 
   async listWithoutConcluded(): Promise<BidModel[]> {
     return await this._model.find({
-      $and: [{ status: { $ne: BidStatusEnum.completed } }, { status: { $ne: BidStatusEnum.deserted } }],
+      $and: [
+        { status: { $ne: BidStatusEnum.completed } },
+        { status: { $ne: BidStatusEnum.deserted } },
+      ],
     });
   }
 

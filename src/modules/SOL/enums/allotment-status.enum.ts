@@ -6,6 +6,6 @@ export enum AllotmentStatusEnum {
   fracassado = "fracassado",
   aberta = "aberta",
   emAnalise = "emAnalise",
-  lancada = 'lançada',
-  concluida = 'concluída',
+  lancada = "lançada",
+  concluida = "concluída",
 }

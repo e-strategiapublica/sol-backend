@@ -7,8 +7,9 @@ import { EndPointsInterface } from "../interfaces/endpoits.interface";
 
 @Injectable()
 export class EndPointsRepository {
-  
-  constructor(@InjectModel(EndPoints.name) private readonly _model: Model<EndPointsModel>) {}
+  constructor(
+    @InjectModel(EndPoints.name) private readonly _model: Model<EndPointsModel>,
+  ) {}
 
   async register(dto: EndPointsInterface): Promise<EndPointsModel> {
     const data = await new this._model(dto);
@@ -29,7 +30,7 @@ export class EndPointsRepository {
       {
         $set: dto,
       },
-      { new: true }
+      { new: true },
     );
   }
 

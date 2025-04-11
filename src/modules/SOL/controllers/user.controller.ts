@@ -1,7 +1,22 @@
-import { UserTypeEnum } from '../enums/user-type.enum';
-import { Body, Controller, Delete, Get, HttpCode, HttpException, HttpStatus, Logger, Param, Post, Put, Req, UseGuards, UseInterceptors } from "@nestjs/common";
+import { UserTypeEnum } from "../enums/user-type.enum";
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+  UseInterceptors,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiParam, ApiTags } from "@nestjs/swagger";
-import { ResponseDto } from "src/shared/dtos/response.dto";
+import { ResponseDto, ResponseDtoV2 } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ValidatorInterceptor } from "src/shared/interceptors/validator.interceptor";
 import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
@@ -24,42 +39,32 @@ import { UserResetPasswordConfirmationValidator } from "../validators/user-reset
 import { UserResetPasswordResendEmailValidator } from "../validators/user-reset-password-resend-email.validator";
 import { UserUpdatePasswordValidator } from "../validators/user-update-password.validator";
 import { UserUpdateValidator } from "../validators/user-update.validator";
-import { UserUpdateByIdRequestDto } from '../dtos/user-update-by-id-request.dto';
-import { UserRolesEnum } from '../enums/user-roles.enum';
+import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto";
+import { UserRolesEnum } from "../enums/user-roles.enum";
+import { VerificationRegisterResponseDto } from "../dtos/vertification-register-response.dto";
 
-@ApiTags('user')
-@Controller('user')
+@ApiTags("user")
+@Controller("user")
 export class UserController {
-
   private readonly logger = new Logger(UserController.name);
 
   constructor(
     private readonly userService: UserService,
     private readonly userRepository: UserRepository,
     private readonly verificationService: VerificationService,
-  ) { }
+  ) {}
 
   @Get()
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getUser(
-    @Req() request,
-  ) {
-
+  async getUser(@Req() request) {
     try {
-
       const payload: JwtPayload = request.user;
 
       const response = await this.userService.getById(payload.userId);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -70,25 +75,15 @@ export class UserController {
     }
   }
 
-  @Get('all')
+  @Get("all")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getAll(
-  ) {
-
+  async getAll() {
     try {
-
-
       const response = await this.userService.getAll();
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -99,54 +94,15 @@ export class UserController {
     }
   }
 
-  @Get('get-by-id/:_id')
+  @Get("get-by-id/:_id")
   @HttpCode(200)
   // @UseGuards(JwtAuthGuard)
   // @ApiBearerAuth()
-  async getById(
-    @Param('_id') _id: string,
-  ) {
-
+  async getById(@Param("_id") _id: string) {
     try {
-
       const response = await this.userService.getById(_id);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
-    } catch (error) {
-      this.logger.error(error.message);
-
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }  
-
-  @Get('get-users-by-supplier/:_id')
-  @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async getUserBySupplierId(
-    @Param('_id') _id: string,
-  ) {
-
-    try {
-
-      const response = await this.userService.getUserBySupplierId(_id);
-
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -157,25 +113,35 @@ export class UserController {
     }
   }
 
-  @ApiParam({ name: 'type', enum: UserTypeEnum, description: 'Type of user' })
-  @Get('list-by-type/:type')
+  @Get("get-users-by-supplier/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async listByType(
-    @Param('type') type: UserTypeEnum,
-  ) {
+  async getUserBySupplierId(@Param("_id") _id: string) {
+    try {
+      const response = await this.userService.getUserBySupplierId(_id);
 
+      return new ResponseDto(true, response, null);
+    } catch (error) {
+      this.logger.error(error.message);
+
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @ApiParam({ name: "type", enum: UserTypeEnum, description: "Type of user" })
+  @Get("list-by-type/:type")
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async listByType(@Param("type") type: UserTypeEnum) {
     try {
       const response = await this.userService.listByType(type);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -186,27 +152,16 @@ export class UserController {
     }
   }
 
-  @ApiParam({ name: 'role', enum: UserRolesEnum, description: 'role of user' })
-  @Get('list-by-role/:role')
+  @ApiParam({ name: "role", enum: UserRolesEnum, description: "role of user" })
+  @Get("list-by-role/:role")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async listByRole(
-    @Param('role') role: UserRolesEnum,
-  ) {
-
+  async listByRole(@Param("role") role: UserRolesEnum) {
     try {
-
-
       const response = await this.userService.listByRole(role);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -217,26 +172,16 @@ export class UserController {
     }
   }
 
-  @Post('register')
+  @Post("register")
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @UseInterceptors(new ValidatorInterceptor(new UserRegisterValidator()))
-  async register(
-    @Body() dto: UserRegisterRequestDto,
-  ) {
-
+  async register(@Body() dto: UserRegisterRequestDto) {
     try {
-
       const response = await this.userService.register(dto);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -247,24 +192,14 @@ export class UserController {
     }
   }
 
-  @Post('registerWithoutAuth')
-  @HttpCode(201)  
+  @Post("registerWithoutAuth")
+  @HttpCode(201)
   @UseInterceptors(new ValidatorInterceptor(new UserRegisterValidator()))
-  async registerWithoutAuth(
-    @Body() dto: UserRegisterRequestDto,
-  ) {
-
+  async registerWithoutAuth(@Body() dto: UserRegisterRequestDto) {
     try {
-
       const response = await this.userService.register(dto);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -275,25 +210,17 @@ export class UserController {
     }
   }
 
-  @Post('confirm-registration-code')
+  @Post("confirm-registration-code")
   @HttpCode(201)
   async confirmRegistrationCode(
     @Body() dto: UserRegisterConfirmationCodeRequestDto,
   ) {
-
     try {
+      const user = await this.userRepository.getByEmail(dto.email);
 
-      const user = await this.userRepository.getByEmail(dto.email)
+      await this.verificationService.verifyCode(user, dto.code);
 
-      const response = await this.verificationService.verifyCode(user, dto.code);
-
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, true, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -304,25 +231,15 @@ export class UserController {
     }
   }
 
-  @Put('register-password')
+  @Put("register-password")
   @HttpCode(201)
-  async registerPassword(
-    @Body() dto: UserRegisterPasswordRequestDto,
-  ) {
-
+  async registerPassword(@Body() dto: UserRegisterPasswordRequestDto) {
     try {
+      const user = await this.userService.getByEmail(dto.email);
 
-      const user = await this.userService.getByEmail(dto.email)
+      const response = await this.userService.registerPassword(user._id, dto);
 
-      const response = await this.userService.registerPassword(user._id, dto)
-
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -333,24 +250,17 @@ export class UserController {
     }
   }
 
-  @Post('confirmation-register-send')
+  @Post("confirmation-register-send")
   @HttpCode(200)
   async confirmationRegisterSend(
     @Body() dto: UserConfirmationRegisterSendRequestDto,
   ) {
-
     try {
-
-      if (dto.type === 'email') {
+      if (dto.type === "email") {
         const user = await this.userService.getByEmail(dto.value);
         let response = await this.verificationService.sendRegister(user);
-        return new ResponseDto(
-          true,
-          response,
-          null,
-        );
-      } 
-
+        return new ResponseDto(true, response, null);
+      }
     } catch (error) {
       this.logger.error(error.message);
 
@@ -361,24 +271,16 @@ export class UserController {
     }
   }
 
-  @Post('resend-code-register-email')
+  @Post("resend-code-register-email")
   @HttpCode(200)
   async resendCodeRegisterEmail(
     @Body() dto: UserRegisterResendEmailRequestDto,
   ) {
-
     try {
+      const response =
+        await this.verificationService.resendCodeRegisterEmail(dto);
 
-      const response = await this.verificationService.resendCodeRegisterEmail(dto)
-
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -389,29 +291,16 @@ export class UserController {
     }
   }
 
-  @Put('update/:_id')
+  @Put("update/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @UseInterceptors(new ValidatorInterceptor(new UserUpdateValidator()))
-  async update(
-    @Param('_id') _id: string,
-    @Body() dto: UserUpdateRequestDto,
-  ) {
-
+  async update(@Param("_id") _id: string, @Body() dto: UserUpdateRequestDto) {
     try {
-
-    
-
       const response = await this.userService.update(_id, dto);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -422,27 +311,19 @@ export class UserController {
     }
   }
 
-  @Put('update-by-id/:_id')
+  @Put("update-by-id/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @UseInterceptors(new ValidatorInterceptor(new UserUpdateValidator()))
   async updateById(
-    @Param('_id') _id: string,
+    @Param("_id") _id: string,
     @Body() dto: UserUpdateByIdRequestDto,
   ) {
-
     try {
-
       const response = await this.userService.updateById(_id, dto);
 
-      return new ResponseDto(
-        true,
-        response,
-        null,
-      );
-
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -453,7 +334,7 @@ export class UserController {
     }
   }
 
-  @Put('update-password')
+  @Put("update-password")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -462,20 +343,15 @@ export class UserController {
     @Req() request,
     @Body() dto: UserUpdatePasswordRequestDto,
   ) {
-
     try {
-
       const payload: JwtPayload = request.user;
 
-      const response = await this.userService.updatePassword(payload.userId, dto);
-
-      return new ResponseDto(
-        true,
-        response,
-        null,
+      const response = await this.userService.updatePassword(
+        payload.userId,
+        dto,
       );
 
-
+      return new ResponseDto(true, response, null);
     } catch (error) {
       this.logger.error(error.message);
 
@@ -486,26 +362,15 @@ export class UserController {
     }
   }
 
- 
-
-  @Post('reset-password')
+  @Post("reset-password")
   @HttpCode(200)
-  async resetPassword(
-    @Body() dto: UserResetPasswordRequestDto
-  ) {
-
+  async resetPassword(@Body() dto: UserResetPasswordRequestDto) {
     try {
-
       const user = await this.userService.getByEmail(dto.email);
 
       const result = await this.verificationService.send(user);
 
-      return new ResponseDto(
-        true,
-        result,
-        null,
-      );
-
+      return new ResponseDto(true, result, null);
     } catch (error) {
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
@@ -514,62 +379,26 @@ export class UserController {
     }
   }
 
-  @Post('first-access')
+  @Post("first-access")
   @HttpCode(200)
   async firstAccess(
-    @Body() dto: UserResetPasswordRequestDto
-  ) {
-
-    try {
-
-      const user = await this.userService.getByEmailFirstAccess(dto.email);
-      const result = await this.verificationService.sendFirstAcess(user);
-
-      return new ResponseDto(
-        true,
-        result,
-        null,
-      );
-
-    } catch (error) {
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    @Body() dto: UserResetPasswordRequestDto,
+  ): Promise<ResponseDtoV2<VerificationRegisterResponseDto>> {
+    const user = await this.userService.getByEmailFirstAccess(dto.email);
+    const result = await this.verificationService.sendFirstAcess(user);
+    return { success: true, data: result };
   }
 
-  @Put('reset-password-confirmation')
+  @Put("reset-password-confirmation")
   @HttpCode(200)
-  @UseInterceptors(
-    new ValidatorInterceptor(new UserResetPasswordConfirmationValidator()),
-  )
   async resetPasswordConfirmation(
-    @Body() dto: UserResetPasswordConfirmationRequestDto
-  ) {
-
-    try {
-
-      const response = await this.userService.updatePasswordWithCode(dto);
-
-      return new ResponseDto(
-        true,
-        response,
-        null
-      );
-
-    } catch (error) {
-
-      this.logger.error(JSON.stringify(error));
-
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    @Body() dto: UserResetPasswordConfirmationRequestDto,
+  ): Promise<ResponseDtoV2<VerificationRegisterResponseDto>> {
+    const data = await this.userService.updatePasswordWithCode(dto);
+    return { success: true, data };
   }
 
-  @Post('reset-password-resend-email')
+  @Post("reset-password-resend-email")
   @HttpCode(200)
   @UseInterceptors(
     new ValidatorInterceptor(new UserResetPasswordResendEmailValidator()),
@@ -577,16 +406,9 @@ export class UserController {
   async resetPasswordResendEmail(
     @Body() dto: UserResetPasswordResendEmailRequestDto,
   ) {
-
     try {
-
-      const result = await this.verificationService.resendResetPasswordEmail(dto);
-
-      return new ResponseDto(
-        true,
-        result,
-        null,
-      );
+      const result =
+        await this.verificationService.resendResetPasswordEmail(dto);
     } catch (error) {
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
@@ -595,22 +417,16 @@ export class UserController {
     }
   }
 
-  @Put('update-profile-picture')
+  @Put("update-profile-picture")
   @HttpCode(200)
-  async updateProfilePicture(
-    @Body() dto: UserUpdateProfilePictureRequestDto
-  ) {
-
+  async updateProfilePicture(@Body() dto: UserUpdateProfilePictureRequestDto) {
     try {
-
-      const profilePicture = await this.userService.updateProfilePicture(dto.userId, dto.profilePicture);
-
-      return new ResponseDto(
-        true,
-        profilePicture,
-        null,
+      const profilePicture = await this.userService.updateProfilePicture(
+        dto.userId,
+        dto.profilePicture,
       );
 
+      return new ResponseDto(true, profilePicture, null);
     } catch (error) {
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
@@ -619,24 +435,15 @@ export class UserController {
     }
   }
 
-  @Delete('delete-by-id/:_id')
+  @Delete("delete-by-id/:_id")
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteById(
-    @Param('_id') _id: string,
-  ) {
-
+  async deleteById(@Param("_id") _id: string) {
     try {
-
       const result = await this.userService.deleteById(_id);
 
-      return new ResponseDto(
-        true,
-        result,
-        null,
-      );
-
+      return new ResponseDto(true, result, null);
     } catch (error) {
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
@@ -644,5 +451,4 @@ export class UserController {
       );
     }
   }
-
 }

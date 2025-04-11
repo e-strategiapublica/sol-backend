@@ -21,16 +21,18 @@ export class EndPointsService {
     private endpointsRepository: EndPointsRepository,
     private associationService: AssociationService,
     private httpService: HttpService,
-    private agreementService:AgreementService,
-    private costItemsService:CostItemsService
+    private agreementService: AgreementService,
+    private costItemsService: CostItemsService,
   ) {
     this.initAllJobs();
   }
 
   async createEndpoint(endpoint: EndPointsInterface): Promise<EndPointsModel> {
-    const old = await this.endpointsRepository.getByEndpointType(endpoint.endpointType);
+    const old = await this.endpointsRepository.getByEndpointType(
+      endpoint.endpointType,
+    );
     if (old) {
-      throw new BadRequestException('Já existe um endpoint com esse tipo!');
+      throw new BadRequestException("Já existe um endpoint com esse tipo!");
     }
 
     const newEndpoint = await this.endpointsRepository.register(endpoint);
@@ -38,7 +40,9 @@ export class EndPointsService {
     if (!newEndpoint) return null;
 
     const job = new CronJob(endpoint.frequency, async () => {
-      this._logger.debug(`Running endpoint${endpoint.endpointType} :${endpoint.endpointPath}`);
+      this._logger.debug(
+        `Running endpoint${endpoint.endpointType} :${endpoint.endpointPath}`,
+      );
       return this.dynamicJob(endpoint.endpointType);
     });
 
@@ -56,17 +60,24 @@ export class EndPointsService {
     return await this.endpointsRepository.getById(_id);
   }
 
-  async updateEndpoint(_id: string, endpoint: EndPointsInterface): Promise<EndPointsModel> {
+  async updateEndpoint(
+    _id: string,
+    endpoint: EndPointsInterface,
+  ): Promise<EndPointsModel> {
     endpoint.status = EndPointsStatusEnum.stopped;
     const result = await this.endpointsRepository.update(_id, endpoint);
-    if (!result){
-      throw new BadRequestException('Não foi possivel atualizar esse endpoint!');
+    if (!result) {
+      throw new BadRequestException(
+        "Não foi possivel atualizar esse endpoint!",
+      );
     }
-    if(this.schedulerRegistry.doesExist("cron",result.endpointType))
+    if (this.schedulerRegistry.doesExist("cron", result.endpointType))
       this.schedulerRegistry.deleteCronJob(result.endpointType);
 
     const job = new CronJob(endpoint.frequency, async () => {
-      this._logger.debug(`Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`);
+      this._logger.debug(
+        `Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`,
+      );
       return this.dynamicJob(endpoint.endpointType);
     });
 
@@ -78,8 +89,8 @@ export class EndPointsService {
 
   async deleteEndpointById(_id: string) {
     const endpoint = await this.endpointsRepository.getById(_id);
-    if (!endpoint){
-      throw new BadRequestException('Não foi possivel deletar esse endpoint!');
+    if (!endpoint) {
+      throw new BadRequestException("Não foi possivel deletar esse endpoint!");
     }
 
     this.schedulerRegistry.deleteCronJob(endpoint.endpointType);
@@ -87,37 +98,37 @@ export class EndPointsService {
     return await this.endpointsRepository.deleteById(_id);
   }
 
-
-  async dynamicJob(type:EndPointsTypeEnum) {    
+  async dynamicJob(type: EndPointsTypeEnum) {
     const endpoint = await this.endpointsRepository.getByEndpointType(type);
     endpoint.lastRun = new Date();
     endpoint.status = EndPointsStatusEnum.running;
-    await this.endpointsRepository.update(endpoint.id, endpoint);    
-    try {      
-        
+    await this.endpointsRepository.update(endpoint.id, endpoint);
+    try {
       const headers = {
-        Authorization: endpoint.token
+        Authorization: endpoint.token,
       };
 
-      const result = await firstValueFrom(this.httpService.get(endpoint.endpointPath, { headers }));      
-      
-      if (result.data) {        
+      const result = await firstValueFrom(
+        this.httpService.get(endpoint.endpointPath, { headers }),
+      );
+
+      if (result.data) {
         endpoint.status = EndPointsStatusEnum.success;
-        await this.endpointsRepository.update(endpoint.id, endpoint);        
-        if(type === EndPointsTypeEnum.association)          
+        await this.endpointsRepository.update(endpoint.id, endpoint);
+        if (type === EndPointsTypeEnum.association)
           return await this.associationService.handlerJob(result.data);
-        if(type === EndPointsTypeEnum.agreement)          
+        if (type === EndPointsTypeEnum.agreement)
           return await this.agreementService.handlerJob(result.data);
-        if(type === EndPointsTypeEnum.costItems)
+        if (type === EndPointsTypeEnum.costItems)
           return await this.costItemsService.handlerJob(result.data);
       }
-      
+
       endpoint.status = EndPointsStatusEnum.error;
-      endpoint.messageError = 'Não foi possivel obter os dados do endpoint';
-      
+      endpoint.messageError = "Não foi possivel obter os dados do endpoint";
+
       await this.endpointsRepository.update(endpoint.id, endpoint);
       return;
-    } catch (error) {      
+    } catch (error) {
       endpoint.status = EndPointsStatusEnum.error;
       endpoint.messageError = error;
       this._logger.error(error);
@@ -126,11 +137,13 @@ export class EndPointsService {
   }
 
   async initAllJobs() {
-    this._logger.debug('EndpointsService initialized');
+    this._logger.debug("EndpointsService initialized");
     const endpoints = await this.endpointsRepository.list();
     endpoints.forEach((endpoint) => {
       const job = new CronJob(endpoint.frequency, async () => {
-        this._logger.debug(`Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`);
+        this._logger.debug(
+          `Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`,
+        );
         return this.dynamicJob(endpoint.endpointType);
       });
 
@@ -138,5 +151,4 @@ export class EndPointsService {
       this.schedulerRegistry.getCronJob(endpoint.endpointType).start();
     });
   }
-
 }

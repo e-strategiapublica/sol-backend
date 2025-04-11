@@ -1,10 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 
 export abstract class TfaVerifyRequestDto {
+  @ApiProperty({ type: String })
+  secret: string;
 
-    @ApiProperty({ type: String })
-    secret: string;
-
-    @ApiProperty({ type: String })
-    code: number;
+  @ApiProperty({ type: String })
+  code: number;
 }

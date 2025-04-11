@@ -1,5 +1,3 @@
 export enum TutorialLocationEnum {
-
-    PtBR = 'PT-BR'
-
+  PtBR = "PT-BR",
 }

@@ -1,14 +1,13 @@
 export interface PushNotificationSendInterface {
-
-    readonly category: PushNotificationCategoryEnum;
-    readonly title: string;
-    readonly body: string;
-    readonly link: string;
+  readonly category: PushNotificationCategoryEnum;
+  readonly title: string;
+  readonly body: string;
+  readonly link: string;
 }
 
 export enum PushNotificationCategoryEnum {
-    institucional = 'institucional',
-    educacional = 'educacional',
-    awards = 'awards',
-    swap = 'swap',
+  institucional = "institucional",
+  educacional = "educacional",
+  awards = "awards",
+  swap = "swap",
 }

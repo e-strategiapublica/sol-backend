@@ -1,10 +1,16 @@
-import { NestInterceptor, ExecutionContext, HttpException, HttpStatus, CallHandler } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { ResponseDto } from '../dtos/response.dto';
-import { ValidatorContractInterface } from '../interfaces/validator-contract.interface';
+import {
+  NestInterceptor,
+  ExecutionContext,
+  HttpException,
+  HttpStatus,
+  CallHandler,
+} from "@nestjs/common";
+import { Observable } from "rxjs";
+import { ResponseDto } from "../dtos/response.dto";
+import { ValidatorContractInterface } from "../interfaces/validator-contract.interface";
 
 export class ValidatorInterceptor implements NestInterceptor {
-  constructor(public validationContractInterface: ValidatorContractInterface) { }
+  constructor(public validationContractInterface: ValidatorContractInterface) {}
 
   intercept(
     context: ExecutionContext,
