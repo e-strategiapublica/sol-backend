@@ -1,7 +1,7 @@
 services:
   database:
     image: mongo:latest
-    restart: always
+    # restart: always
     ports:
       - "30000:27017"
     volumes:
