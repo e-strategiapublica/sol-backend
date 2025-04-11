@@ -1,5 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsInt, IsString, Min, MinLength } from "class-validator";
+import { IsEmail, IsString, Matches, MinLength } from "class-validator";
+import { Transform } from "class-transformer";
 
 export class UserResetPasswordConfirmationRequestDto {
   @ApiProperty({ type: String })
@@ -7,8 +8,9 @@ export class UserResetPasswordConfirmationRequestDto {
   email: string;
 
   @ApiProperty({ type: Number })
-  @IsInt({ message: "Código é obrigatório!" })
-  @Min(10000, { message: "Código deve conter 5 números!" })
+  @IsString({ message: "Código deve ser uma string númerica!" })
+  @Matches(/^\d{5}$/, { message: "Código deve conter 5 números!" })
+  @Transform(({ value }) => parseInt(value, 10))
   code: number;
 
   @IsString({ message: "Senha é obrigatória!" })

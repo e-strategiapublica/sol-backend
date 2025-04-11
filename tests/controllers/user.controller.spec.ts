@@ -438,7 +438,7 @@ describe("UserController", () => {
         data: null,
         errors: [
           "Email inválido",
-          "Código deve conter 5 números!",
+          "Código deve ser uma string númerica!",
           "Código é obrigatório!",
           "Senha deve conter no mínimo 8 caracteres!",
           "Senha é obrigatória!",
