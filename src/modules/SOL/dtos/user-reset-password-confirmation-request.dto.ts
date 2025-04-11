@@ -1,15 +1,32 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsString, Matches, MinLength } from "class-validator";
+import {
+  IsEmail,
+  IsString,
+  Matches,
+  MinLength,
+  Validate,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from "class-validator";
 import { Transform } from "class-transformer";
 
+@ValidatorConstraint({ name: "isFiveDigitCode", async: false })
+class IsFiveDigitCodeConstraint implements ValidatorConstraintInterface {
+  validate(value: any) {
+    return /^\d{5}$/.test(String(value));
+  }
+
+  defaultMessage() {
+    return "Código deve conter 5 números!";
+  }
+}
 export class UserResetPasswordConfirmationRequestDto {
   @ApiProperty({ type: String })
   @IsEmail({}, { message: "Email inválido" })
   email: string;
 
   @ApiProperty({ type: Number })
-  @IsString({ message: "Código deve ser uma string númerica!" })
-  @Matches(/^\d{5}$/, { message: "Código deve conter 5 números!" })
+  @Validate(IsFiveDigitCodeConstraint)
   @Transform(({ value }) => parseInt(value, 10))
   code: number;
 
