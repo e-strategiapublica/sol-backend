@@ -13,14 +13,13 @@ import { User } from "src/modules/SOL/schemas/user.schema";
 import { UserStatusEnum } from "src/modules/SOL/enums/user-status.enum";
 import { UserTypeEnum } from "src/modules/SOL/enums/user-type.enum";
 import { Verification } from "src/modules/SOL/schemas/verification.schema";
-import mongoose, { Model } from "mongoose";
-import { SendGridService } from "@ntegral/nestjs-sendgrid";
+import { Model } from "mongoose";
 let app: INestApplication;
 import { SENDGRID_TOKEN } from "@ntegral/nestjs-sendgrid"; // importe o token correto
 import { UnprocessableEntityException } from "src/shared/exceptions/unprocessable-entity.exception";
 import { UserResetPasswordConfirmationRequestDto } from "src/modules/SOL/dtos/user-reset-password-confirmation-request.dto";
 
-describe("UserController", () => {
+describe("User Controller", () => {
   const sendMock = jest.fn();
   const mockSendGridService = {
     send: sendMock,
