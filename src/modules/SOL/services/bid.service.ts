@@ -1183,7 +1183,7 @@ export class BidService {
         returned: "Devolvida",
       },
     };
-  
+   
     const modelContract = await this._modelContractRepository.getByContractAndLanguage(lang, type);
   
     if (!modelContract) throw new Error("Modelo de documento não encontrado");
