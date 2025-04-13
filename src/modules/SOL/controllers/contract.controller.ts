@@ -263,48 +263,51 @@ export class ContractController {
   }
 
   @Get("create-document/:_id/:language/:type")
-@HttpCode(200)
-async createDocument(
-  @Param("_id") _id: string,
-  @Param("language") language: string,
-  @Param("type") type: string,
-  @Res() res: Response,
-) {
-  try {
-    this.logger.log(`[INÍCIO] Geração de documento: _id=${_id}, language=${language}, type=${type}`);
+  @HttpCode(200)
+  async createDocument(
+    @Param("_id") _id: string,
+    @Param("language") language: string,
+    @Param("type") type: string,
+    @Res() res: Response,
+  ) {
+    try {
+      this.logger.log(
+        `[INÍCIO] Geração de documento: _id=${_id}, language=${language}, type=${type}`,
+      );
 
-    this.logger.log(`[CHAMADA] contractService.createDocument`);
-    await this.contractService.createDocument(_id, language, type as any);
-    this.logger.log(`[OK] Documento gerado com sucesso`);
+      this.logger.log(`[CHAMADA] contractService.createDocument`);
+      await this.contractService.createDocument(_id, language, type as any);
+      this.logger.log(`[OK] Documento gerado com sucesso`);
 
-    const filePath = path.resolve("src/shared/documents", "output.pdf");
-    this.logger.log(`[ENVIO] Tentando enviar o arquivo: ${filePath}`);
+      const filePath = path.resolve("src/shared/documents", "output.pdf");
+      this.logger.log(`[ENVIO] Tentando enviar o arquivo: ${filePath}`);
 
-    res.sendFile(filePath, {}, (err) => {
-      if (err) {
-        this.logger.error(`[ERRO] Falha no envio do arquivo: ${err.message}`);
-        throw new HttpException(
-          new ResponseDto(false, null, [err.message]),
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      res.sendFile(filePath, {}, (err) => {
+        if (err) {
+          this.logger.error(`[ERRO] Falha no envio do arquivo: ${err.message}`);
+          throw new HttpException(
+            new ResponseDto(false, null, [err.message]),
+            HttpStatus.BAD_REQUEST,
+          );
+        }
 
-      this.logger.log(`[SUCESSO] Arquivo enviado com sucesso: ${filePath}`);
+        this.logger.log(`[SUCESSO] Arquivo enviado com sucesso: ${filePath}`);
 
-      try {
-        fs.unlinkSync(filePath);
-        this.logger.log(`[LIMPEZA] Arquivo deletado após envio: ${filePath}`);
-      } catch (unlinkErr) {
-        this.logger.error(`[ERRO] Falha ao deletar o arquivo: ${unlinkErr.message}`);
-      }
-    });
-  } catch (error) {
-    this.logger.error(`[EXCEÇÃO] ${error.message}`);
-    throw new HttpException(
-      new ResponseDto(false, null, [error.message]),
-      HttpStatus.BAD_REQUEST,
-    );
+        try {
+          fs.unlinkSync(filePath);
+          this.logger.log(`[LIMPEZA] Arquivo deletado após envio: ${filePath}`);
+        } catch (unlinkErr) {
+          this.logger.error(
+            `[ERRO] Falha ao deletar o arquivo: ${unlinkErr.message}`,
+          );
+        }
+      });
+    } catch (error) {
+      this.logger.error(`[EXCEÇÃO] ${error.message}`);
+      throw new HttpException(
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
-}
-
 }
