@@ -1183,37 +1183,38 @@ export class BidService {
         returned: "Devolvida",
       },
     };
-   
-    const modelContract = await this._modelContractRepository.getByContractAndLanguage(lang, type);
-  
+
+    const modelContract =
+      await this._modelContractRepository.getByContractAndLanguage(lang, type);
+
     if (!modelContract) throw new Error("Modelo de documento não encontrado");
-  
+
     const content = fs.readFileSync(
       path.resolve("src/shared/documents", modelContract.contract),
       "binary",
     );
-  
+
     const zip = new PizZip(content);
-  
+
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
     });
-  
+
     const bid = await this._bidsRepository.getById(_id);
     const contractArray = await this._contractRepository.getByBidId(_id);
     const proposalArray = await this._proposalRepository.listByBid(_id);
-  
+
     const contract = contractArray ? contractArray[0] : null;
-  
+
     let allotment: AllotmentModel[] = [];
     bid.add_allotment.forEach((allot) => {
       allotment.push(allot);
     });
-  
+
     let listOfItems: any[] = [];
     listOfItems = await this.costItensGet(allotment, proposalArray);
-  
+
     const estimatedValue =
       contract?.value ||
       bid.agreement.workPlan?.reduce(
@@ -1226,7 +1227,7 @@ export class BidService {
         0,
       ) ||
       0;
-  
+
     let signature = "Assinado eletronicamente pela: ";
     let yes = "Sim";
     let no = "Não";
@@ -1254,32 +1255,42 @@ export class BidService {
       default:
         break;
     }
-  
-    const formatDateString = lang === LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
-  
+
+    const formatDateString =
+      lang === LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
+
     let listOfBidPrices: any[] = [];
     if (proposalArray)
       proposalArray
-        .sort((a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0))
+        .sort(
+          (a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0),
+        )
         .forEach((proposal) => {
           listOfBidPrices.push({
-            lot: proposal.allotment.map((allot) => allot.allotment_name).join(", "),
+            lot: proposal.allotment
+              .map((allot) => allot.allotment_name)
+              .join(", "),
             rank: listOfBidPrices.length + 1,
             bidders_name: proposal.proposedBy.supplier.name || "",
             didders_id: proposal._id.toString(),
             bid_price: proposal?.total_value || 0,
             submited_at: moment(proposal.createdAt).format(formatDateString),
-            accepted: proposal.association_accept && proposal.reviewer_accept ? yes : no,
+            accepted:
+              proposal.association_accept && proposal.reviewer_accept
+                ? yes
+                : no,
             justification_for_rejection: proposal.refusedBecaused || "",
             awarded_at:
               proposal.association_accept && proposal.reviewer_accept
                 ? moment(proposal.acceptedRevisorAt).format(formatDateString)
                 : "",
             number_contract:
-              contract?.contract_number + "/" + moment(contract?.createdAt).format("YYYY"),
+              contract?.contract_number +
+              "/" +
+              moment(contract?.createdAt).format("YYYY"),
           });
         });
-  
+
     doc.render({
       process_description: bid.description,
       bid_number: bid.bid_count + "/" + moment(bid.start_at).format("YYYY"),
@@ -1315,9 +1326,11 @@ export class BidService {
         bid.association.association.address.state +
         ", " +
         bid.association.association.address.zipCode,
-      name_legal_representative_purchaser: bid.association.association.legalRepresentative.name,
+      name_legal_representative_purchaser:
+        bid.association.association.legalRepresentative.name,
       name_supplier: contract?.supplier_id?.name || "Não tem fornecedor",
-      supplier_country: contract?.supplier_id?.address.state || "Não tem fornecedor",
+      supplier_country:
+        contract?.supplier_id?.address.state || "Não tem fornecedor",
       adress_supplier: contract?.supplier_id
         ? contract?.supplier_id?.address.publicPlace +
           ", " +
@@ -1332,29 +1345,41 @@ export class BidService {
           contract?.supplier_id?.address.zipCode
         : "Não tem fornecedor",
       name_legal_representative_supplier:
-        contract?.supplier_id?.legal_representative.name || "Não tem fornecedor",
+        contract?.supplier_id?.legal_representative.name ||
+        "Não tem fornecedor",
       purchaser_cnpj: bid.association.association.cnpj,
       supplier_cnpj: contract?.supplier_id?.cpf || "Não tem fornecedor",
       delivery_place: bid.local_to_delivery,
       supplier_email: contract?.supplier_id?.name || "Não tem fornecedor",
       days_to_delivery: bid.days_to_delivery,
-      date_to_delivery: moment().add(bid.days_to_delivery, "days").format(formatDateString),
+      date_to_delivery: moment()
+        .add(bid.days_to_delivery, "days")
+        .format(formatDateString),
       role_purchaser: "",
       role_supplier: "",
       contract_value: estimatedValue,
       batch_list_name: listOfItems.map((item) => item.name).toString(),
-      agreement_name: bid.agreement.register_number + "/" + bid.agreement.register_object,
+      agreement_name:
+        bid.agreement.register_number + "/" + bid.agreement.register_object,
       bid_status: bidStatusTranslations[lang][bid.status] || bid.status,
       bid_concluded_date: bid.concludedAt
         ? moment(bid.concludedAt).format(formatDateString)
         : "",
-      guest_suppliers: bid.invited_suppliers.map((supplier) => supplier.name).toString(),
-      winning_supplier: listOfBidPrices.length ? listOfBidPrices[0].bidders_name : "",
+      guest_suppliers: bid.invited_suppliers
+        .map((supplier) => supplier.name)
+        .toString(),
+      winning_supplier: listOfBidPrices.length
+        ? listOfBidPrices[0].bidders_name
+        : "",
       estimated_value:
-        listOfItems?.reduce((acc, item) => acc + Number(item?.total_value || 0), 0) || 0,
+        listOfItems?.reduce(
+          (acc, item) => acc + Number(item?.total_value || 0),
+          0,
+        ) || 0,
       list_of_supplier: contractArray.map((contract) => {
         return {
-          supplier_email: contract?.supplier_id?.name || "Não tem email fornecido",
+          supplier_email:
+            contract?.supplier_id?.name || "Não tem email fornecido",
           supplier_cnpj: contract?.supplier_id?.cpf || "Não tem cnpj fornecido",
           adress_supplier: contract?.supplier_id
             ? contract?.supplier_id?.address.publicPlace +
@@ -1369,16 +1394,21 @@ export class BidService {
               ", " +
               contract?.supplier_id?.address.zipCode
             : "Não tem endereço fornecido",
-          supplier_country: contract?.supplier_id?.address.state || "Não tem pais fornecido",
-          name_supplier: contract?.supplier_id?.name || "Não tem nome fornecido",
+          supplier_country:
+            contract?.supplier_id?.address.state || "Não tem pais fornecido",
+          name_supplier:
+            contract?.supplier_id?.name || "Não tem nome fornecido",
         };
       }),
     });
-  
+
     const buf = doc.getZip().generate({ type: "nodebuffer" });
-  
-    await fs.writeFileSync(path.resolve("src/shared/documents", "output.docx"), buf);
-  
+
+    await fs.writeFileSync(
+      path.resolve("src/shared/documents", "output.docx"),
+      buf,
+    );
+
     await this.callPythonFile()
       .then(async () => {
         fs.unlinkSync(path.resolve("src/shared/documents", "output.docx"));
@@ -1391,7 +1421,6 @@ export class BidService {
         );
       });
   }
-  
 
   private async costItensGet(
     allotment: AllotmentModel[],
