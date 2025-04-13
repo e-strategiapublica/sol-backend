@@ -709,41 +709,50 @@ export class ContractService {
     lang: string = LanguageContractEnum.english,
     type: ModelContractClassificationEnum,
   ): Promise<any> {
-    const modelContract =
-      await this._modelContractRepository.getByContractAndLanguage(lang, type);
-
-    if (!modelContract) throw new Error("Modelo de documento não encontrado");
-
-    const content = fs.readFileSync(
-      path.resolve("src/shared/documents", modelContract.contract),
-      "binary",
-    );
-
+    const logger = new Logger('DocumentGenerator');
+    logger.log(`Iniciando criação de documento - ID: ${_id}, language: ${lang}, type: ${type}`);
+  
+    const modelContract = await this._modelContractRepository.getByContractAndLanguage(lang, type);
+    logger.log(`Resultado da busca pelo modelo: ${modelContract?.contract || 'Nenhum modelo encontrado'}`);
+  
+    if (!modelContract) {
+      logger.error(`Modelo de documento não encontrado para language=${lang}, type=${type}`);
+      throw new Error("Modelo de documento não encontrado");
+    }
+  
+    const modelPath = path.resolve("src/shared/documents", modelContract.contract);
+    logger.log(`Caminho do modelo a ser carregado: ${modelPath}`);
+  
+    const content = fs.readFileSync(modelPath, "binary");
+  
     const zip = new PizZip(content);
-
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
     });
-
+  
+    logger.log("Modelo carregado e parser iniciado");
+  
     const contract = await this._contractRepository.getById(_id);
-
+    logger.log(`Contrato carregado: ${contract?._id?.toString()}`);
+  
     const proposalArray = await this._proposalRepository.listByBid(
       contract.bid_number._id.toString(),
     );
-
+    logger.log(`Propostas carregadas: ${proposalArray?.length}`);
+  
     let allotment: AllotmentModel[] = [];
-
     contract.proposal_id.forEach((proposal) => {
       proposal.allotment.forEach((allot) => {
         allotment.push(allot);
       });
     });
-
+    logger.log(`Lotes extraídos: ${allotment.length}`);
+  
     let listOfItems: any[] = [];
-
     listOfItems = await this.costItensGet(allotment, proposalArray);
-
+    logger.log(`Itens de custo carregados: ${listOfItems.length}`);
+  
     let signature = "Assinado eletronicamente pela: ";
     let yes = "Sim";
     let no = "Não";
@@ -758,43 +767,28 @@ export class ContractService {
         yes = "Sí";
         no = "No";
         break;
-      case LanguageContractEnum.portuguese:
-        signature = "Assinado eletronicamente pela: ";
-        yes = "Sim";
-        no = "Não";
-        break;
       case LanguageContractEnum.french:
         signature = "Signé électroniquement par: ";
         yes = "Oui";
         no = "Non";
         break;
-      default:
-        break;
     }
-
-    const formatDateString =
-      lang === LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
-
+  
+    const formatDateString = lang === LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
+  
     let listOfBidPrices: any[] = [];
     if (proposalArray)
       proposalArray
-        .sort(
-          (a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0),
-        )
+        .sort((a, b) => Number(a?.total_value || 0) - Number(b?.total_value || 0))
         .forEach((proposal) => {
           listOfBidPrices.push({
-            lot: proposal.allotment
-              .map((allot) => allot.allotment_name)
-              .join(", "),
+            lot: proposal.allotment.map((allot) => allot.allotment_name).join(", "),
             rank: listOfBidPrices.length + 1,
             bidders_name: proposal.proposedBy.supplier.name || "",
             didders_id: proposal._id.toString(),
             bid_price: proposal?.total_value || 0,
             submited_at: moment(proposal.createdAt).format(formatDateString),
-            accepted:
-              proposal.association_accept && proposal.reviewer_accept
-                ? yes
-                : no,
+            accepted: proposal.association_accept && proposal.reviewer_accept ? yes : no,
             justification_for_rejection: proposal.refusedBecaused || "",
             awarded_at:
               proposal.association_accept && proposal.reviewer_accept
@@ -806,25 +800,19 @@ export class ContractService {
               moment(contract.createdAt).format("YYYY"),
           });
         });
-
+  
+    logger.log(`Lista de preços das propostas montada: ${listOfBidPrices.length}`);
+  
     doc.render({
       process_description: contract.bid_number.description,
-      bid_number:
-        contract.bid_number.bid_count +
-        "/" +
-        moment(contract.bid_number.start_at).format("YYYY"),
+      bid_number: contract.bid_number.bid_count + "/" + moment(contract.bid_number.start_at).format("YYYY"),
       name_project: contract.contract_document,
       name_purchaser: contract.bid_number.agreement.association.name,
-      purchaser_country:
-        contract.bid_number.agreement.association.address.state,
-      publication_date: moment(contract.bid_number.createdAt).format(
-        formatDateString,
-      ),
+      purchaser_country: contract.bid_number.agreement.association.address.state,
+      publication_date: moment(contract.bid_number.createdAt).format(formatDateString),
       list_of_items: listOfItems,
       list_of_bid_prices: listOfBidPrices,
-      bid_opening_date: moment(contract.bid_number.start_at).format(
-        formatDateString,
-      ),
+      bid_opening_date: moment(contract.bid_number.start_at).format(formatDateString),
       email_purchaser: contract.bid_number.association.email,
       deadline_date: contract.bid_number.end_at
         ? moment(contract.bid_number.end_at).format(formatDateString)
@@ -835,9 +823,7 @@ export class ContractService {
       year_contract: moment(contract.createdAt).format("YYYY"),
       date_contract: moment(contract.createdAt).format(formatDateString),
       number_contract:
-        contract.contract_number +
-        "/" +
-        moment(contract.createdAt).format("YYYY"),
+        contract.contract_number + "/" + moment(contract.createdAt).format("YYYY"),
       adress_purchaser:
         contract.bid_number.agreement.association.address.publicPlace +
         ", " +
@@ -892,9 +878,7 @@ export class ContractService {
         signature +
         contract.bid_number.agreement.association.name +
         " em " +
-        moment(new Date(contract.association_sign_date)).format(
-          formatDateString,
-        ),
+        moment(new Date(contract.association_sign_date)).format(formatDateString),
       signature_supplier:
         signature +
         contract.supplier_id?.name +
@@ -908,34 +892,34 @@ export class ContractService {
           ?.map((supplier) => supplier.name)
           .toString() || "",
       estimated_value:
-        listOfItems?.reduce(
-          (acc, item) => acc + Number(item?.total_value || 0),
-          0,
-        ) || 0,
+        listOfItems?.reduce((acc, item) => acc + Number(item?.total_value || 0), 0) || 0,
     });
-
+  
+    logger.log("Documento renderizado com sucesso");
+  
     const buf = doc.getZip().generate({ type: "nodebuffer" });
-
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", "output.docx"),
-      buf,
-    );
-
+  
+    const outputPath = path.resolve("src/shared/documents", "output.docx");
+    logger.log(`Salvando documento temporário em: ${outputPath}`);
+  
+    await fs.writeFileSync(outputPath, buf);
+  
     await this.callPythonFile()
       .then(async () => {
-        fs.unlinkSync(path.resolve("src/shared/documents", "output.docx"));
-
-        return;
+        logger.log("Documento convertido com sucesso via Python, excluindo temporário");
+        fs.unlinkSync(outputPath);
       })
       .catch((err) => {
-        console.log(err);
+        logger.error("Erro ao converter o arquivo via Python:", err);
         throw new BadRequestException(
           "Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto",
         );
       });
-
+  
+    logger.log("Criação de documento finalizada com sucesso");
     return buf;
   }
+  
 
   async getById(_id: string): Promise<ContractModel> {
     const result = await this._contractRepository.getById(_id);
@@ -959,14 +943,24 @@ export class ContractService {
     proposal?: ProposalModel[],
   ): Promise<any[]> {
     let listOfItems = [];
+    console.log("Iniciando costItensGet");
+    console.log("Allotments recebidos:", JSON.stringify(allotment, null, 2));
+    console.log("Proposals recebidas:", JSON.stringify(proposal, null, 2));
+  
     for (let allot of allotment) {
-      let el = proposal.find((proposal) =>
+      console.log("Processando allotment:", allot._id);
+  
+      let el = proposal?.find((proposal) =>
         proposal.allotment.find(
           (all) => all._id.toString() === allot._id.toString(),
         ),
       );
+  
+      console.log("Proposta encontrada:", el?._id);
+  
       let price = 0;
       let quantity = 0;
+  
       if (el) {
         price = +el?.total_value || 0;
         quantity = +el.allotment
@@ -974,13 +968,21 @@ export class ContractService {
           .reduce((a, b) => Number(a) + Number(b), 0)
           .toFixed(2);
         price = +Number(price / quantity).toFixed(2);
+  
+        console.log(`Preço total da proposta: ${el.total_value}`);
+        console.log(`Quantidade total: ${quantity}`);
+        console.log(`Preço unitário calculado: ${price}`);
       }
-
+  
       for (let item of allot.add_item) {
+        console.log("Processando item:", item.item);
+  
         const costItems = await this._costItemsService.getByName(item.item);
+        console.log("Resultado de getByName:", costItems);
+  
         listOfItems.push({
-          code: costItems.code || item.group,
           name: item.item,
+          code: costItems?.code || item.group,
           classification: costItems?.category?.segment || "Sem classificação",
           specification: item.specification || "Sem especificação",
           quantity: item.quantity,
@@ -992,9 +994,11 @@ export class ContractService {
         });
       }
     }
-
+  
+    console.log("Itens de custo finais:", JSON.stringify(listOfItems, null, 2));
     return listOfItems;
   }
+  
 
   private async callPythonFile() {
     return new Promise((resolve, reject): void => {
