@@ -9,10 +9,8 @@ import {
   Logger,
   Param,
   Post,
-  Put,
   Req,
   UseGuards,
-  UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { ResponseDto } from "src/shared/dtos/response.dto";
@@ -20,11 +18,10 @@ import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { FuncoesGuard } from "src/shared/guards/funcoes.guard";
 import { UserTypeEnum } from "../enums/user-type.enum";
 import { Funcoes } from "src/shared/decorators/function.decorator";
-import { WorkPlanWorkPlanRequestDto } from "../dtos/work-plan-add-work-plan-request.dto";
-import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
 import { ProjectService } from "../services/project.service";
 import { ProjectRegisterRequestDto } from "../dtos/project-register-request.dto";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { ProjectModel } from "../models/project.model";
 
 @ApiTags("projetos")
 @Controller("projetos")
@@ -56,17 +53,13 @@ export class ProjectController {
   }
 
   @Post("register")
-  @HttpCode(201)
   @UseGuards(JwtAuthGuard, FuncoesGuard)
   @Funcoes(UserTypeEnum.administrador, UserTypeEnum.project_manager)
   @ApiBearerAuth()
-  async register(@Req() request, @Body() dto: ProjectRegisterRequestDto) {
-    try {
-      const res = await this._projectService.register(dto);
-      return { type: "success" };
-    } catch (error) {
-      throw ErrorManager.createError(error);
-    }
+  async register(
+    @Body() dto: ProjectRegisterRequestDto,
+  ): Promise<ProjectModel> {
+    return this._projectService.register(dto);
   }
 
   @Get("/:id")

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { HttpStatus, Injectable } from "@nestjs/common";
 import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
 import { AgreementRepository } from "../repositories/agreement.repository";
 import { UserRepository } from "../repositories/user.repository";
@@ -17,6 +17,7 @@ import { AgreementModel } from "../models/agreement.model";
 import { UserRolesEnum } from "../enums/user-roles.enum";
 import { ProjectModel } from "../models/project.model";
 import { ProjectInterfaceWithId } from "../interfaces/project.interface";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class AgreementService {
@@ -86,15 +87,21 @@ export class AgreementService {
     dto: AgreementRegisterRequestDto,
   ): Promise<AgreementInterface> {
     const project = await this._projectRepository.findById(dto.projectId);
-    if (!project) throw new Error("Project not found");
-    dto.project = project;
+    if (!project)
+      throw new CustomHttpException(
+        "Projeto não encontrado",
+        HttpStatus.NOT_FOUND,
+      );
 
     const association = await this._associationService.getById(
       dto.associationId,
     );
     if (!association) throw new Error("Association not found");
-    dto.association = association;
-    const result = await this._agreementRepository.register(dto);
+    const result = await this._agreementRepository.register({
+      ...dto,
+      association,
+      project,
+    });
 
     return result;
   }
@@ -174,11 +181,13 @@ export class AgreementService {
     id: string,
     dto: AgreementRegisterRequestDto,
   ): Promise<AgreementInterface> {
-    dto.project = await this._projectRepository.findById(dto.projectId);
-    if (!dto.project) throw new Error("User not found");
+    const project = await this._projectRepository.findById(dto.projectId);
+    if (!project) throw new Error("User not found");
 
-    dto.association = await this._associationService.getById(dto.associationId);
-    if (!dto.association) throw new Error("Association not found");
+    const association = await this._associationService.getById(
+      dto.associationId,
+    );
+    if (!association) throw new Error("Association not found");
 
     return await this._agreementRepository.update(id, dto);
   }

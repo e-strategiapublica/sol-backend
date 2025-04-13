@@ -10,6 +10,9 @@ import { AgreementRepository } from "../repositories/agreement.repository";
 import { AgreementActiveStatusEnum } from "../enums/agreement-active-status";
 import { ProjectModel } from "../models/database/project.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import { UserTypeEnum } from "../enums/user-type.enum";
+import { ProjectModel as ProjectModelResponse } from "../models/project.model";
 
 @Injectable()
 export class ProjectService {
@@ -32,25 +35,21 @@ export class ProjectService {
 
   async register(
     dto: ProjectRegisterRequestDto,
-  ): Promise<ProjectInterface | any> {
-    const res = await this._projectModel.getProjectByName(dto.name);
-    if (res) {
-      throw new ErrorManager(
+  ): Promise<ProjectModelResponse> {
+    const existProject = await this._projectRepository.findByName(dto.name);
+    if (existProject) {
+      throw new CustomHttpException(
+        "Já existe um projeto com esse nome.",
         HttpStatus.BAD_REQUEST,
-        "Existing project name",
-        1,
       );
     }
 
     const user = await this._userRepository.getById(dto.project_manager);
-    if (!user || user.type !== "project_manager")
-      throw new Error("User not found or user is not a project manager");
-    for (let i = 0; i < dto.agreement_list.length; i++) {
-      await this._agreementRepository.addManager(
-        dto.agreement_list[i],
-        dto.project_manager,
+    if (!user || user.type !== UserTypeEnum.project_manager)
+      throw new CustomHttpException(
+        "Usuário não encontrado ou não é um gerente de projeto",
+        HttpStatus.BAD_REQUEST,
       );
-    }
 
     const result = await this._projectRepository.register(dto);
     return result;

@@ -53,7 +53,7 @@ export class User {
   })
   supplier: Supplier;
 
-  @Prop({ required: false, enum: Object.keys(UserRolesEnum) })
+  @Prop({ required: false, enum: Object.values(UserRolesEnum), type: String })
   roles: UserRolesEnum;
 
   @Prop({

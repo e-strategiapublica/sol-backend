@@ -294,10 +294,7 @@ describe("User Controller", () => {
     };
 
     it("should be throw NOT FOUND, because user not found with passed email", async () => {
-      const verificationModel = app.get<Model<Verification>>(
-        getModelToken(Verification.name),
-      );
-      const { user, verification } = await setupValidFirstAccess();
+      const { verification } = await setupValidFirstAccess();
 
       const response = await resetPasswordConfirmation(app, {
         payload: {

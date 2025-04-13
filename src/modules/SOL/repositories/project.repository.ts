@@ -13,13 +13,16 @@ export class ProjectRepository {
     @InjectModel(Project.name) private readonly _model: Model<ProjectModel>,
   ) {}
 
-  async findById(id: string): Promise<ProjectModel> {
-    return await (
-      await this._model
-        .findOne({ _id: id })
-        .populate("project_manager")
-        .populate("viewer_list")
-    ).populate("reviewer_list");
+  findByName(projectName: string): Promise<ProjectModel> {
+    return this._model.findOne({ name: projectName });
+  }
+
+  findById(id: string): Promise<ProjectModel> {
+    return this._model
+      .findOne({ _id: id })
+      .populate("project_manager")
+      .populate("viewer_list")
+      .populate("reviewer_list");
   }
 
   async findByEmail(email: string): Promise<ProjectModel> {

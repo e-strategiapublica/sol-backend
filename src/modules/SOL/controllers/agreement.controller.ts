@@ -15,7 +15,7 @@ import {
   UseInterceptors,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
-import { ResponseDto } from "src/shared/dtos/response.dto";
+import { ResponseDto, ResponseDtoV2 } from "src/shared/dtos/response.dto";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.dto";
 
@@ -27,6 +27,7 @@ import { WorkPlanWorkPlanRequestDto } from "../dtos/work-plan-add-work-plan-requ
 import { JwtPayload } from "src/shared/interfaces/jwt-payload.interface";
 import { UserRolesEnum } from "../enums/user-roles.enum";
 import { UserTypeRequestDto } from "../dtos/user-type-request.dto";
+import { AgreementInterface } from "../interfaces/agreement.interface";
 
 @ApiTags("conveios")
 @Controller("convenios")
@@ -136,21 +137,18 @@ export class AgreementController {
     UserTypeEnum.project_manager,
   )
   @ApiBearerAuth()
-  async register(@Req() request, @Body() dto: AgreementRegisterRequestDto) {
-    try {
-      const payload: JwtPayload = request.user;
-      dto.manager = payload.userId;
-      const response = await this._airdropService.register(dto);
+  async register(
+    @Req() request,
+    @Body() dto: AgreementRegisterRequestDto,
+  ): Promise<ResponseDtoV2<AgreementInterface>> {
+    const payload: JwtPayload = request.user;
+    dto.manager = payload.userId;
+    const response = await this._airdropService.register(dto);
 
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this._logger.error(error.message);
-
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return {
+      data: response,
+      success: true,
+    };
   }
 
   @Get("/:id")

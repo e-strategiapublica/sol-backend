@@ -5,7 +5,8 @@ import { AgreementRegisterRequestDto } from "../dtos/agreement-register-request.
 import { AgreementModel } from "../models/agreement.model";
 import { Agreement } from "../schemas/agreement.schema";
 import { AgreementActiveStatusEnum } from "../enums/agreement-active-status";
-
+import { AssociationModel } from "../models/association.model";
+import { ProjectModel } from "../models/project.model";
 @Injectable()
 export class AgreementRepository {
   constructor(
@@ -59,7 +60,12 @@ export class AgreementRepository {
     );
   }
 
-  async register(dto: AgreementRegisterRequestDto): Promise<AgreementModel> {
+  async register(
+    dto: AgreementRegisterRequestDto & {
+      association: AssociationModel;
+      project: ProjectModel;
+    },
+  ): Promise<AgreementModel> {
     const data = new this._model(dto);
     return await data.save();
   }
