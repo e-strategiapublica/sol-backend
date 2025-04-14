@@ -724,7 +724,10 @@ export class ContractService {
       logger.error(
         `Modelo de documento não encontrado para language=${lang}, type=${type}`,
       );
-      throw new Error("Modelo de documento não encontrado");
+      throw new CustomHttpException(
+        "Modelo de documento não encontrado",
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     const modelPath = path.resolve(
