@@ -994,7 +994,6 @@ export class ContractService {
         ),
       );
 
-      console.log("Proposta encontrada:", el?._id);
 
       let price = 0;
       let quantity = 0;
