@@ -987,7 +987,6 @@ export class ContractService {
     console.log("Proposals recebidas:", JSON.stringify(proposal, null, 2));
 
     for (let allot of allotment) {
-      console.log("Processando allotment:", allot._id);
 
       let el = proposal?.find((proposal) =>
         proposal.allotment.find(
