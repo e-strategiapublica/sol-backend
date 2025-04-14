@@ -12,5 +12,5 @@ export class ResponseDto {
 export interface ResponseDtoV2<T> {
   success: boolean;
   data: T;
-  errors?: string[]
+  errors?: string[];
 }
