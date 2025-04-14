@@ -285,9 +285,9 @@ export class ContractController {
       res.sendFile(filePath, {}, (err) => {
         if (err) {
           this.logger.error(`[ERRO] Falha no envio do arquivo: ${err.message}`);
-          throw new HttpException(
-            new ResponseDto(false, null, [err.message]),
-            HttpStatus.BAD_REQUEST,
+          throw new CustomHttpException(
+           err.message,
+           HttpStatus.BAD_REQUEST,
           );
         }
 
