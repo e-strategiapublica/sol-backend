@@ -1,5 +1,6 @@
 import {
   ForbiddenException,
+  HttpStatus,
   Injectable,
   Logger,
   NotFoundException,
@@ -17,6 +18,7 @@ import { UserResetPasswordResendEmailRequestDto } from "../dtos/user-reset-passw
 import { UserResetPasswordResendEmailResponseDto } from "../dtos/user-reset-password-resend-email-response.dto";
 import { UserConfirmationRegisterSendRequestDto } from "../dtos/user-confirmation-register-request.dto";
 import { UserRegisterResendEmailRequestDto } from "../dtos/user-register-resend-email-request.dto";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class VerificationService {
@@ -251,38 +253,41 @@ export class VerificationService {
   //     );
   // }
 
-  async verifyCode(user: UserModel, code: number) {
+  async verifyCode(user: UserModel, code: number): Promise<void> {
     const verification = await this.verificationRepository.getByUser(user);
 
-    let response;
-
-    if (!verification) throw new NotFoundException("Código expirado!");
-    response = false;
+    if (!verification)
+      throw new CustomHttpException(
+        "Código não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
 
     const now = new Date();
     if (now > verification.deadline) {
       await this.verificationRepository.delete(verification.id);
-      throw new UnauthorizedException("Código expirado!");
-      response = false;
+      throw new CustomHttpException(
+        "Código expirado!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (verification.attempt == 5) {
       await this.verificationRepository.delete(verification.id);
-      throw new UnauthorizedException("Você excedeu o limite de 5 tentativas!");
-      response = false;
+      throw new CustomHttpException(
+        "Você excedeu o limite de 5 tentativas!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     if (verification.code != code) {
       this.incrementAttempt(verification._id);
-      throw new UnauthorizedException("Código inválido!");
-      response = false;
+      throw new CustomHttpException(
+        "Código inválido!",
+        HttpStatus.UNAUTHORIZED,
+      );
     }
 
     await this.verificationRepository.delete(verification.id);
-
-    response = true;
-
-    return response;
   }
 
   async sendFirstAcess(
@@ -292,15 +297,17 @@ export class VerificationService {
 
     let verification = await this.verificationRepository.getByUser(userModel);
 
+    const alreadyHasValidVerification =
+      verification && new Date() < verification.deadline;
+    if (alreadyHasValidVerification) {
+      throw new CustomHttpException(
+        "Um código já foi enviado e está válido!",
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
     if (verification) {
-      const now = new Date();
-      if (now < verification.deadline) {
-        throw new UnauthorizedException(
-          "Um código já foi enviado e está válido!",
-        );
-      } else {
-        await this.verificationRepository.delete(verification.id);
-      }
+      await this.verificationRepository.delete(verification.id);
     }
 
     let deadline: Date = new Date();

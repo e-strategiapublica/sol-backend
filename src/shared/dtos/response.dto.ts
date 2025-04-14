@@ -1,3 +1,6 @@
+/**
+ * @deprecated This class is deprecated. Use interface ResponseDTO .
+ */
 export class ResponseDto {
   constructor(
     public success: boolean,
@@ -9,5 +12,5 @@ export class ResponseDto {
 export interface ResponseDtoV2<T> {
   success: boolean;
   data: T;
-  errors?: string[];
+  errors?: string[]
 }

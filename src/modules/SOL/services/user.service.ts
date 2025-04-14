@@ -1,5 +1,5 @@
 import { UserTypeEnum } from "../enums/user-type.enum";
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable } from "@nestjs/common";
 import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
 import { UserRegisterResponseDto } from "../dtos/user-register-response.dto";
 import { UserStatusEnum } from "../enums/user-status.enum";
@@ -22,6 +22,7 @@ import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto"
 import { SupplierService } from "./supplier.service";
 import { AssociationService } from "./association.service";
 import { UserRolesEnum } from "../enums/user-roles.enum";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class UserService {
@@ -81,11 +82,17 @@ export class UserService {
 
   async getByEmailFirstAccess(email: string): Promise<UserGetResponseDto> {
     const result = await this._userRepository.getByEmail(email);
-
-    if (!result) throw new BadRequestException("Email não encontrado!");
+    if (!result)
+      throw new CustomHttpException(
+        "Email não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
 
     if (result.status == UserStatusEnum.active)
-      throw new BadRequestException("Você já realizou o primeiro acesso!");
+      throw new CustomHttpException(
+        "Você já realizou o primeiro acesso!",
+        HttpStatus.BAD_REQUEST,
+      );
 
     return new UserGetResponseDto(
       result.id,
@@ -170,9 +177,9 @@ export class UserService {
     if (!(await bcrypt.compare(dto.password, user.password)))
       throw new BadRequestException("wrong password!");
 
-    dto.password = await bcrypt.hash(dto.newPassword, 13);
+    const newPassword = await bcrypt.hash(dto.newPassword, 13);
 
-    const result = await this._userRepository.updatePassword(_id, dto);
+    const result = await this._userRepository.updatePassword(_id, newPassword);
 
     return new UserUpdateResponseDto(_id, result.email);
   }
@@ -197,25 +204,21 @@ export class UserService {
   async updatePasswordWithCode(
     dto: UserUpdatePasswordWithCodeRequestDto,
   ): Promise<UserUpdateResponseDto> {
-    const userModel = await this._userRepository.getByEmail(dto.email);
+    const user = await this._userRepository.getByEmail(dto.email);
+    if (!user)
+      throw new CustomHttpException(
+        "Usuário não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
 
-    await this._verificationService.verifyCode(userModel, dto.code);
+    await this._verificationService.verifyCode(user, dto.code);
 
     const password = await bcrypt.hash(dto.newPassword, 13);
 
-    await this._userRepository.updatePassword(userModel.id, {
-      password: password,
-      newPassword: "",
-    });
+    await this._userRepository.updatePassword(user.id, password);
+    await this._userRepository.updateStatus(user.id, UserStatusEnum.active);
 
-    if (userModel.status == UserStatusEnum.inactive) {
-      await this._userRepository.updateStatus(
-        userModel.id,
-        UserStatusEnum.active,
-      );
-    }
-
-    return new UserUpdateResponseDto(userModel.id, userModel.email);
+    return new UserUpdateResponseDto(user.id, user.email);
   }
 
   async updateProfilePicture(

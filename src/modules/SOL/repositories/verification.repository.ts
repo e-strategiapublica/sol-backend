@@ -25,9 +25,7 @@ export class VerificationRepository {
   }
 
   async getByUser(user: UserModel): Promise<VerificationModel> {
-    return await this.model
-      .findOne({ user: user._id.toString() })
-      .populate("user");
+    return this.model.findOne({ user: user._id.toString() }).populate("user");
   }
 
   async delete(id: string) {

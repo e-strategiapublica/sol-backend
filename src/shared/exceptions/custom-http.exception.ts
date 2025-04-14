@@ -9,7 +9,6 @@ export class CustomHttpException extends HttpException {
     const normalizedErrors: string[] = Array.isArray(errors)
       ? errors
       : [errors];
-
     const response: ResponseDtoV2<null> = {
       success: false,
       data: null,
