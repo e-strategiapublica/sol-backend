@@ -1006,9 +1006,6 @@ export class ContractService {
           .toFixed(2);
         price = +Number(price / quantity).toFixed(2);
 
-        console.log(`Preço total da proposta: ${el.total_value}`);
-        console.log(`Quantidade total: ${quantity}`);
-        console.log(`Preço unitário calculado: ${price}`);
       }
 
       for (let item of allot.add_item) {
