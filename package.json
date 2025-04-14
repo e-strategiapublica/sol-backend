@@ -33,6 +33,7 @@
     "bcryptjs": "^2.4.3",
     "chart.js": "^4.4.7",
     "cheerio": "^1.0.0",
+    "class-validator": "^0.14.1",
     "cron": "^3.5.0",
     "crypto-js": "^4.2.0",
     "custom-soffice-to-pdf": "^1.0.0",

@@ -5,3 +5,9 @@ export class ResponseDto {
     public errors: any,
   ) {}
 }
+
+export interface ResponseDtoV2<T> {
+  success: boolean;
+  data: T;
+  errors?: string[];
+}

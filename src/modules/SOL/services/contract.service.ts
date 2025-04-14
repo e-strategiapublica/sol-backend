@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { BadRequestException, HttpStatus, Injectable, Logger } from "@nestjs/common";
 import { ContractRepository } from "../repositories/contract.repository";
 import { ContractModel } from "../models/contract.model";
 import { ContractRegisterDto } from "../dtos/contract-register-request.dto";
@@ -23,6 +23,7 @@ import { LanguageContractEnum } from "../enums/language-contract.enum";
 import { ModelContractClassificationEnum } from "../enums/modelContract-classification.enum";
 import { ProposalModel } from "../models/proposal.model";
 import { AgreementRepository } from "../repositories/agreement.repository";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 // import * as docxConverter from 'docx-pdf';
 // import * as temp from 'temp';
 const PizZip = require("pizzip");
@@ -708,52 +709,38 @@ export class ContractService {
     _id: string,
     lang: string = LanguageContractEnum.english,
     type: ModelContractClassificationEnum,
-  ): Promise<any> {
+  ): Promise<Buffer> {
     const logger = new Logger("DocumentGenerator");
-    logger.log(
-      `Iniciando criação de documento - ID: ${_id}, language: ${lang}, type: ${type}`,
-    );
-
-    const modelContract =
-      await this._modelContractRepository.getByContractAndLanguage(lang, type);
-    logger.log(
-      `Resultado da busca pelo modelo: ${modelContract?.contract || "Nenhum modelo encontrado"}`,
-    );
-
+  
+    logger.log(`Iniciando criação de documento - ID: ${_id}, language: ${lang}, type: ${type}`);
+  
+    const modelContract = await this._modelContractRepository.getByContractAndLanguage(lang, type);
+    logger.log(`Resultado da busca pelo modelo: ${modelContract?.contract || "Nenhum modelo encontrado"}`);
+  
     if (!modelContract) {
-      logger.error(
-        `Modelo de documento não encontrado para language=${lang}, type=${type}`,
-      );
-      throw new CustomHttpException(
-        "Modelo de documento não encontrado",
-        HttpStatus.NOT_FOUND,
-      );
+      logger.error(`Modelo de documento não encontrado para language=${lang}, type=${type}`);
+      throw new CustomHttpException("Modelo de documento não encontrado", HttpStatus.NOT_FOUND);
     }
-
-    const modelPath = path.resolve(
-      "src/shared/documents",
-      modelContract.contract,
-    );
+  
+    const modelPath = path.resolve("src/shared/documents", modelContract.contract);
     logger.log(`Caminho do modelo a ser carregado: ${modelPath}`);
-
+  
     const content = fs.readFileSync(modelPath, "binary");
-
+  
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
     });
-
+  
     logger.log("Modelo carregado e parser iniciado");
-
+  
     const contract = await this._contractRepository.getById(_id);
     logger.log(`Contrato carregado: ${contract?._id?.toString()}`);
-
-    const proposalArray = await this._proposalRepository.listByBid(
-      contract.bid_number._id.toString(),
-    );
+  
+    const proposalArray = await this._proposalRepository.listByBid(contract.bid_number._id.toString());
     logger.log(`Propostas carregadas: ${proposalArray?.length}`);
-
+  
     let allotment: AllotmentModel[] = [];
     contract.proposal_id.forEach((proposal) => {
       proposal.allotment.forEach((allot) => {
@@ -761,11 +748,10 @@ export class ContractService {
       });
     });
     logger.log(`Lotes extraídos: ${allotment.length}`);
-
-    let listOfItems: any[] = [];
-    listOfItems = await this.costItensGet(allotment, proposalArray);
+  
+    const listOfItems = await this.costItensGet(allotment, proposalArray);
     logger.log(`Itens de custo carregados: ${listOfItems.length}`);
-
+  
     let signature = "Assinado eletronicamente pela: ";
     let yes = "Sim";
     let no = "Não";
@@ -785,11 +771,16 @@ export class ContractService {
         yes = "Oui";
         no = "Non";
         break;
+      case LanguageContractEnum.portuguese:
+        signature = "Assinado eletrônico pela: ";
+        yes = "Sim";
+        no = "Nao";
+        break;
     }
-
+  
     const formatDateString =
       lang === LanguageContractEnum.english ? "MM/DD/YYYY" : "DD/MM/YYYY";
-
+  
     let listOfBidPrices: any[] = [];
     if (proposalArray)
       proposalArray
@@ -821,11 +812,9 @@ export class ContractService {
               moment(contract.createdAt).format("YYYY"),
           });
         });
-
-    logger.log(
-      `Lista de preços das propostas montada: ${listOfBidPrices.length}`,
-    );
-
+  
+    logger.log(`Lista de preços das propostas montada: ${listOfBidPrices.length}`);
+  
     doc.render({
       process_description: contract.bid_number.description,
       bid_number:
@@ -834,16 +823,11 @@ export class ContractService {
         moment(contract.bid_number.start_at).format("YYYY"),
       name_project: contract.contract_document,
       name_purchaser: contract.bid_number.agreement.association.name,
-      purchaser_country:
-        contract.bid_number.agreement.association.address.state,
-      publication_date: moment(contract.bid_number.createdAt).format(
-        formatDateString,
-      ),
+      purchaser_country: contract.bid_number.agreement.association.address.state,
+      publication_date: moment(contract.bid_number.createdAt).format(formatDateString),
       list_of_items: listOfItems,
       list_of_bid_prices: listOfBidPrices,
-      bid_opening_date: moment(contract.bid_number.start_at).format(
-        formatDateString,
-      ),
+      bid_opening_date: moment(contract.bid_number.start_at).format(formatDateString),
       email_purchaser: contract.bid_number.association.email,
       deadline_date: contract.bid_number.end_at
         ? moment(contract.bid_number.end_at).format(formatDateString)
@@ -911,9 +895,7 @@ export class ContractService {
         signature +
         contract.bid_number.agreement.association.name +
         " em " +
-        moment(new Date(contract.association_sign_date)).format(
-          formatDateString,
-        ),
+        moment(new Date(contract.association_sign_date)).format(formatDateString),
       signature_supplier:
         signature +
         contract.supplier_id?.name +
@@ -932,30 +914,29 @@ export class ContractService {
           0,
         ) || 0,
     });
-
+  
     logger.log("Documento renderizado com sucesso");
-
+  
     const buf = doc.getZip().generate({ type: "nodebuffer" });
-
+  
     const outputPath = path.resolve("src/shared/documents", "output.docx");
     logger.log(`Salvando documento temporário em: ${outputPath}`);
-
-    await fs.writeFileSync(outputPath, buf);
-
+  
+    fs.writeFileSync(outputPath, buf);
+  
     await this.callPythonFile()
-      .then(async () => {
-        logger.log(
-          "Documento convertido com sucesso via Python, excluindo temporário",
-        );
+      .then(() => {
+        logger.log("Documento convertido com sucesso via Python, excluindo temporário");
         fs.unlinkSync(outputPath);
       })
       .catch((err) => {
         logger.error("Erro ao converter o arquivo via Python:", err);
-        throw new BadRequestException(
+        throw new CustomHttpException(
           "Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto",
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
-
+  
     logger.log("Criação de documento finalizada com sucesso");
     return buf;
   }
