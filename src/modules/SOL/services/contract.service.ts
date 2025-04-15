@@ -994,9 +994,7 @@ export class ContractService {
     proposal?: ProposalModel[],
   ): Promise<any[]> {
     let listOfItems = [];
-    console.log("Iniciando costItensGet");
-    console.log("Allotments recebidos:", JSON.stringify(allotment, null, 2));
-    console.log("Proposals recebidas:", JSON.stringify(proposal, null, 2));
+    this.logger.debug(....)
 
     for (let allot of allotment) {
       let el = proposal?.find((proposal) =>
