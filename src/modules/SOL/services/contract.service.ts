@@ -714,10 +714,16 @@ export class ContractService {
 
     if (!modelContract) throw new Error("Modelo de documento não encontrado");
 
-    const content = fs.readFileSync(
-      path.resolve("src/shared/documents", modelContract.contract),
-      "binary",
+    const modelPath = path.resolve(
+      "src/shared/documents",
+      modelContract.contract,
     );
+
+    if (!fs.existsSync(modelPath)) {
+      throw new Error("Arquivo do modelo não foi criado ou está ausente");
+    }
+
+    const content = fs.readFileSync(modelPath, "binary");
 
     const zip = new PizZip(content);
 
