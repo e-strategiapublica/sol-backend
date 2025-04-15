@@ -994,7 +994,6 @@ export class ContractService {
     proposal?: ProposalModel[],
   ): Promise<any[]> {
     let listOfItems = [];
-    this.logger.debug(....)
 
     for (let allot of allotment) {
       let el = proposal?.find((proposal) =>

@@ -45,6 +45,7 @@ import { MyBidModel } from "../models/database/bid.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
 import { SHA256, enc } from "crypto-js";
+import { bidStatusTranslations } from "src/shared/utils/translation.utils";
 
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
@@ -1125,64 +1126,7 @@ export class BidService {
     lang: string = LanguageContractEnum.english,
     type: ModelContractClassificationEnum,
   ): Promise<any> {
-    const bidStatusTranslations = {
-      english: {
-        awaiting: "Awaiting",
-        deserted: "Deserted",
-        draft: "Draft",
-        analysis: "Under analysis",
-        released: "Released",
-        open: "Open",
-        completed: "Completed",
-        reopened: "Reopened",
-        failed: "Failed",
-        canceled: "Canceled",
-        tiebreaker: "Tiebreaker",
-        returned: "Returned",
-      },
-      spanish: {
-        awaiting: "En espera",
-        deserted: "Desierta",
-        draft: "Borrador",
-        analysis: "En análisis",
-        released: "Publicada",
-        open: "Abierta",
-        completed: "Finalizada",
-        reopened: "Reabierta",
-        failed: "Fallida",
-        canceled: "Cancelada",
-        tiebreaker: "Desempate",
-        returned: "Devuelta",
-      },
-      french: {
-        awaiting: "En attente",
-        deserted: "Déserte",
-        draft: "Brouillon",
-        analysis: "En cours d'analyse",
-        released: "Publiée",
-        open: "Ouverte",
-        completed: "Terminée",
-        reopened: "Rouverte",
-        failed: "Échouée",
-        canceled: "Annulée",
-        tiebreaker: "Égalité",
-        returned: "Retournée",
-      },
-      portuguese: {
-        awaiting: "Aguardando",
-        deserted: "Deserta",
-        draft: "Rascunho",
-        analysis: "Em análise",
-        released: "Divulgada",
-        open: "Aberta",
-        completed: "Concluída",
-        reopened: "Reaberta",
-        failed: "Fracassada",
-        canceled: "Cancelada",
-        tiebreaker: "Desempate",
-        returned: "Devolvida",
-      },
-    };
+   
 
     const modelContract =
       await this._modelContractRepository.getByContractAndLanguage(lang, type);
