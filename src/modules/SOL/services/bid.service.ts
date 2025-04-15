@@ -1126,8 +1126,6 @@ export class BidService {
     lang: string = LanguageContractEnum.english,
     type: ModelContractClassificationEnum,
   ): Promise<any> {
-   
-
     const modelContract =
       await this._modelContractRepository.getByContractAndLanguage(lang, type);
 
