@@ -23,6 +23,7 @@ import { LanguageContractEnum } from "../enums/language-contract.enum";
 import { ModelContractClassificationEnum } from "../enums/modelContract-classification.enum";
 import { ProposalModel } from "../models/proposal.model";
 import { AgreementRepository } from "../repositories/agreement.repository";
+import { ErrorMessages } from "src/shared/utils/error-model-document-messages.util";
 // import * as docxConverter from 'docx-pdf';
 // import * as temp from 'temp';
 const PizZip = require("pizzip");
@@ -712,15 +713,16 @@ export class ContractService {
     const modelContract =
       await this._modelContractRepository.getByContractAndLanguage(lang, type);
 
-    if (!modelContract) throw new Error("Modelo de documento não encontrado");
+    if (!modelContract) throw new Error(ErrorMessages.MODEL_NOT_FOUND[lang]);
 
     const modelPath = path.resolve(
       "src/shared/documents",
       modelContract.contract,
     );
 
+    // Verifique se o arquivo do modelo existe
     if (!fs.existsSync(modelPath)) {
-      throw new Error("Arquivo do modelo não foi criado ou está ausente");
+      throw new Error(ErrorMessages.FILE_NOT_CREATED_OR_MISSING[lang]);
     }
 
     const content = fs.readFileSync(modelPath, "binary");
