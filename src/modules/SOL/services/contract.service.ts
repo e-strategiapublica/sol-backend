@@ -29,6 +29,8 @@ import { ModelContractClassificationEnum } from "../enums/modelContract-classifi
 import { ProposalModel } from "../models/proposal.model";
 import { AgreementRepository } from "../repositories/agreement.repository";
 import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import { ErrorMessages } from "src/shared/utils/error-model-document-messages.util";
+
 // import * as docxConverter from 'docx-pdf';
 // import * as temp from 'temp';
 const PizZip = require("pizzip");
@@ -737,13 +739,23 @@ export class ContractService {
       );
     }
 
+
     const modelPath = path.resolve(
       "src/shared/documents",
       modelContract.contract,
     );
     logger.log(`Caminho do modelo a ser carregado: ${modelPath}`);
 
+
+    // Verifique se o arquivo do modelo existe
+    if (!fs.existsSync(modelPath)) {
+      throw new Error(ErrorMessages.FILE_NOT_CREATED_OR_MISSING[lang]);
+    }
+
     const content = fs.readFileSync(modelPath, "binary");
+
+    const zip = new PizZip(content);
+
 
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {

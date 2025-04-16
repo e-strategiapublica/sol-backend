@@ -2,6 +2,7 @@ import { Injectable, Scope, StreamableFile } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as fs from "fs";
 import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
+import * as path from "path";
 
 @Injectable()
 export class FileRepository {
@@ -11,13 +12,19 @@ export class FileRepository {
     const bucket = this._configService.get<string>(
       EnviromentVariablesEnum.BUCKET,
     );
-    const path = bucket + "/" + filename;
+
+    const fullPath = path.join(bucket, filename);
+    const dir = path.dirname(fullPath);
+
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
     const base64Data = base64.replace(/^data:([A-Za-z-+/]+);base64,/, "");
 
-    fs.writeFileSync(path, base64Data, { encoding: "base64" });
+    fs.writeFileSync(fullPath, base64Data, { encoding: "base64" });
 
-    return path;
+    return fullPath;
   }
 
   async download(filename: string): Promise<Buffer> {
