@@ -45,6 +45,7 @@ import { MyBidModel } from "../models/database/bid.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
 import { SHA256, enc } from "crypto-js";
+import { bidStatusTranslations } from "src/shared/utils/translation.utils";
 
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
@@ -1143,27 +1144,17 @@ export class BidService {
     });
 
     const bid = await this._bidsRepository.getById(_id);
-
     const contractArray = await this._contractRepository.getByBidId(_id);
-
     const proposalArray = await this._proposalRepository.listByBid(_id);
 
     const contract = contractArray ? contractArray[0] : null;
 
     let allotment: AllotmentModel[] = [];
-
-    // contract.proposal_id.forEach(proposal => {
-    //   proposal.allotment.forEach(allot => {
-    //     allotment.push(allot);
-    //   });
-    // });
-
     bid.add_allotment.forEach((allot) => {
       allotment.push(allot);
     });
 
     let listOfItems: any[] = [];
-
     listOfItems = await this.costItensGet(allotment, proposalArray);
 
     const estimatedValue =
@@ -1312,7 +1303,7 @@ export class BidService {
       batch_list_name: listOfItems.map((item) => item.name).toString(),
       agreement_name:
         bid.agreement.register_number + "/" + bid.agreement.register_object,
-      bid_status: bid.status,
+      bid_status: bidStatusTranslations[lang][bid.status] || bid.status,
       bid_concluded_date: bid.concludedAt
         ? moment(bid.concludedAt).format(formatDateString)
         : "",
@@ -1363,7 +1354,6 @@ export class BidService {
     await this.callPythonFile()
       .then(async () => {
         fs.unlinkSync(path.resolve("src/shared/documents", "output.docx"));
-
         return;
       })
       .catch((err) => {
