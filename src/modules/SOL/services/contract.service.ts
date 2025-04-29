@@ -739,13 +739,11 @@ export class ContractService {
       );
     }
 
-
     const modelPath = path.resolve(
       "src/shared/documents",
       modelContract.contract,
     );
     logger.log(`Caminho do modelo a ser carregado: ${modelPath}`);
-
 
     // Verifique se o arquivo do modelo existe
     if (!fs.existsSync(modelPath)) {
@@ -755,7 +753,6 @@ export class ContractService {
     const content = fs.readFileSync(modelPath, "binary");
 
     const zip = new PizZip(content);
-
 
     const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
