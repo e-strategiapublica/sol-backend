@@ -753,8 +753,6 @@ export class ContractService {
     const content = fs.readFileSync(modelPath, "binary");
 
     const zip = new PizZip(content);
-
-    const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
