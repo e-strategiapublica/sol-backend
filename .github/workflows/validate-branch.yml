@@ -1,0 +1,41 @@
+name: Validate Branch
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - staging
+  pull_request:
+    branches-ignore:
+      - main
+      - staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22.13.1"
+          cache: "yarn"
+
+      - name: Instalar dependências
+        run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Type check
+        run: yarn type-check
+
+      - name: Build
+        run: yarn build
+
+      - name: Notificar deploy
+        run: |
+          echo "🚀 Branch validada com sucesso!"
