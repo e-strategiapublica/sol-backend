@@ -20,6 +20,9 @@ import { ProjectService } from "./project.service";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
+import * as fs from "fs";
+import * as pdf from "pdf-parse";
+import { ModelContractStatusEnum } from "../enums/model-contract-status.enum";
 
 describe("BidService", () => {
   let service: BidService;
@@ -120,46 +123,122 @@ describe("BidService", () => {
     ).rejects.toThrow("Template não encontrado");
   });
 
-  it("should create and delete a document file successfully", async () => {
+  it.only("should create and delete a document file successfully", async () => {
     // Este teste verifica apenas se o método não lança exceção quando o modelo de contrato é encontrado
     mockModelContractRepo.getByContractAndLanguage.mockResolvedValue({
       contract: "template.docx",
+      name: "Template Contract",
+      status: ModelContractStatusEnum.ativo,
+      classification: ModelContractClassificationEnum.ata,
+      language: "english",
     });
+
     const mockBid = {
-      add_allotment: [],
-      description: "desc",
-      bid_count: 1,
-      start_at: new Date(),
-      association: {
-        association: {
-          name: "Org",
-          address: {
-            state: "State",
-            publicPlace: "",
-            number: "",
-            complement: "",
-            city: "",
-            zipCode: "",
-          },
-          cnpj: "",
-          legalRepresentative: { name: "Rep" },
+      _id: "68110898aae767c1ec129419",
+      bid_count: "18",
+      description: "asdfasdfasdfasdf",
+      agreement: "67fd5c22d4e6c3bfd42ba0ea",
+      classification: "bens",
+      start_at: "",
+      end_at: "1",
+      days_to_tiebreaker: "1",
+      days_to_delivery: "1",
+      deleted: false,
+      local_to_delivery: "Avenida Professor João Augusto de Carvalho",
+      bid_type: "individualPrice",
+      modality: "openClosed",
+      status: "draft",
+      aditional_site: "",
+      add_allotment: [
+        {
+          _id: "AL123",
+          allotment_name: "asdfasdfasdfasdf",
+          days_to_delivery: "1",
+          place_to_delivery: "Avenida Professor João Augusto de Carvalho",
+          quantity: "2",
+          files: "development-bucket/product_1745946776628.pdf",
+          status: "rascunho",
+          add_item: [
+            {
+              group: "Primeiro Grupo",
+              item: "Primeiro Item",
+              quantity: "2",
+              unitMeasure: "Kg",
+              specification: "",
+            },
+          ],
+          proposals: [],
+          createdAt: "2025-04-29T17:12:56.647Z",
+          updatedAt: "2025-04-29T17:12:56.647Z",
+          __v: 0,
         },
-        email: "email@x.com",
-      },
-      agreement: {
-        register_number: "123",
-        register_object: "obj",
-        workPlan: [],
-      },
-      local_to_delivery: "somewhere",
-      days_to_delivery: 5,
-      status: "open",
+      ],
       invited_suppliers: [],
-      createdAt: new Date(),
+      state: "Rondônia",
+      city: "Cabixi",
+      association: "67fd5bc3d4e6c3bfd42ba0d0",
+      additionalDocuments: [],
+      createdAt: "2025-04-29T17:12:56.676Z",
+      updatedAt: "2025-04-29T17:12:56.676Z",
+      __v: 0,
     };
     mockBidsRepo.getById.mockResolvedValue(mockBid);
-    mockContractRepo.getByBidId.mockResolvedValue([]);
-    mockProposalRepo.listByBid.mockResolvedValue([]);
+
+    const mockContract = {
+      _id: "6123456789abcdef01234568",
+      sequencial_number: 1,
+      contract_number: "CONTR-001/2024",
+      bid_number: "68110898aae767c1ec129419", // MongoDB ObjectId
+      association_accept: true,
+      supplier_accept: true,
+      association_sign_date: "2024-05-15",
+      supplier_sign_date: "2024-05-16",
+      contract_document: "path/to/contract/document.pdf",
+      value: "50000.00",
+      deleted: false,
+      status: "assinado",
+      proposal_id: ["AL123"], // Array of MongoDB ObjectIds
+      supplier_id: "6123456789abcdef01234569", // MongoDB ObjectId
+      association_id: "6123456789abcdef01234570", // MongoDB ObjectId
+      items_received: 10,
+      createdAt: new Date("2024-05-10T10:00:00Z"),
+      updatedAt: new Date("2024-05-16T15:30:00Z"),
+    };
+    mockContractRepo.getByBidId.mockResolvedValue([mockContract]);
+
+    const mockProposal = {
+      _id: "PR123",
+      total_value: 45000.0,
+      association_accept: false,
+      supplier_accept: true,
+      reviewer_accept: false,
+      status: "aguardando1",
+      deleted: false,
+      item_list: ["Item 1", "Item 2", "Item 3"],
+      bid: "68110898aae767c1ec129419", // MongoDB ObjectId
+      allotment: [
+        { _id: "AL123", quantity: 10 },
+        { _id: "AL1234", quantity: 2 },
+      ], // Array of MongoDB ObjectIds
+      file: "path/to/proposal/document.pdf",
+      proposalWin: false,
+      refusedBecaused: "",
+      refusedBy: null,
+      proposedBy: "6123456789abcdef01234570", // MongoDB ObjectId
+      acceptedRevisor: null,
+      acceptedFornecedor: "6123456789abcdef01234571", // MongoDB ObjectId
+      acceptedFornecedorAt: new Date("2024-05-15T14:30:00Z"),
+      acceptedRevisorAt: null,
+      refusedAt: null,
+      freight: 1500,
+      totalValueForAllotment: [
+        { allotmentId: "6123456789abcdef01234568", value: 30000.0 },
+        { allotmentId: "6123456789abcdef01234569", value: 15000.0 },
+      ],
+      createdAt: new Date("2024-05-10T10:00:00Z"),
+      updatedAt: new Date("2024-05-15T14:30:00Z"),
+    };
+    mockProposalRepo.listByBid.mockResolvedValue([mockProposal]);
 
     jest.spyOn(service as any, "callPythonFile").mockResolvedValue(undefined);
 
@@ -170,6 +249,13 @@ describe("BidService", () => {
         ModelContractClassificationEnum.ata,
       ),
     ).resolves.not.toThrow();
+
+    const filePath = "src/shared/documents/output.pdf";
+    const buffer = fs.readFileSync(filePath);
+    const data = await pdf(buffer);
+    expect(data.text).toContain(
+      "\n\nDescrição da  licitação: Test Description\nNúmero da licitação: 1/2025\nNome do projeto: ",
+    );
   });
 
   it("should throw BadRequestException if Python fails", async () => {

@@ -1,3 +1,4 @@
+import * as bcrypt from "bcryptjs";
 import * as CryptoJS from "crypto-js";
 
 export default class CryptoUtil {
@@ -8,5 +9,10 @@ export default class CryptoUtil {
   static decrypt(key: string, textToDecrypt: string): any {
     const bytes = CryptoJS.AES.decrypt(textToDecrypt, key);
     return bytes.toString(CryptoJS.enc.Utf8);
+  }
+
+  static async encryptPassword(password: string): Promise<string> {
+    const hashedPassword = await bcrypt.hash(password, 13);
+    return hashedPassword;
   }
 }
