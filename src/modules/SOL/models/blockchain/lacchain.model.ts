@@ -1,9 +1,7 @@
-import { Injectable, HttpStatus } from "@nestjs/common";
-import { MongoClient, ObjectId } from "mongodb";
-import { ErrorManager } from "../../../../shared/utils/error.manager";
 import { ConfigService } from "@nestjs/config";
 import { HttpService } from "@nestjs/axios";
-
+import { Injectable } from "@nestjs/common";
+import { ErrorManager } from "../../../../shared/utils/error.manager";
 @Injectable()
 export class LacchainModel {
   constructor(
@@ -13,11 +11,9 @@ export class LacchainModel {
 
   async getBidData(_bidHistoryId: string) {
     try {
-      const res = await this.httpService
-        .get(
-          `http://216.238.103.122:3002/api/lacchain/bid/getData/${_bidHistoryId}`,
-        )
-        .toPromise();
+      const res = await this.httpService.axiosRef.get(
+        `http://216.238.103.122:3002/api/lacchain/bid/getData/${_bidHistoryId}`,
+      );
       return res.data;
     } catch (e) {
       throw ErrorManager.createError(e);

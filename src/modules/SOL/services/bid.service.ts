@@ -1,5 +1,4 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
-import { BideRegisterDto } from "../dtos/bid-register-request.dto";
 import { BidRepository } from "../repositories/bid.repository";
 import { BidModel } from "../models/bid.model";
 import { BidUpdateDto } from "../dtos/bid-update-request.dto";
@@ -31,27 +30,23 @@ import { parseISO, isAfter } from "date-fns";
 import { ModelContractClassificationEnum } from "../enums/modelContract-classification.enum";
 import { LanguageContractEnum } from "../enums/language-contract.enum";
 import { AllotmentModel } from "../models/allotment.model";
-import { CostItemsService } from "./cost-items.service";
 import { ProposalModel } from "../models/proposal.model";
-import { RegistryService } from "./registry.service";
 import { RegistrySendRequestDto } from "../dtos/registry-send-request.dto";
 import { ConfigService } from "@nestjs/config";
 import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
 import { ProjectService } from "./project.service";
 import { AgreementInterfaceWithId } from "../interfaces/agreement.interface";
-import { MongoClient, ObjectId } from "mongodb";
+import { ObjectId } from "mongodb";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
-import { MyBidModel } from "../models/database/bid.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
 import { SHA256, enc } from "crypto-js";
 import { bidStatusTranslations } from "src/shared/utils/translation.utils";
-
-const PizZip = require("pizzip");
-const Docxtemplater = require("docxtemplater");
-const fs = require("fs");
-const path = require("path");
-const { spawn } = require("child_process");
+import * as fs from "fs";
+import Docxtemplater from "docxtemplater";
+import PizZip from "pizzip";
+import * as path from "path";
+import { spawn } from "child_process";
 
 @Injectable()
 export class BidService {
@@ -71,12 +66,9 @@ export class BidService {
     private readonly _associationRepository: AssociationRepository,
     private readonly _supplierRepository: SupplierRepository,
     private readonly _plataformRepository: PlataformRepository,
-    private readonly _costItemsService: CostItemsService,
-    private readonly _registryService: RegistryService,
     private readonly _configService: ConfigService,
     private readonly _projectService: ProjectService,
     private _lacchainModel: LacchainModel,
-    private _myBidModel: MyBidModel,
     private _bidHistoryModel: BidHistoryModel,
     private readonly itemsModel: ItemsModel,
   ) {}
@@ -1131,10 +1123,15 @@ export class BidService {
 
     if (!modelContract) throw new Error("Modelo de documento não encontrado");
 
-    const content = fs.readFileSync(
-      path.resolve("src/shared/documents", modelContract.contract),
+    const documentsPath = "src/shared/documents";
+
+    const content = this._fileRepository.readFile(
+      documentsPath,
+      modelContract.contract,
       "binary",
     );
+
+    if (!content) throw new Error("Template não encontrado");
 
     const zip = new PizZip(content);
 
@@ -1346,10 +1343,7 @@ export class BidService {
 
     const buf = doc.getZip().generate({ type: "nodebuffer" });
 
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", "output.docx"),
-      buf,
-    );
+    this._fileRepository.writeFile(documentsPath, "output.docx", buf);
 
     await this.callPythonFile()
       .then(async () => {
