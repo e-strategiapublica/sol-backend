@@ -1,5 +1,5 @@
 export default class BooleanUtil {
-  static getBoolean(value) {
+  static getBoolean(value: string | boolean | number) {
     switch (value) {
       case true:
       case "true":

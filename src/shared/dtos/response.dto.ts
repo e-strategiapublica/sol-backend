@@ -1,5 +1,6 @@
 /**
  * @deprecated This class is deprecated. Use interface ResponseDTO .
+ * @use ResponseDTOV2
  */
 export class ResponseDto {
   constructor(

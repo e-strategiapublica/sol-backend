@@ -524,52 +524,7 @@ export class BidController {
 
   @Get("lacchain/getBidData/:bidId")
   @HttpCode(200)
-  async getBidData(@Req() request, @Param("bidId") bidId: string) {
-    try {
-      const bidsHistory = await this._bidHistoryModel.listByBidId(bidId);
-      let hash;
-      let res, fieldSaved;
-
-      if (bidsHistory.length > 0) {
-        for (let i = 0; i < bidsHistory.length; i++) {
-          hash = await this.bidsService.calculateHash(bidsHistory[i].data);
-
-          const sendToBlockchain = this.configService.get(
-            EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
-          );
-          if (sendToBlockchain && sendToBlockchain == "true") {
-            res = await this._lacchainModel.getBidData(
-              bidsHistory[i]._id.toHexString(),
-            );
-          }
-
-          bidsHistory[i].hash = hash;
-
-          if (!res) {
-            bidsHistory[i].verifiedByLacchain = { result: false, hash: "" };
-          } else if (res[0] == true) {
-            if (hash == res[1]) {
-              bidsHistory[i].verifiedByLacchain = {
-                result: true,
-                hash: res[1],
-              };
-            } else {
-              bidsHistory[i].verifiedByLacchain = {
-                result: false,
-                hash: res[1],
-              };
-            }
-          } else {
-            bidsHistory[i].verifiedByLacchain = { result: false, hash: res[1] };
-          }
-        }
-      } else {
-        return { type: "error", message: "A licitação não existe" }; // Ajustei a mensagem de erro
-      }
-
-      return bidsHistory;
-    } catch (error) {
-      throw ErrorManager.createError(error);
-    }
+  async getBidData(@Param("bidId") bidId: string) {
+    return this.bidsService.getBidData(bidId);
   }
 }

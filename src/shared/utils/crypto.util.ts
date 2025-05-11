@@ -9,4 +9,10 @@ export default class CryptoUtil {
     const bytes = CryptoJS.AES.decrypt(textToDecrypt, key);
     return bytes.toString(CryptoJS.enc.Utf8);
   }
+
+  static calculateHash(data: Record<string, any>): string {
+    return (
+      "0x" + CryptoJS.SHA256(JSON.stringify(data)).toString(CryptoJS.enc.Hex)
+    );
+  }
 }
