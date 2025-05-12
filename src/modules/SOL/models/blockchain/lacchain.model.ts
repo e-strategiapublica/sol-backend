@@ -1,4 +1,5 @@
-import { HttpStatus, Injectable, Logger } from "@nestjs/common";
+import { HttpStatus, Inject, Injectable, Logger, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import { HttpService } from "@nestjs/axios";
 import axios from "axios";
@@ -10,12 +11,14 @@ import {
   SetBidDataPayload,
   SetBidDataResponse,
 } from "./types";
-@Injectable()
+
+@Injectable({ scope: Scope.REQUEST })
 export class LacchainModel {
   private readonly logger = new Logger(LacchainModel.name);
   private readonly baseUrl: string;
 
   constructor(
+    @Inject(REQUEST) private readonly request: Request,
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
@@ -25,7 +28,8 @@ export class LacchainModel {
   }
 
   private getHeaders() {
-    const token = "";
+    const headers = this.request.headers;
+    const token = headers["authorization"];
     return {
       Authorization: token,
     };
