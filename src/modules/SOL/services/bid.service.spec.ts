@@ -25,6 +25,9 @@ import { RegistryService } from "./registry.service";
 import { MyBidModel } from "../models/database/bid.model";
 import { Types } from "mongoose";
 import CryptoUtil from "src/shared/utils/crypto.util";
+import { UserRepositoryMock } from "tests/mocks/user";
+import { AgreementRepositoryMock } from "tests/mocks/agreement";
+import { BidRepositoryMock } from "tests/mocks/bid";
 
 describe("BidService", () => {
   let service: BidService;
@@ -35,7 +38,7 @@ describe("BidService", () => {
   const mockBidsRepo = {
     getById: jest.fn(),
     list: jest.fn(),
-    count: jest.fn(),
+    count: jest.fn().mockResolvedValue(1),
     register: jest.fn(),
     getByAgreementId: jest.fn(),
     update: jest.fn(),
@@ -67,6 +70,18 @@ describe("BidService", () => {
     getBidData: jest.fn(),
   };
 
+  const mockUserRepository = {
+    getById: jest.fn(),
+  };
+
+  const mockAgreementRepository = {
+    findById: jest.fn(),
+  };
+
+  const mockNotificationService = {
+    registerForRealese: jest.fn(),
+  };
+
   const sampleMock = jest.fn();
 
   beforeEach(async () => {
@@ -74,10 +89,10 @@ describe("BidService", () => {
       providers: [
         BidService,
         { provide: BidRepository, useValue: mockBidsRepo },
-        { provide: UserRepository, useValue: sampleMock },
+        { provide: UserRepository, useValue: mockUserRepository },
         { provide: AllotmentRepository, useValue: sampleMock },
-        { provide: NotificationService, useValue: sampleMock },
-        { provide: AgreementService, useValue: sampleMock },
+        { provide: NotificationService, useValue: mockNotificationService },
+        { provide: AgreementService, useValue: mockAgreementRepository },
         FileRepository, // Usando a instância real
         { provide: SupplierService, useValue: sampleMock },
         { provide: ProposalRepository, useValue: mockProposalRepo },
@@ -243,6 +258,77 @@ describe("BidService", () => {
           },
         },
       ]);
+    });
+  });
+
+  describe('Test methos: "register', () => {
+    it("throw when agreement not found", async () => {
+      try {
+        mockUserRepository.getById.mockResolvedValue({});
+        mockAgreementRepository.findById.mockResolvedValue(null);
+        await service.register("123", {}, []);
+        fail("Exceção não foi lançada");
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.NOT_FOUND);
+        expect(error.response).toEqual({
+          success: false,
+          data: null,
+          errors: ["Convênio não encontrado!"],
+        });
+      }
+    });
+
+    it("throw when association not found", async () => {
+      try {
+        mockUserRepository.getById.mockResolvedValue(null);
+        mockAgreementRepository.findById.mockResolvedValue({});
+        await service.register("123", {}, []);
+        fail("Exceção não foi lançada");
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.NOT_FOUND);
+        expect(error.response).toEqual({
+          success: false,
+          data: null,
+          errors: ["Associação nao encontrada!"],
+        });
+      }
+    });
+
+    it("fail register a new bid, because invalid add_allotment", async () => {
+      mockUserRepository.getById.mockResolvedValue(
+        UserRepositoryMock.getById(),
+      );
+      mockAgreementRepository.findById.mockResolvedValue(
+        AgreementRepositoryMock.findById(),
+      );
+
+      try {
+        await service.register("123", {}, []);
+        fail("Exceção não foi lançada");
+      } catch (error) {
+        expect(error.status).toBe(HttpStatus.BAD_REQUEST);
+        expect(error.response).toEqual({
+          success: false,
+          data: null,
+          errors: ["Não foi possivel cadastrar essa licitação!"],
+        });
+      }
+    });
+
+    it("success register a new bid(send to blockchain disabled)", async () => {
+      process.env.BLOCKCHAIN_ACTIVE = "false";
+      mockUserRepository.getById.mockResolvedValue(
+        UserRepositoryMock.getById(),
+      );
+      mockAgreementRepository.findById.mockResolvedValue(
+        AgreementRepositoryMock.findById(),
+      );
+      const mockBid = BidRepositoryMock.register();
+      mockBidsRepo.register.mockResolvedValue(mockBid);
+
+      const response = await service.register("123", { add_allotment: [] }, []);
+
+      expect(response).toEqual(mockBid);
     });
   });
 });

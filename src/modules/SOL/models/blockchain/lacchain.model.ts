@@ -81,11 +81,9 @@ export class LacchainModel {
       if (axios.isAxiosError(error)) {
         this.logger.error({
           error: error.response,
+          message: "erro ao gravar dados do Bid na Lacchain",
         });
-        throw new CustomHttpException(
-          "Erro ao setar dados do Bid na Lacchain",
-          HttpStatus.BAD_GATEWAY,
-        );
+        return "FAIL_TO_SET_BID_DATA";
       }
       throw error;
     }

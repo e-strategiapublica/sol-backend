@@ -19,7 +19,7 @@ import {
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
-import { ResponseDto } from "src/shared/dtos/response.dto";
+import { ResponseDto, ResponseDtoV2 } from "src/shared/dtos/response.dto";
 import { UserController } from "./user.controller";
 import { BideRegisterDto } from "../dtos/bid-register-request.dto";
 import { BidService } from "../services/bid.service";
@@ -40,6 +40,7 @@ import { ConfigService } from "@nestjs/config";
 const path = require("path");
 import * as fs from "fs";
 import { EnviromentVariablesEnum } from "src/shared/enums/enviroment.variables.enum";
+import { BidModel } from "../models/bid.model";
 
 @ApiTags("bid")
 @Controller("bid")
@@ -66,27 +67,14 @@ export class BidController {
     @Req() request,
     @Body() dto: BideRegisterDto,
     @UploadedFiles() files: Array<Express.Multer.File>,
-    @Headers("authorization") authorizationHeader: string,
-  ) {
-    try {
-      const [bearer, token] = authorizationHeader.split(" ");
+  ): Promise<ResponseDtoV2<BidModel>> {
+    const response = await this.bidsService.register(
+      request.user.userId, // to-do: ajustar a tipagem da request
+      dto,
+      files,
+    );
 
-      const payload: JwtPayload = request.user;
-      const response = await this.bidsService.register(
-        token,
-        payload.userId,
-        dto,
-        files,
-      );
-
-      return new ResponseDto(true, response, null);
-    } catch (error) {
-      this.logger.error(error.message);
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return { data: response, success: true };
   }
 
   @Get("list")

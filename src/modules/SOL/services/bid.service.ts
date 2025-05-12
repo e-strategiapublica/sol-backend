@@ -237,7 +237,6 @@ export class BidService {
   }
 
   async register(
-    token: string,
     associationId: string,
     dto: any,
     files: Array<Express.Multer.File>,
@@ -255,9 +254,19 @@ export class BidService {
     const association = await this._userRepository.getById(associationId);
     const agreement = await this._agreementService.findById(dto.agreementId);
 
-    if (!agreement) throw new BadRequestException("Convênio não encontrado!");
-    if (!association)
-      throw new BadRequestException("Associação nao encontrada!");
+    if (!agreement) {
+      throw new CustomHttpException(
+        "Convênio não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (!association) {
+      throw new CustomHttpException(
+        "Associação nao encontrada!",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     dto.agreement = agreement;
     dto.association = association;
 
@@ -293,6 +302,14 @@ export class BidService {
       );
     });
 
+    if (!dto.add_allotment) {
+      this._logger.error("add_allotment is undefined");
+      throw new CustomHttpException(
+        "Não foi possivel cadastrar essa licitação!",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     let newArray = [];
     for (let i = 0; i < dto.add_allotment.length; i++) {
       dto.add_allotment[i].files = this._fileRepository.upload(
@@ -307,31 +324,21 @@ export class BidService {
 
     dto.add_allotment = newArray;
 
-    let newId;
-
-    if (!dto.add_allotment)
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
     dto._id = new ObjectId();
     const result = await this._bidsRepository.register(dto);
-    if (!result) {
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
-    }
 
     // Lacchain
     // The Bid was registered successfully. Register on Lacchain
 
-    newId = new ObjectId();
-    const bidHistoryId = newId.toHexString();
+    const bidHistoryId = new ObjectId().toHexString();
 
-    const data = await this.createData(dto);
-    const hash = await this.calculateHash(data);
+    const data = this.createData(dto);
+    const hash = CryptoUtil.calculateHash(data);
 
-    const sendToBlockchain = this._configService.get(Env.BLOCKCHAIN_ACTIVE);
-    if (sendToBlockchain && sendToBlockchain == "true") {
+    const sendToBlockchain = BooleanUtil.getBoolean(
+      this.configService.get(Env.BLOCKCHAIN_ACTIVE),
+    );
+    if (sendToBlockchain) {
       const txHash = await this._lacchainModel.setBidData({
         bidHistoryId,
         hash,
@@ -629,8 +636,8 @@ export class BidService {
       const newId = new ObjectId();
       const bidHistoryId = newId.toHexString();
 
-      const newData = await this.createData(bid);
-      const hash = await this.calculateHash(newData);
+      const newData = this.createData(bid);
+      const hash = CryptoUtil.calculateHash(newData);
       const sendToBlockchain = this._configService.get(Env.BLOCKCHAIN_ACTIVE);
       if (sendToBlockchain && sendToBlockchain == "true") {
         const txHash = await this._lacchainModel.setBidData({
@@ -669,8 +676,8 @@ export class BidService {
     const newId = new ObjectId();
     const bidHistoryId = newId.toHexString();
 
-    const newData = await this.createData(bid);
-    const hash = await this.calculateHash(newData);
+    const newData = this.createData(bid);
+    const hash = CryptoUtil.calculateHash(newData);
 
     const sendToBlockchain = this._configService.get(Env.BLOCKCHAIN_ACTIVE);
     if (sendToBlockchain && sendToBlockchain == "true") {
@@ -1577,9 +1584,5 @@ export class BidService {
     };
 
     return data;
-  }
-
-  calculateHash(data) {
-    return "0x" + SHA256(JSON.stringify(data)).toString(enc.Hex);
   }
 }
