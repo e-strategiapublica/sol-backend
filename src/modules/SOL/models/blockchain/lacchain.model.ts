@@ -78,7 +78,6 @@ export class LacchainModel {
           { headers: this.getHeaders() },
         ),
       );
-      console.log({ response });
       return response.data.txHash;
     } catch (error) {
       if (axios.isAxiosError(error)) {
