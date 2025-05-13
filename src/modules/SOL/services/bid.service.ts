@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { BideRegisterDto } from "../dtos/bid-register-request.dto";
 import { BidRepository } from "../repositories/bid.repository";
 import { BidModel } from "../models/bid.model";
@@ -36,7 +41,7 @@ import { ProposalModel } from "../models/proposal.model";
 import { RegistryService } from "./registry.service";
 import { RegistrySendRequestDto } from "../dtos/registry-send-request.dto";
 import { ConfigService } from "@nestjs/config";
-import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
+import { EnviromentVariablesEnum as Env } from "../../../shared/enums/enviroment.variables.enum";
 import { ProjectService } from "./project.service";
 import { AgreementInterfaceWithId } from "../interfaces/agreement.interface";
 import { MongoClient, ObjectId } from "mongodb";
@@ -46,6 +51,9 @@ import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
 import { SHA256, enc } from "crypto-js";
 import { bidStatusTranslations } from "src/shared/utils/translation.utils";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import BooleanUtil from "src/shared/utils/boolean.util";
+import CryptoUtil from "src/shared/utils/crypto.util";
 
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
@@ -58,6 +66,7 @@ export class BidService {
   private readonly _logger = new Logger(BidService.name);
 
   constructor(
+    private readonly configService: ConfigService,
     private readonly _bidsRepository: BidRepository,
     private readonly _userRepository: UserRepository,
     private readonly _allotmentRepository: AllotmentRepository,
@@ -174,8 +183,60 @@ export class BidService {
     }
   }
 
+  /**
+   * Rota não utilizada pelo frontend
+   * Quando for utilizar, tipar e alterar o response
+   */
+  async getBidData(bidId: string) {
+    const bidsHistory = await this._bidHistoryModel.listByBidId(bidId);
+    if (!bidsHistory.length) {
+      throw new CustomHttpException(
+        "A licitação não existe",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const sendToBlockchain = BooleanUtil.getBoolean(
+      this.configService.get(Env.BLOCKCHAIN_ACTIVE),
+    );
+
+    for (const bidHistory of bidsHistory) {
+      const hash = CryptoUtil.calculateHash(bidHistory.data);
+      bidHistory.hash = hash;
+
+      if (!sendToBlockchain) {
+        bidHistory.verifiedByLacchain = {
+          result: false,
+          hash: "ENV_BLOCKCHAIN_ACTIVE_IS_FALSE",
+        };
+        continue;
+      }
+
+      const bidDataOnLacchain = await this._lacchainModel.getBidData(
+        bidHistory._id.toHexString(),
+      );
+
+      // não encontrou o registro na lacchain ou existe na lacchain porém está inconsistente
+      if (!bidDataOnLacchain.exist || hash !== bidDataOnLacchain.txHash) {
+        bidHistory.verifiedByLacchain = {
+          result: false,
+          hash: bidDataOnLacchain.txHash,
+        };
+        continue;
+      }
+
+      // existe na lacchain e o hash bate
+      bidHistory.verifiedByLacchain = {
+        result: true,
+        hash,
+      };
+    }
+
+    // to-do: alterar o response quando realmente for utilizar no front-end
+    return bidsHistory;
+  }
+
   async register(
-    token: string,
     associationId: string,
     dto: any,
     files: Array<Express.Multer.File>,
@@ -193,9 +254,19 @@ export class BidService {
     const association = await this._userRepository.getById(associationId);
     const agreement = await this._agreementService.findById(dto.agreementId);
 
-    if (!agreement) throw new BadRequestException("Convênio não encontrado!");
-    if (!association)
-      throw new BadRequestException("Associação nao encontrada!");
+    if (!agreement) {
+      throw new CustomHttpException(
+        "Convênio não encontrado!",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+    if (!association) {
+      throw new CustomHttpException(
+        "Associação nao encontrada!",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
     dto.agreement = agreement;
     dto.association = association;
 
@@ -231,6 +302,14 @@ export class BidService {
       );
     });
 
+    if (!dto.add_allotment) {
+      this._logger.error("add_allotment is undefined");
+      throw new CustomHttpException(
+        "Não foi possivel cadastrar essa licitação!",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     let newArray = [];
     for (let i = 0; i < dto.add_allotment.length; i++) {
       dto.add_allotment[i].files = this._fileRepository.upload(
@@ -245,38 +324,25 @@ export class BidService {
 
     dto.add_allotment = newArray;
 
-    let newId;
-
-    if (!dto.add_allotment)
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
     dto._id = new ObjectId();
     const result = await this._bidsRepository.register(dto);
-    if (!result) {
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
-    }
 
     // Lacchain
     // The Bid was registered successfully. Register on Lacchain
 
-    newId = new ObjectId();
-    const bidHistoryId = newId.toHexString();
+    const bidHistoryId = new ObjectId().toHexString();
 
-    const data = await this.createData(dto);
-    const hash = await this.calculateHash(data);
+    const data = this.createData(dto);
+    const hash = CryptoUtil.calculateHash(data);
 
-    const sendToBlockchain = this._configService.get(
-      EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
+    const sendToBlockchain = BooleanUtil.getBoolean(
+      this.configService.get(Env.BLOCKCHAIN_ACTIVE),
     );
-    if (sendToBlockchain && sendToBlockchain == "true") {
-      const txHash = await this._lacchainModel.setBidData(
-        token,
+    if (sendToBlockchain) {
+      const txHash = await this._lacchainModel.setBidData({
         bidHistoryId,
         hash,
-      );
+      });
       await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
     }
 
@@ -570,22 +636,19 @@ export class BidService {
       const newId = new ObjectId();
       const bidHistoryId = newId.toHexString();
 
-      const newData = await this.createData(bid);
-      const hash = await this.calculateHash(newData);
-      const sendToBlockchain = this._configService.get(
-        EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
-      );
+      const newData = this.createData(bid);
+      const hash = CryptoUtil.calculateHash(newData);
+      const sendToBlockchain = this._configService.get(Env.BLOCKCHAIN_ACTIVE);
       if (sendToBlockchain && sendToBlockchain == "true") {
-        const txHash = await this._lacchainModel.setBidData(
-          token,
+        const txHash = await this._lacchainModel.setBidData({
           bidHistoryId,
           hash,
-        );
+        });
         await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
       }
 
       /*
-      const sendToBlockchain = this._configService.get<boolean>(EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE);      
+      const sendToBlockchain = this._configService.get<boolean>(Env.BLOCKCHAIN_ACTIVE);      
       if (sendToBlockchain) {
         const hash = await this._registryService.send(registry);
         this._logger.debug(`bid sended to blockchain, hash ${hash}`);
@@ -613,18 +676,15 @@ export class BidService {
     const newId = new ObjectId();
     const bidHistoryId = newId.toHexString();
 
-    const newData = await this.createData(bid);
-    const hash = await this.calculateHash(newData);
+    const newData = this.createData(bid);
+    const hash = CryptoUtil.calculateHash(newData);
 
-    const sendToBlockchain = this._configService.get(
-      EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
-    );
+    const sendToBlockchain = this._configService.get(Env.BLOCKCHAIN_ACTIVE);
     if (sendToBlockchain && sendToBlockchain == "true") {
-      const txHash = await this._lacchainModel.setBidData(
-        token,
+      const txHash = await this._lacchainModel.setBidData({
         bidHistoryId,
         hash,
-      );
+      });
       await this._bidHistoryModel.insert(bidHistoryId, newData, txHash);
     }
 
@@ -1524,9 +1584,5 @@ export class BidService {
     };
 
     return data;
-  }
-
-  calculateHash(data) {
-    return "0x" + SHA256(JSON.stringify(data)).toString(enc.Hex);
   }
 }

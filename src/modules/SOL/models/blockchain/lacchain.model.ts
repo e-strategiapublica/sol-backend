@@ -1,53 +1,95 @@
-import { Injectable, HttpStatus } from "@nestjs/common";
-import { MongoClient, ObjectId } from "mongodb";
-import { ErrorManager } from "../../../../shared/utils/error.manager";
+import { HttpStatus, Inject, Injectable, Logger, Scope } from "@nestjs/common";
+import { REQUEST } from "@nestjs/core";
 import { ConfigService } from "@nestjs/config";
 import { HttpService } from "@nestjs/axios";
+import axios from "axios";
+import { firstValueFrom } from "rxjs";
+import { EnviromentVariablesEnum as ENV } from "../../../../shared/enums/enviroment.variables.enum";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import {
+  GetBidDataResponse,
+  SetBidDataPayload,
+  SetBidDataResponse,
+} from "./types";
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class LacchainModel {
-  constructor(
-    readonly configService: ConfigService,
-    private httpService: HttpService,
-  ) {}
+  private readonly logger = new Logger(LacchainModel.name);
+  private readonly baseUrl: string;
 
-  async getBidData(_bidHistoryId: string) {
+  constructor(
+    @Inject(REQUEST) private readonly request: Request,
+    private readonly configService: ConfigService,
+    private readonly httpService: HttpService,
+  ) {
+    this.baseUrl = this.configService.get<string>(ENV.LACCHAIN_NODE_URL);
+  }
+
+  private getHeaders() {
+    const headers = this.request.headers;
+    const token = headers["authorization"];
+    return {
+      Authorization: token,
+    };
+  }
+
+  /**
+   * Obtém dados de uma licitação na blockchain
+   * @param bidHistoryId ID do histórico da licitação
+   * @returns Dados da licitação na blockchain
+   */
+  public async getBidData(bidHistoryId: string): Promise<GetBidDataResponse> {
     try {
-      const res = await this.httpService
-        .get(
-          `http://216.238.103.122:3002/api/lacchain/bid/getData/${_bidHistoryId}`,
-        )
-        .toPromise();
-      return res.data;
-    } catch (e) {
-      throw ErrorManager.createError(e);
+      const response = await firstValueFrom(
+        this.httpService.get<GetBidDataResponse>(
+          `${this.baseUrl}/api/bid/${bidHistoryId}`,
+          { headers: this.getHeaders() },
+        ),
+      );
+
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.error({
+          error: error.response,
+        });
+        throw new CustomHttpException(
+          "Erro ao buscar dados do Bid na Lacchain",
+          HttpStatus.BAD_GATEWAY,
+        );
+      }
+      throw error;
     }
   }
 
-  async setBidData(token, bidHistoryId, hash) {
+  /**
+   * Registra dados de uma licitação na blockchain
+   * @param token Token de autenticação
+   * @param bidHistoryId ID do histórico da licitação
+   * @param hash Hash dos dados da licitação
+   * @returns Hash da transação ou hash zero em caso de erro
+   */
+  public async setBidData(payload: SetBidDataPayload): Promise<string> {
     try {
-      const headers = {
-        Authorization: token,
-      };
-
-      const data = {
-        bidHistoryId: bidHistoryId,
-        hash: hash,
-      };
-
-      const res = await this.httpService
-        .post("http://216.238.103.122:3002/api/lacchain/bid/setData", data, {
-          headers,
-        })
-        .toPromise();
-
-      if (res.data["type"] == "error") {
-        return "0x0000000000000000000000000000000000000000000000000000000000000000";
+      const response = await firstValueFrom(
+        this.httpService.post<SetBidDataResponse>(
+          `${this.baseUrl}/api/bid/setData`,
+          payload,
+          { headers: this.getHeaders() },
+        ),
+      );
+      return response.data.txHash;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        this.logger.error({
+          code: error.code,
+          error_data: error.response?.data,
+          status_code: error.response?.status,
+          message: "erro ao gravar dados do Bid na Lacchain",
+        });
+        return "FAIL_TO_SET_BID_DATA_IN_LACCHAIN";
       }
-
-      return res.data;
-    } catch (e) {
-      throw ErrorManager.createError(e);
+      throw error;
     }
   }
 }

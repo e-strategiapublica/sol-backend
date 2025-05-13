@@ -20,7 +20,7 @@ export class BidRepository {
   ) {}
 
   async register(dto: BideRegisterDto): Promise<BidModel> {
-    const data = await new this._model(dto);
+    const data = new this._model(dto);
     return data.save();
   }
 
