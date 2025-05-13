@@ -4,7 +4,7 @@ import { ConfigService } from "@nestjs/config";
 import { HttpService } from "@nestjs/axios";
 import axios from "axios";
 import { firstValueFrom } from "rxjs";
-import { EnviromentVariablesEnum } from "../../../../shared/enums/enviroment.variables.enum";
+import { EnviromentVariablesEnum as ENV } from "../../../../shared/enums/enviroment.variables.enum";
 import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 import {
   GetBidDataResponse,
@@ -22,9 +22,7 @@ export class LacchainModel {
     private readonly configService: ConfigService,
     private readonly httpService: HttpService,
   ) {
-    this.baseUrl = this.configService.get<string>(
-      EnviromentVariablesEnum.LACCHAIN_NODE_URL,
-    );
+    this.baseUrl = this.configService.get<string>(ENV.LACCHAIN_NODE_URL);
   }
 
   private getHeaders() {
@@ -75,19 +73,22 @@ export class LacchainModel {
     try {
       const response = await firstValueFrom(
         this.httpService.post<SetBidDataResponse>(
-          `${this.baseUrl}/api/lacchain/bid/setData`,
+          `${this.baseUrl}/api/bid/setData`,
           payload,
           { headers: this.getHeaders() },
         ),
       );
+      console.log({ response });
       return response.data.txHash;
     } catch (error) {
       if (axios.isAxiosError(error)) {
         this.logger.error({
-          error: error.response,
+          code: error.code,
+          error_data: error.response?.data,
+          status_code: error.response?.status,
           message: "erro ao gravar dados do Bid na Lacchain",
         });
-        return "FAIL_TO_SET_BID_DATA";
+        return "FAIL_TO_SET_BID_DATA_IN_LACCHAIN";
       }
       throw error;
     }
