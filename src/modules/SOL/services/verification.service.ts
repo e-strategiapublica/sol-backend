@@ -319,12 +319,34 @@ export class VerificationService {
       new VerificationRegisterRequestDto(0, deadline, userModel, code),
     );
 
-    await this.sendVerificationEmail(
-      userModel,
-      "LACCHAIN - Primeiro Acesso",
-      "LACCHAIN - Primeiro Acesso",
-      `Olá ${user.name}, foi solicitado o código de primeiro acesso! <br> Código: <b>${verification.code.toString()}</b>`,
-    );
+    const systemName = "LACCHAIN";
+const accessLink = `${process.env.FRONTEND_URL || 'https://lacchain.com'}/primeiro-acesso?email=${encodeURIComponent(userModel.email)}`;
+const plainText = `Olá ${user.name},\n\nVocê está recebendo este e-mail para realizar o primeiro acesso ao sistema SOL.\n\nSeu código de verificação (PIN): ${code}\n\nClique no link abaixo para criar sua senha de acesso:\n${accessLink}\n\nSe você não solicitou este acesso, ignore este e-mail.\n\nAtenciosamente,\nEquipe ${systemName}`;
+const htmlContent = `
+  <div style="font-family: Arial, sans-serif; background: #f7f7f7; padding: 24px;">
+    <table width="100%" style="max-width: 480px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #00000011;">
+      <tr>
+        <td style="padding: 32px 24px 24px 24px; text-align: center;">
+          <h2 style="color: #1a237e; margin-bottom: 12px;">Olá, ${user.name}!</h2>
+          <p style="font-size: 15px; color: #333; margin-bottom: 24px;">Você está recebendo este e-mail para realizar o primeiro acesso ao sistema <b>SOL</b>.</p>
+          <div style="margin: 24px 0;">
+            <span style="display:inline-block;font-size:22px;font-weight:bold;color:#1976d2;letter-spacing:2px;padding:12px 24px;border:2px dashed #1976d2;border-radius:6px;background:#f5faff;">
+              ${code}
+            </span>
+          </div>
+          <p style="font-size: 14px; color: #444; margin-top: 24px;">Se não solicitou este acesso, ignore este e-mail.</p>
+          <p style="font-size: 13px; color: #888; margin-top: 32px;">Atenciosamente,<br>Equipe SOL</p>
+        </td>
+      </tr>
+    </table>
+  </div>
+`;
+await this.sendVerificationEmail(
+  userModel,
+  `${systemName} - Primeiro Acesso`,
+  plainText,
+  htmlContent,
+);
 
     return new VerificationRegisterResponseDto(userModel.email);
   }
