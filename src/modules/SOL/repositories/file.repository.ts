@@ -9,22 +9,29 @@ export class FileRepository {
   constructor(private readonly _configService: ConfigService) {}
 
   private sanitizeFilename(filename: string): string {
-    const base = path.basename(filename);
+    // Remove caracteres suspeitos e impede "../" e similares
+    const base = path.basename(filename); // já elimina ../
     return base.replace(/[^a-zA-Z0-9._-]/g, "_");
   }
 
-  upload(filename: string, base64: string): string {
+  private resolveAndValidatePath(filename: string): string {
     const bucketRaw = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
-    const bucket = path.resolve(bucketRaw); // Resolve uma vez
+    const bucket = path.resolve(bucketRaw);
+    const sanitized = this.sanitizeFilename(filename);
+    const fullPath = path.resolve(bucket, sanitized);
 
-    const sanitizedFilename = this.sanitizeFilename(filename);
-    const fullPath = path.resolve(bucket, sanitizedFilename);
-
-    if (!fullPath.startsWith(bucket)) {
+    // Verificação de segurança contra path traversal
+    if (!fullPath.startsWith(bucket + path.sep)) {
       throw new Error(`Invalid file path detected: ${fullPath}`);
     }
 
+    return fullPath;
+  }
+
+  upload(filename: string, base64: string): string {
+    const fullPath = this.resolveAndValidatePath(filename);
     const dir = path.dirname(fullPath);
+
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
@@ -36,16 +43,7 @@ export class FileRepository {
   }
 
   async download(filename: string): Promise<Buffer> {
-    const bucketRaw = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
-    const bucket = path.resolve(bucketRaw);
-
-    const sanitizedFilename = this.sanitizeFilename(filename);
-    const fullPath = path.resolve(bucket, sanitizedFilename);
-
-    if (!fullPath.startsWith(bucket)) {
-      throw new Error(`Invalid file path detected: ${fullPath}`);
-    }
-
+    const fullPath = this.resolveAndValidatePath(filename);
     return fs.promises.readFile(fullPath);
   }
 }
