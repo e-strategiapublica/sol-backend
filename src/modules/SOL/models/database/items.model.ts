@@ -61,7 +61,7 @@ export class ItemsModel {
     }
   }
 
-  async verifyCodeExists(item: string) {
+  async verifyCodeExists(code: number) {
     const client = new MongoClient(this.url);
 
     try {
@@ -70,7 +70,7 @@ export class ItemsModel {
       const db = client.db(this.dbName);
       const collection = db.collection(this.collection);
 
-      const res = await collection.findOne({ item });
+      const res = await collection.findOne({ code: code });
 
       if (res) {
         throw new ErrorManager(HttpStatus.BAD_REQUEST, "The code exists", 1);
