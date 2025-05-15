@@ -9,19 +9,19 @@ export class FileRepository {
   constructor(private readonly _configService: ConfigService) {}
 
   private sanitizeFilename(filename: string): string {
-    // Remove caminhos absolutos, ../, ..\, etc.
     const base = path.basename(filename);
-    return base.replace(/[^a-zA-Z0-9._-]/g, "_"); // Permite apenas caracteres seguros
+    return base.replace(/[^a-zA-Z0-9._-]/g, "_");
   }
 
   upload(filename: string, base64: string): string {
-    const bucket = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
+    const bucketRaw = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
+    const bucket = path.resolve(bucketRaw); // Resolve uma vez
+
     const sanitizedFilename = this.sanitizeFilename(filename);
     const fullPath = path.resolve(bucket, sanitizedFilename);
-    const resolvedBucket = path.resolve(bucket);
 
-    if (!fullPath.startsWith(resolvedBucket)) {
-      throw new Error("Invalid file path");
+    if (!fullPath.startsWith(bucket)) {
+      throw new Error(`Invalid file path detected: ${fullPath}`);
     }
 
     const dir = path.dirname(fullPath);
@@ -36,15 +36,16 @@ export class FileRepository {
   }
 
   async download(filename: string): Promise<Buffer> {
-    const bucket = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
+    const bucketRaw = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
+    const bucket = path.resolve(bucketRaw);
+
     const sanitizedFilename = this.sanitizeFilename(filename);
     const fullPath = path.resolve(bucket, sanitizedFilename);
-    const resolvedBucket = path.resolve(bucket);
 
-    if (!fullPath.startsWith(resolvedBucket)) {
-      throw new Error("Invalid file path");
+    if (!fullPath.startsWith(bucket)) {
+      throw new Error(`Invalid file path detected: ${fullPath}`);
     }
 
-    return await fs.promises.readFile(fullPath);
+    return fs.promises.readFile(fullPath);
   }
 }
