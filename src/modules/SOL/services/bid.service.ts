@@ -199,6 +199,33 @@ export class BidService {
     dto.agreement = agreement;
     dto.association = association;
 
+    // Verificar se é um rascunho e preencher campos vazios com valores padrão
+    const isDraft = dto.status === BidStatusEnum.draft;
+    if (isDraft) {
+      // Preencher campos obrigatórios com valores padrão se estiverem vazios
+      dto.start_at = dto.start_at || new Date().toISOString().split('T')[0];
+      dto.end_at = dto.end_at || new Date().toISOString().split('T')[0];
+      dto.days_to_delivery = dto.days_to_delivery || "0";
+      dto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
+      dto.local_to_delivery = dto.local_to_delivery || "A definir";
+      dto.bid_type = dto.bid_type || "individualPrice";
+      dto.modality = dto.modality || "closedInvite";
+      dto.classification = dto.classification || "A definir";
+      dto.state = dto.state || "São Paulo";
+      dto.city = dto.city || "São Paulo";
+      dto.aditional_site = dto.aditional_site || "";
+
+      // Garantir que add_allotment seja um array válido
+      if (!dto.add_allotment) {
+        dto.add_allotment = [];
+      }
+
+      // Garantir que invited_suppliers seja um array válido
+      if (!dto.invited_suppliers) {
+        dto.invited_suppliers = [];
+      }
+    }
+
     const now = new Date();
 
     if (dto.editalFile) {
@@ -232,96 +259,176 @@ export class BidService {
     });
 
     let newArray = [];
-    for (let i = 0; i < dto.add_allotment.length; i++) {
-      dto.add_allotment[i].files = this._fileRepository.upload(
-        `product_${new Date().getTime()}.pdf`,
-        dto.add_allotment[i].files,
-      );
-      dto.add_allotment[i].status = AllotmentStatusEnum.rascunho;
-      newArray.push(
-        await this._allotmentRepository.register(dto.add_allotment[i]),
-      );
+    // Garantir que add_allotment seja sempre um array válido
+    if (!dto.add_allotment) {
+      dto.add_allotment = [];
     }
 
-    dto.add_allotment = newArray;
-
-    let newId;
-
-    if (!dto.add_allotment)
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
-    dto._id = new ObjectId();
-    const result = await this._bidsRepository.register(dto);
-    if (!result) {
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa licitação!",
-      );
-    }
-
-    // Lacchain
-    // The Bid was registered successfully. Register on Lacchain
-
-    newId = new ObjectId();
-    const bidHistoryId = newId.toHexString();
-
-    const data = await this.createData(dto);
-    const hash = await this.calculateHash(data);
-
-    const sendToBlockchain = this._configService.get(
-      EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
-    );
-    if (sendToBlockchain && sendToBlockchain == "true") {
-      const txHash = await this._lacchainModel.setBidData(
-        token,
-        bidHistoryId,
-        hash,
-      );
-      await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
-    }
-
-    const obj = {
-      title: `Convite para licitação de número ${dto.bid_count}`,
-      description: dto.description,
-      from_user: associationId,
-      to_user: ["aaa"],
-      deleted: false,
-      bid_id: result._id,
-    };
-    await this._notificationService.registerForRealese(
-      result.agreement.manager?._id.toString(),
-      result.association?._id.toString(),
-      result._id.toString(),
-    );
-
-    if (dto.modality === BidModalityEnum.openClosed) {
-      const listSuppliers = await this._supplierService.list();
-
-      const suppliers = listSuppliers
-        .filter((item) => !item.blocked)
-        .map((ele) => ele._id?.toString() as string);
-      for (let j = 0; j < suppliers.length; j++) {
-        await this._notificationService.registerByBidCreation(
-          suppliers[j],
-          obj,
+    try {
+      // Verificar se há lotes e se não é um rascunho vazio
+      if (dto.add_allotment && dto.add_allotment.length > 0) {
+        for (let i = 0; i < dto.add_allotment.length; i++) {
+          // Verificar se o lote tem os campos mínimos necessários
+          if (isDraft) {
+            // Preencher campos obrigatórios do lote para rascunhos
+            dto.add_allotment[i].allotment_name = dto.add_allotment[i].allotment_name || 'Lote Rascunho';
+            dto.add_allotment[i].days_to_delivery = dto.add_allotment[i].days_to_delivery || '0';
+            dto.add_allotment[i].place_to_delivery = dto.add_allotment[i].place_to_delivery || 'A definir';
+            dto.add_allotment[i].quantity = dto.add_allotment[i].quantity || '0';
+            
+            // Garantir que add_item seja um array válido
+            if (!dto.add_allotment[i].add_item) {
+              dto.add_allotment[i].add_item = [];
+            }
+          }
+          
+          // Verificar se o lote tem arquivos antes de tentar fazer upload
+          if (dto.add_allotment[i].files) {
+            try {
+              dto.add_allotment[i].files = this._fileRepository.upload(
+                `product_${new Date().getTime()}.pdf`,
+                dto.add_allotment[i].files,
+              );
+            } catch (error) {
+              this._logger.error(`Erro ao fazer upload do arquivo do lote: ${error.message}`);
+              // Se for rascunho, continuar mesmo com erro no upload
+              if (dto.status !== BidStatusEnum.draft) {
+                throw error;
+              }
+              // Para rascunhos, remover o arquivo com erro
+              dto.add_allotment[i].files = null;
+            }
+          }
+          
+          dto.add_allotment[i].status = AllotmentStatusEnum.rascunho;
+          
+          try {
+            const registeredAllotment = await this._allotmentRepository.register(dto.add_allotment[i]);
+            newArray.push(registeredAllotment);
+          } catch (error) {
+            this._logger.error(`Erro ao registrar lote: ${error.message}`);
+            // Se for rascunho, continuar mesmo com erro no registro
+            if (dto.status !== BidStatusEnum.draft) {
+              throw error;
+            }
+            // Para rascunhos, ignorar o lote com erro e continuar
+            this._logger.warn(`Ignorando lote com erro para rascunho: ${error.message}`);
+          }
+        }
+        dto.add_allotment = newArray;
+      } else if (dto.status === BidStatusEnum.draft) {
+        // Para rascunhos, permitir array vazio de lotes
+        dto.add_allotment = [];
+      } else {
+        // Para licitações finais, exigir lotes
+        throw new BadRequestException(
+          "Não foi possível cadastrar essa licitação! É necessário adicionar pelo menos um lote.",
         );
       }
-      return result;
-    } else {
-      if (result.invited_suppliers.length)
-        for (let j = 0; j < result.invited_suppliers.length; j++) {
-          await this._notificationService.registerByBidCreation(
-            result.invited_suppliers[j]?.id,
-            obj,
+    } catch (error) {
+      // Se for rascunho, ignorar erros relacionados aos lotes
+      if (dto.status !== BidStatusEnum.draft) {
+        throw error;
+      }
+      this._logger.warn(`Erro ignorado ao processar lotes para rascunho: ${error.message}`);
+      // Garantir que add_allotment seja um array vazio para rascunhos com erro
+      dto.add_allotment = [];
+    }
+
+    dto._id = new ObjectId();
+
+    try {
+      const result = await this._bidsRepository.register(dto);
+      if (!result) {
+        throw new BadRequestException(
+          "Não foi possivel cadastrar essa licitação!",
+        );
+      }
+
+      // Lacchain
+      // The Bid was registered successfully. Register on Lacchain
+      const newId = new ObjectId();
+      const bidHistoryId = newId.toHexString();
+
+      // Para rascunhos, pular a parte do blockchain para evitar erros
+      if (dto.status !== BidStatusEnum.draft) {
+        try {
+          const data = await this.createData(dto);
+          const hash = await this.calculateHash(data);
+
+          const sendToBlockchain = this._configService.get(
+            EnviromentVariablesEnum.BLOCKCHAIN_ACTIVE,
           );
+          if (sendToBlockchain && sendToBlockchain == "true") {
+            const txHash = await this._lacchainModel.setBidData(
+              token,
+              bidHistoryId,
+              hash,
+            );
+            await this._bidHistoryModel.insert(bidHistoryId, data, txHash);
+          }
+        } catch (blockchainError) {
+          // Registrar o erro, mas não falhar o processo para licitações finais
+          this._logger.error(`Erro ao processar blockchain: ${blockchainError.message}`);
         }
+      }
+
+      const obj = {
+        title: `Convite para licitação de número ${dto.bid_count}`,
+        description: dto.description,
+        from_user: associationId,
+        to_user: ["aaa"],
+        deleted: false,
+        bid_id: result._id,
+      };
+
+      // Apenas enviar notificações se não for rascunho
+      if (dto.status !== BidStatusEnum.draft) {
+        try {
+          await this._notificationService.registerForRealese(
+            result.agreement.manager?._id.toString(),
+            result.association?._id.toString(),
+            result._id.toString(),
+          );
+
+          if (dto.modality === BidModalityEnum.openClosed) {
+            const listSuppliers = await this._supplierService.list();
+
+            const suppliers = listSuppliers
+              .filter((item) => !item.blocked)
+              .map((ele) => ele._id?.toString() as string);
+            for (let j = 0; j < suppliers.length; j++) {
+              await this._notificationService.registerByBidCreation(
+                suppliers[j],
+                obj,
+              );
+            }
+          } else if (result.invited_suppliers && result.invited_suppliers.length > 0) {
+            for (let j = 0; j < result.invited_suppliers.length; j++) {
+              await this._notificationService.registerByBidCreation(
+                result.invited_suppliers[j]?.id,
+                obj,
+              );
+            }
+          }
+        } catch (notificationError) {
+          this._logger.error(`Erro ao enviar notificações: ${notificationError.message}`);
+          // Não falhar o registro da licitação por causa de erros nas notificações
+        }
+      }
 
       return result;
+    } catch (error) {
+      this._logger.error(`Erro ao registrar licitação: ${error.message}`);
+      throw new BadRequestException(
+        `Não foi possivel cadastrar essa licitação: ${error.message}`,
+      );
     }
   }
 
   async findAgreementByReviewerOrManagerId(_id: string): Promise<BidModel[]> {
     const agreements =
+// ... (rest of the code remains the same)
       await this._agreementService.findAgreementByReviewerOrManagerId(_id);
     const results: BidModel[] = [];
     for (let i = 0; i < agreements.length; i++) {
@@ -1511,22 +1618,39 @@ export class BidService {
   }
 
   createData(dto) {
-    const data = {
-      bidId: dto._id.toHexString(),
-      description: dto.description,
-      agreement: dto.agreement._id.toHexString(),
-      classification: dto.classification,
-      bid_type: dto.bid_type,
-      state: dto.state,
-      city: dto.city,
-      association: dto.association._id.toHexString(),
-      status: dto.status,
-    };
-
-    return data;
+    try {
+      // Verificar se as propriedades existem antes de acessá-las
+      const data = {
+        bidId: dto._id?.toHexString() || new ObjectId().toHexString(),
+        description: dto.description || 'Rascunho de licitação',
+        agreement: dto.agreement?._id?.toHexString() || 'sem_convenio',
+        classification: dto.classification || 'Sem classificação',
+        bid_type: dto.bid_type || 'individualPrice',
+        state: dto.state || 'Não informado',
+        city: dto.city || 'Não informado',
+        association: dto.association?._id?.toHexString() || 'sem_associacao',
+        status: dto.status || BidStatusEnum.draft,
+      };
+      
+      return data;
+    } catch (error) {
+      this._logger.error(`Erro ao criar dados para blockchain: ${error.message}`);
+      // Retornar dados mínimos em caso de erro
+      return {
+        bidId: new ObjectId().toHexString(),
+        description: 'Erro ao processar dados',
+        status: BidStatusEnum.draft,
+      };
+    }
   }
 
   calculateHash(data) {
-    return "0x" + SHA256(JSON.stringify(data)).toString(enc.Hex);
+    try {
+      return "0x" + SHA256(JSON.stringify(data)).toString(enc.Hex);
+    } catch (error) {
+      this._logger.error(`Erro ao calcular hash: ${error.message}`);
+      // Retornar um hash padrão em caso de erro
+      return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    }
   }
 }

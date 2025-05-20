@@ -35,6 +35,9 @@ import { BidDateUpdateDto } from "../dtos/bid-date-update.dto";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { BidStatusEnum } from "../enums/bid-status.enum";
+import { BidTypeEnum } from "../enums/bid-type.enum";
+import { BidModalityEnum } from "../enums/bid-modality.enum";
 import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 const path = require("path");
@@ -70,8 +73,30 @@ export class BidController {
   ) {
     try {
       const [bearer, token] = authorizationHeader.split(" ");
-
       const payload: JwtPayload = request.user;
+      
+      // Verificar se é um rascunho e tratar campos obrigatórios
+      if (dto.status === BidStatusEnum.draft) {
+        this.logger.log('Processando requisição de rascunho de licitação');
+        
+        // Garantir que campos obrigatórios tenham valores padrão
+        dto.start_at = dto.start_at || new Date().toISOString().split('T')[0];
+        dto.end_at = dto.end_at || new Date().toISOString().split('T')[0];
+        dto.days_to_delivery = dto.days_to_delivery || "0";
+        dto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
+        dto.local_to_delivery = dto.local_to_delivery || "A definir";
+        dto.bid_type = dto.bid_type || BidTypeEnum.individualPrice;
+        dto.modality = dto.modality || BidModalityEnum.closedInvite;
+        dto.classification = dto.classification || "A definir";
+        dto.state = dto.state || "São Paulo";
+        dto.city = dto.city || "São Paulo";
+        dto.aditional_site = dto.aditional_site || "";
+        
+        // Garantir que arrays sejam inicializados
+        if (!dto.add_allotment) dto.add_allotment = [];
+        if (!dto.invited_suppliers) dto.invited_suppliers = [];
+      }
+      
       const response = await this.bidsService.register(
         token,
         payload.userId,
@@ -81,7 +106,42 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error(`Erro ao registrar licitação: ${error.message}`);
+      this.logger.error(`Stack: ${error.stack}`);
+      
+      // Verificar se é um erro de validação e se é um rascunho
+      if (dto && dto.status === BidStatusEnum.draft) {
+        this.logger.warn('Erro ao salvar rascunho, mas tentando continuar...');
+        try {
+          // Tentar novamente com menos campos
+          const simplifiedDto = {
+            ...dto,
+            add_allotment: [],
+            invited_suppliers: [],
+            additionalDocuments: [],
+          };
+          
+          // Obter novamente o token e payload
+          const [bearer, retryToken] = authorizationHeader.split(" ");
+          const retryPayload: JwtPayload = request.user;
+          
+          const response = await this.bidsService.register(
+            retryToken,
+            retryPayload.userId,
+            simplifiedDto,
+            [],
+          );
+          
+          return new ResponseDto(true, response, null);
+        } catch (retryError) {
+          this.logger.error(`Erro na segunda tentativa: ${retryError.message}`);
+          throw new HttpException(
+            new ResponseDto(false, null, [retryError.message]),
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
+      
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST,
