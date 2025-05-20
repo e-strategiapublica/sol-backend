@@ -78,7 +78,7 @@ export class BidController {
 
       // Log para depuração
       if (dto.status === BidStatusEnum.draft) {
-        this.logger.log('Processando requisição de rascunho de licitação');
+        this.logger.log("Processando requisição de rascunho de licitação");
       }
 
       // Delegar toda a responsabilidade de tratamento para o serviço
@@ -95,10 +95,13 @@ export class BidController {
       this.logger.error(`Erro ao registrar licitação: ${error.message}`);
 
       // Melhorar a mensagem de erro para o frontend
-      const errorMessage = error.message || 'Erro interno ao processar a licitação';
-      const statusCode = error instanceof BadRequestException ? 
-        HttpStatus.BAD_REQUEST : HttpStatus.INTERNAL_SERVER_ERROR;
-      
+      const errorMessage =
+        error.message || "Erro interno ao processar a licitação";
+      const statusCode =
+        error instanceof BadRequestException
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+
       throw new HttpException(
         new ResponseDto(false, null, [errorMessage]),
         statusCode,

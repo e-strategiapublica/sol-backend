@@ -1653,11 +1653,11 @@ export class BidService {
    * @returns DTO com campos preenchidos para rascunho
    */
   prepareDraftFields(dto: BideRegisterDto): BideRegisterDto {
-    this._logger.log('Preparando campos para rascunho');
-    
+    this._logger.log("Preparando campos para rascunho");
+
     // Criar uma cópia do DTO para evitar problemas de tipagem
     const draftDto = { ...dto } as any;
-    
+
     // Preencher campos obrigatórios com valores padrão se estiverem vazios
     draftDto.start_at = dto.start_at || new Date().toISOString().split("T")[0];
     draftDto.end_at = dto.end_at || new Date().toISOString().split("T")[0];
@@ -1683,13 +1683,13 @@ export class BidService {
     // Verificar e preparar cada lote
     if (draftDto.add_allotment && draftDto.add_allotment.length > 0) {
       for (let i = 0; i < draftDto.add_allotment.length; i++) {
-        draftDto.add_allotment[i].allotment_name = 
+        draftDto.add_allotment[i].allotment_name =
           draftDto.add_allotment[i].allotment_name || "Lote Rascunho";
-        draftDto.add_allotment[i].days_to_delivery = 
+        draftDto.add_allotment[i].days_to_delivery =
           draftDto.add_allotment[i].days_to_delivery || "0";
-        draftDto.add_allotment[i].place_to_delivery = 
+        draftDto.add_allotment[i].place_to_delivery =
           draftDto.add_allotment[i].place_to_delivery || "A definir";
-        draftDto.add_allotment[i].quantity = 
+        draftDto.add_allotment[i].quantity =
           draftDto.add_allotment[i].quantity || "0";
 
         // Garantir que add_item seja um array válido
@@ -1709,30 +1709,30 @@ export class BidService {
    */
   validateRequiredFields(dto: BideRegisterDto): void {
     const requiredFields = [
-      'description',
-      'start_at',
-      'end_at',
-      'days_to_delivery',
-      'local_to_delivery',
-      'bid_type',
-      'modality',
-      'classification',
-      'state',
-      'city'
+      "description",
+      "start_at",
+      "end_at",
+      "days_to_delivery",
+      "local_to_delivery",
+      "bid_type",
+      "modality",
+      "classification",
+      "state",
+      "city",
     ];
 
-    const missingFields = requiredFields.filter(field => !dto[field]);
+    const missingFields = requiredFields.filter((field) => !dto[field]);
 
     if (missingFields.length > 0) {
       throw new BadRequestException(
-        `Campos obrigatórios ausentes: ${missingFields.join(', ')}`
+        `Campos obrigatórios ausentes: ${missingFields.join(", ")}`,
       );
     }
 
     // Verificar se há pelo menos um lote para licitações não-rascunho
     if (!dto.add_allotment || dto.add_allotment.length === 0) {
       throw new BadRequestException(
-        "Não foi possível cadastrar essa licitação! É necessário adicionar pelo menos um lote."
+        "Não foi possível cadastrar essa licitação! É necessário adicionar pelo menos um lote.",
       );
     }
   }
