@@ -74,14 +74,14 @@ export class BidController {
     try {
       const [bearer, token] = authorizationHeader.split(" ");
       const payload: JwtPayload = request.user;
-      
+
       // Verificar se é um rascunho e tratar campos obrigatórios
       if (dto.status === BidStatusEnum.draft) {
-        this.logger.log('Processando requisição de rascunho de licitação');
-        
+        this.logger.log("Processando requisição de rascunho de licitação");
+
         // Garantir que campos obrigatórios tenham valores padrão
-        dto.start_at = dto.start_at || new Date().toISOString().split('T')[0];
-        dto.end_at = dto.end_at || new Date().toISOString().split('T')[0];
+        dto.start_at = dto.start_at || new Date().toISOString().split("T")[0];
+        dto.end_at = dto.end_at || new Date().toISOString().split("T")[0];
         dto.days_to_delivery = dto.days_to_delivery || "0";
         dto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
         dto.local_to_delivery = dto.local_to_delivery || "A definir";
@@ -91,12 +91,12 @@ export class BidController {
         dto.state = dto.state || "São Paulo";
         dto.city = dto.city || "São Paulo";
         dto.aditional_site = dto.aditional_site || "";
-        
+
         // Garantir que arrays sejam inicializados
         if (!dto.add_allotment) dto.add_allotment = [];
         if (!dto.invited_suppliers) dto.invited_suppliers = [];
       }
-      
+
       const response = await this.bidsService.register(
         token,
         payload.userId,
@@ -108,10 +108,10 @@ export class BidController {
     } catch (error) {
       this.logger.error(`Erro ao registrar licitação: ${error.message}`);
       this.logger.error(`Stack: ${error.stack}`);
-      
+
       // Verificar se é um erro de validação e se é um rascunho
       if (dto && dto.status === BidStatusEnum.draft) {
-        this.logger.warn('Erro ao salvar rascunho, mas tentando continuar...');
+        this.logger.warn("Erro ao salvar rascunho, mas tentando continuar...");
         try {
           // Tentar novamente com menos campos
           const simplifiedDto = {
@@ -120,18 +120,18 @@ export class BidController {
             invited_suppliers: [],
             additionalDocuments: [],
           };
-          
+
           // Obter novamente o token e payload
           const [bearer, retryToken] = authorizationHeader.split(" ");
           const retryPayload: JwtPayload = request.user;
-          
+
           const response = await this.bidsService.register(
             retryToken,
             retryPayload.userId,
             simplifiedDto,
             [],
           );
-          
+
           return new ResponseDto(true, response, null);
         } catch (retryError) {
           this.logger.error(`Erro na segunda tentativa: ${retryError.message}`);
@@ -141,7 +141,7 @@ export class BidController {
           );
         }
       }
-      
+
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST,

@@ -203,8 +203,8 @@ export class BidService {
     const isDraft = dto.status === BidStatusEnum.draft;
     if (isDraft) {
       // Preencher campos obrigatórios com valores padrão se estiverem vazios
-      dto.start_at = dto.start_at || new Date().toISOString().split('T')[0];
-      dto.end_at = dto.end_at || new Date().toISOString().split('T')[0];
+      dto.start_at = dto.start_at || new Date().toISOString().split("T")[0];
+      dto.end_at = dto.end_at || new Date().toISOString().split("T")[0];
       dto.days_to_delivery = dto.days_to_delivery || "0";
       dto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
       dto.local_to_delivery = dto.local_to_delivery || "A definir";
@@ -271,17 +271,21 @@ export class BidService {
           // Verificar se o lote tem os campos mínimos necessários
           if (isDraft) {
             // Preencher campos obrigatórios do lote para rascunhos
-            dto.add_allotment[i].allotment_name = dto.add_allotment[i].allotment_name || 'Lote Rascunho';
-            dto.add_allotment[i].days_to_delivery = dto.add_allotment[i].days_to_delivery || '0';
-            dto.add_allotment[i].place_to_delivery = dto.add_allotment[i].place_to_delivery || 'A definir';
-            dto.add_allotment[i].quantity = dto.add_allotment[i].quantity || '0';
-            
+            dto.add_allotment[i].allotment_name =
+              dto.add_allotment[i].allotment_name || "Lote Rascunho";
+            dto.add_allotment[i].days_to_delivery =
+              dto.add_allotment[i].days_to_delivery || "0";
+            dto.add_allotment[i].place_to_delivery =
+              dto.add_allotment[i].place_to_delivery || "A definir";
+            dto.add_allotment[i].quantity =
+              dto.add_allotment[i].quantity || "0";
+
             // Garantir que add_item seja um array válido
             if (!dto.add_allotment[i].add_item) {
               dto.add_allotment[i].add_item = [];
             }
           }
-          
+
           // Verificar se o lote tem arquivos antes de tentar fazer upload
           if (dto.add_allotment[i].files) {
             try {
@@ -290,7 +294,9 @@ export class BidService {
                 dto.add_allotment[i].files,
               );
             } catch (error) {
-              this._logger.error(`Erro ao fazer upload do arquivo do lote: ${error.message}`);
+              this._logger.error(
+                `Erro ao fazer upload do arquivo do lote: ${error.message}`,
+              );
               // Se for rascunho, continuar mesmo com erro no upload
               if (dto.status !== BidStatusEnum.draft) {
                 throw error;
@@ -299,11 +305,12 @@ export class BidService {
               dto.add_allotment[i].files = null;
             }
           }
-          
+
           dto.add_allotment[i].status = AllotmentStatusEnum.rascunho;
-          
+
           try {
-            const registeredAllotment = await this._allotmentRepository.register(dto.add_allotment[i]);
+            const registeredAllotment =
+              await this._allotmentRepository.register(dto.add_allotment[i]);
             newArray.push(registeredAllotment);
           } catch (error) {
             this._logger.error(`Erro ao registrar lote: ${error.message}`);
@@ -312,7 +319,9 @@ export class BidService {
               throw error;
             }
             // Para rascunhos, ignorar o lote com erro e continuar
-            this._logger.warn(`Ignorando lote com erro para rascunho: ${error.message}`);
+            this._logger.warn(
+              `Ignorando lote com erro para rascunho: ${error.message}`,
+            );
           }
         }
         dto.add_allotment = newArray;
@@ -330,7 +339,9 @@ export class BidService {
       if (dto.status !== BidStatusEnum.draft) {
         throw error;
       }
-      this._logger.warn(`Erro ignorado ao processar lotes para rascunho: ${error.message}`);
+      this._logger.warn(
+        `Erro ignorado ao processar lotes para rascunho: ${error.message}`,
+      );
       // Garantir que add_allotment seja um array vazio para rascunhos com erro
       dto.add_allotment = [];
     }
@@ -369,7 +380,9 @@ export class BidService {
           }
         } catch (blockchainError) {
           // Registrar o erro, mas não falhar o processo para licitações finais
-          this._logger.error(`Erro ao processar blockchain: ${blockchainError.message}`);
+          this._logger.error(
+            `Erro ao processar blockchain: ${blockchainError.message}`,
+          );
         }
       }
 
@@ -403,7 +416,10 @@ export class BidService {
                 obj,
               );
             }
-          } else if (result.invited_suppliers && result.invited_suppliers.length > 0) {
+          } else if (
+            result.invited_suppliers &&
+            result.invited_suppliers.length > 0
+          ) {
             for (let j = 0; j < result.invited_suppliers.length; j++) {
               await this._notificationService.registerByBidCreation(
                 result.invited_suppliers[j]?.id,
@@ -412,7 +428,9 @@ export class BidService {
             }
           }
         } catch (notificationError) {
-          this._logger.error(`Erro ao enviar notificações: ${notificationError.message}`);
+          this._logger.error(
+            `Erro ao enviar notificações: ${notificationError.message}`,
+          );
           // Não falhar o registro da licitação por causa de erros nas notificações
         }
       }
@@ -428,7 +446,7 @@ export class BidService {
 
   async findAgreementByReviewerOrManagerId(_id: string): Promise<BidModel[]> {
     const agreements =
-// ... (rest of the code remains the same)
+      // ... (rest of the code remains the same)
       await this._agreementService.findAgreementByReviewerOrManagerId(_id);
     const results: BidModel[] = [];
     for (let i = 0; i < agreements.length; i++) {
@@ -1622,23 +1640,25 @@ export class BidService {
       // Verificar se as propriedades existem antes de acessá-las
       const data = {
         bidId: dto._id?.toHexString() || new ObjectId().toHexString(),
-        description: dto.description || 'Rascunho de licitação',
-        agreement: dto.agreement?._id?.toHexString() || 'sem_convenio',
-        classification: dto.classification || 'Sem classificação',
-        bid_type: dto.bid_type || 'individualPrice',
-        state: dto.state || 'Não informado',
-        city: dto.city || 'Não informado',
-        association: dto.association?._id?.toHexString() || 'sem_associacao',
+        description: dto.description || "Rascunho de licitação",
+        agreement: dto.agreement?._id?.toHexString() || "sem_convenio",
+        classification: dto.classification || "Sem classificação",
+        bid_type: dto.bid_type || "individualPrice",
+        state: dto.state || "Não informado",
+        city: dto.city || "Não informado",
+        association: dto.association?._id?.toHexString() || "sem_associacao",
         status: dto.status || BidStatusEnum.draft,
       };
-      
+
       return data;
     } catch (error) {
-      this._logger.error(`Erro ao criar dados para blockchain: ${error.message}`);
+      this._logger.error(
+        `Erro ao criar dados para blockchain: ${error.message}`,
+      );
       // Retornar dados mínimos em caso de erro
       return {
         bidId: new ObjectId().toHexString(),
-        description: 'Erro ao processar dados',
+        description: "Erro ao processar dados",
         status: BidStatusEnum.draft,
       };
     }
