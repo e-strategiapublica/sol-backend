@@ -199,33 +199,6 @@ export class BidService {
     dto.agreement = agreement;
     dto.association = association;
 
-    // Verificar se é um rascunho e preencher campos vazios com valores padrão
-    const isDraft = dto.status === BidStatusEnum.draft;
-    if (isDraft) {
-      // Preencher campos obrigatórios com valores padrão se estiverem vazios
-      dto.start_at = dto.start_at || new Date().toISOString().split("T")[0];
-      dto.end_at = dto.end_at || new Date().toISOString().split("T")[0];
-      dto.days_to_delivery = dto.days_to_delivery || "0";
-      dto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
-      dto.local_to_delivery = dto.local_to_delivery || "A definir";
-      dto.bid_type = dto.bid_type || "individualPrice";
-      dto.modality = dto.modality || "closedInvite";
-      dto.classification = dto.classification || "A definir";
-      dto.state = dto.state || "São Paulo";
-      dto.city = dto.city || "São Paulo";
-      dto.aditional_site = dto.aditional_site || "";
-
-      // Garantir que add_allotment seja um array válido
-      if (!dto.add_allotment) {
-        dto.add_allotment = [];
-      }
-
-      // Garantir que invited_suppliers seja um array válido
-      if (!dto.invited_suppliers) {
-        dto.invited_suppliers = [];
-      }
-    }
-
     const now = new Date();
 
     if (dto.editalFile) {
@@ -269,7 +242,7 @@ export class BidService {
       if (dto.add_allotment && dto.add_allotment.length > 0) {
         for (let i = 0; i < dto.add_allotment.length; i++) {
           // Verificar se o lote tem os campos mínimos necessários
-          if (isDraft) {
+          if (dto.status === BidStatusEnum.draft) {
             // Preencher campos obrigatórios do lote para rascunhos
             dto.add_allotment[i].allotment_name =
               dto.add_allotment[i].allotment_name || "Lote Rascunho";
@@ -1671,6 +1644,96 @@ export class BidService {
       this._logger.error(`Erro ao calcular hash: ${error.message}`);
       // Retornar um hash padrão em caso de erro
       return "0x0000000000000000000000000000000000000000000000000000000000000000";
+    }
+  }
+
+  /**
+   * Prepara os campos do DTO para um rascunho, preenchendo valores padrão para campos obrigatórios
+   * @param dto DTO da licitação
+   * @returns DTO com campos preenchidos para rascunho
+   */
+  prepareDraftFields(dto: BideRegisterDto): BideRegisterDto {
+    this._logger.log('Preparando campos para rascunho');
+    
+    // Criar uma cópia do DTO para evitar problemas de tipagem
+    const draftDto = { ...dto } as any;
+    
+    // Preencher campos obrigatórios com valores padrão se estiverem vazios
+    draftDto.start_at = dto.start_at || new Date().toISOString().split("T")[0];
+    draftDto.end_at = dto.end_at || new Date().toISOString().split("T")[0];
+    draftDto.days_to_delivery = dto.days_to_delivery || "0";
+    draftDto.days_to_tiebreaker = dto.days_to_tiebreaker || "0";
+    draftDto.local_to_delivery = dto.local_to_delivery || "A definir";
+    draftDto.bid_type = dto.bid_type || "individualPrice";
+    draftDto.modality = dto.modality || "closedInvite";
+    draftDto.classification = dto.classification || "A definir";
+    draftDto.state = dto.state || "São Paulo";
+    draftDto.city = dto.city || "São Paulo";
+    draftDto.aditional_site = dto.aditional_site || "";
+
+    // Garantir que arrays sejam inicializados
+    if (!draftDto.add_allotment) {
+      draftDto.add_allotment = [];
+    }
+
+    if (!draftDto.invited_suppliers) {
+      draftDto.invited_suppliers = [];
+    }
+
+    // Verificar e preparar cada lote
+    if (draftDto.add_allotment && draftDto.add_allotment.length > 0) {
+      for (let i = 0; i < draftDto.add_allotment.length; i++) {
+        draftDto.add_allotment[i].allotment_name = 
+          draftDto.add_allotment[i].allotment_name || "Lote Rascunho";
+        draftDto.add_allotment[i].days_to_delivery = 
+          draftDto.add_allotment[i].days_to_delivery || "0";
+        draftDto.add_allotment[i].place_to_delivery = 
+          draftDto.add_allotment[i].place_to_delivery || "A definir";
+        draftDto.add_allotment[i].quantity = 
+          draftDto.add_allotment[i].quantity || "0";
+
+        // Garantir que add_item seja um array válido
+        if (!draftDto.add_allotment[i].add_item) {
+          draftDto.add_allotment[i].add_item = [];
+        }
+      }
+    }
+
+    return draftDto as BideRegisterDto;
+  }
+
+  /**
+   * Valida os campos obrigatórios para licitações não-rascunho
+   * @param dto DTO da licitação
+   * @throws BadRequestException se campos obrigatórios estiverem faltando
+   */
+  validateRequiredFields(dto: BideRegisterDto): void {
+    const requiredFields = [
+      'description',
+      'start_at',
+      'end_at',
+      'days_to_delivery',
+      'local_to_delivery',
+      'bid_type',
+      'modality',
+      'classification',
+      'state',
+      'city'
+    ];
+
+    const missingFields = requiredFields.filter(field => !dto[field]);
+
+    if (missingFields.length > 0) {
+      throw new BadRequestException(
+        `Campos obrigatórios ausentes: ${missingFields.join(', ')}`
+      );
+    }
+
+    // Verificar se há pelo menos um lote para licitações não-rascunho
+    if (!dto.add_allotment || dto.add_allotment.length === 0) {
+      throw new BadRequestException(
+        "Não foi possível cadastrar essa licitação! É necessário adicionar pelo menos um lote."
+      );
     }
   }
 }
