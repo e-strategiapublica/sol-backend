@@ -169,7 +169,9 @@ export class EndPointsService {
     }
     */
     // Registrando mensagem de desativação no log
-    this._logger.warn("Funcionalidade de Integração temporariamente desativada");
+    this._logger.warn(
+      "Funcionalidade de Integração temporariamente desativada",
+    );
     // Não retornamos nada para manter a compatibilidade com o tipo Promise<void>
     return;
   }
@@ -180,9 +182,11 @@ export class EndPointsService {
     // Pode ser reativada no futuro removendo os comentários abaixo.
     const endpoints = await this.endpointsRepository.list();
     if (endpoints.length > 0) {
-      this._logger.warn("Integração está desativada. Os jobs não serão inicializados.");
+      this._logger.warn(
+        "Integração está desativada. Os jobs não serão inicializados.",
+      );
     }
-    
+
     // Comentando a inicialização dos jobs
     /*
     endpoints.forEach((endpoint) => {
