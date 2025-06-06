@@ -38,6 +38,12 @@ then filling-in the values in `.env`.
 
 This file is the single source of truth for environment variables. It is read by `docker compose` (by default), and is then inherited by the containers. That is: the database, which reads some of its values by default and in its init scripts, but also the Nest modules.
 
+## 🔒 Segurança e Criptografia
+
+A criptografia simétrica baseada em `crypto-js` foi removida do backend. Toda comunicação entre sistemas ocorre em texto puro/JSON, protegida exclusivamente por HTTPS.
+
+O uso de `crypto-js` permanece **apenas** para operações de hash SHA256 (ex: geração de IDs), nunca para criptografia de tráfego.
+
 ## Documentação
 
 After starting the server at a port `PORT`, access the generated Swagger documentation at <http://localhost:PORT/docs>.
