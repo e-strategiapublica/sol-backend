@@ -8,7 +8,6 @@ import {
 import { Observable } from "rxjs";
 import { ResponseDto } from "../dtos/response.dto";
 
-
 export class EncryptInterceptor implements NestInterceptor {
   intercept(
     context: ExecutionContext,
