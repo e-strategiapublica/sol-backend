@@ -1,12 +1,19 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { ModelContractRepository } from "../repositories/model-contract.repository";
 import { ModelContractRegisterDto } from "../dtos/model-contract-register-request.dto";
 import { ModelContractUpdateDto } from "../dtos/model-contract-update-request.dto";
 import { BidRepository } from "../repositories/bid.repository";
 import { ModelContractModel } from "../models/model-contract.model";
 import { BidModel } from "../models/bid.model";
+import sanitizeFilename from "sanitize-filename";
 import * as fs from "fs";
 import * as path from "path";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class ModelContractService {
@@ -19,7 +26,13 @@ export class ModelContractService {
   ) {}
 
   private getDocumentFilePath(filename: string): string {
-    return `${this.documentsPath}/${filename}`;
+    const sanitizedFilename = sanitizeFilename(filename);
+    const fullPath = path.resolve(this.documentsPath, sanitizedFilename);
+    if (!fullPath.startsWith(this.documentsPath)) {
+      this._logger.error({ full_path: fullPath }, "invalid file path");
+      throw new CustomHttpException("", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return fullPath;
   }
 
   async register(
