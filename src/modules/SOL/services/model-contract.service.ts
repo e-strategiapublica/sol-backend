@@ -51,7 +51,8 @@ export class ModelContractService {
       );
     }
 
-    fs.writeFileSync(this.getDocumentFilePath(file.originalname), file.buffer);
+    const filePath = this.getDocumentFilePath(file.originalname);
+    fs.writeFileSync(filePath, file.buffer);
 
     dto.contract = file.originalname;
 
@@ -90,7 +91,8 @@ export class ModelContractService {
       fs.unlinkSync(this.documentsPath);
     }
 
-    fs.writeFileSync(this.getDocumentFilePath(file.originalname), file.buffer);
+    const filePath = this.getDocumentFilePath(file.originalname);
+    fs.writeFileSync(filePath, file.buffer);
 
     dto.contract = file.originalname;
 
