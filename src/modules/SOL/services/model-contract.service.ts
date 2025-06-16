@@ -5,17 +5,22 @@ import { ModelContractUpdateDto } from "../dtos/model-contract-update-request.dt
 import { BidRepository } from "../repositories/bid.repository";
 import { ModelContractModel } from "../models/model-contract.model";
 import { BidModel } from "../models/bid.model";
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
 @Injectable()
 export class ModelContractService {
   private readonly _logger = new Logger(ModelContractService.name);
+  private readonly documentsPath = path.resolve("src/shared/documents");
 
   constructor(
     private readonly _modelContractRepository: ModelContractRepository,
     private readonly _bidsRepository: BidRepository,
   ) {}
+
+  private getDocumentFilePath(filename: string): string {
+    return `${this.documentsPath}/${filename}`;
+  }
 
   async register(
     dto: ModelContractRegisterDto,
@@ -33,10 +38,7 @@ export class ModelContractService {
       );
     }
 
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", file.originalname),
-      file.buffer,
-    );
+    fs.writeFileSync(this.getDocumentFilePath(file.originalname), file.buffer);
 
     dto.contract = file.originalname;
 
@@ -71,14 +73,11 @@ export class ModelContractService {
           "Já existe um modelo de contrato cadastrado com essas informações!",
         );
     }
+    if (fs.existsSync(this.documentsPath)) {
+      fs.unlinkSync(this.documentsPath);
+    }
 
-    if (fs.existsSync(path.resolve("src/shared/documents", dto.contract)))
-      await fs.unlinkSync(path.resolve("src/shared/documents", dto.contract));
-
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", file.originalname),
-      file.buffer,
-    );
+    fs.writeFileSync(this.getDocumentFilePath(file.originalname), file.buffer);
 
     dto.contract = file.originalname;
 
