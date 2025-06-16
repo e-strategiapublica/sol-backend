@@ -1,21 +1,39 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { ModelContractRepository } from "../repositories/model-contract.repository";
 import { ModelContractRegisterDto } from "../dtos/model-contract-register-request.dto";
 import { ModelContractUpdateDto } from "../dtos/model-contract-update-request.dto";
 import { BidRepository } from "../repositories/bid.repository";
 import { ModelContractModel } from "../models/model-contract.model";
 import { BidModel } from "../models/bid.model";
-const fs = require("fs");
-const path = require("path");
+import sanitizeFilename from "sanitize-filename";
+import * as fs from "fs";
+import * as path from "path";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @Injectable()
 export class ModelContractService {
   private readonly _logger = new Logger(ModelContractService.name);
+  private readonly documentsPath = path.resolve("src/shared/documents");
 
   constructor(
     private readonly _modelContractRepository: ModelContractRepository,
     private readonly _bidsRepository: BidRepository,
   ) {}
+
+  private getDocumentFilePath(filename: string): string {
+    const sanitizedFilename = sanitizeFilename(filename);
+    const fullPath = path.resolve(this.documentsPath, sanitizedFilename);
+    if (!fullPath.startsWith(this.documentsPath)) {
+      this._logger.error({ full_path: fullPath }, "invalid file path");
+      throw new CustomHttpException("", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    return fullPath;
+  }
 
   async register(
     dto: ModelContractRegisterDto,
@@ -33,10 +51,8 @@ export class ModelContractService {
       );
     }
 
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", file.originalname),
-      file.buffer,
-    );
+    const filePath = this.getDocumentFilePath(file.originalname);
+    fs.writeFileSync(filePath, file.buffer);
 
     dto.contract = file.originalname;
 
@@ -71,14 +87,12 @@ export class ModelContractService {
           "Já existe um modelo de contrato cadastrado com essas informações!",
         );
     }
+    if (fs.existsSync(this.documentsPath)) {
+      fs.unlinkSync(this.documentsPath);
+    }
 
-    if (fs.existsSync(path.resolve("src/shared/documents", dto.contract)))
-      await fs.unlinkSync(path.resolve("src/shared/documents", dto.contract));
-
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", file.originalname),
-      file.buffer,
-    );
+    const filePath = this.getDocumentFilePath(file.originalname);
+    fs.writeFileSync(filePath, file.buffer);
 
     dto.contract = file.originalname;
 
