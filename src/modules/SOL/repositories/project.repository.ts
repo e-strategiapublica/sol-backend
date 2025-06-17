@@ -6,6 +6,7 @@ import { Project } from "../schemas/project.schema";
 import { ProjectModel } from "../models/project.model";
 import { ProjectRegisterRequestDto } from "../dtos/project-register-request.dto";
 import { ProjectInterfaceWithId } from "../interfaces/project.interface";
+import { getValidObjectId } from "../utils/strings.utl";
 
 @Injectable()
 export class ProjectRepository {
@@ -16,7 +17,7 @@ export class ProjectRepository {
   async findById(id: string): Promise<ProjectModel> {
     return await (
       await this._model
-        .findOne({ _id: id })
+        .findOne({ _id: getValidObjectId(id) })
         .populate("project_manager")
         .populate("viewer_list")
     ).populate("reviewer_list");
