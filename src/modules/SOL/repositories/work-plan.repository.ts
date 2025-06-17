@@ -2,9 +2,9 @@ import { Injectable } from "@nestjs/common";
 import { WorkPlan } from "../schemas/work-plan.schema";
 import { WorkPlanModel } from "../models/work-plan.model";
 import { InjectModel } from "@nestjs/mongoose";
-import mongoose, { Model } from "mongoose";
+import { Model } from "mongoose";
 import { WorkPlanInterface } from "../interfaces/agreement.interface";
-import { MongoClient } from "mongodb";
+import { getValidObjectId } from "../utils/strings.utl";
 
 @Injectable()
 export class WorkPlanRepository {
@@ -16,28 +16,19 @@ export class WorkPlanRepository {
     @InjectModel(WorkPlan.name) private readonly _model: Model<WorkPlanModel>,
   ) {}
 
-  private getValidObjectId(_id: string) {
-    if (!mongoose.Types.ObjectId.isValid(_id)) {
-      throw new Error("Invalid ID");
-    }
-    return _id;
-  }
-
   async findById(id: string): Promise<WorkPlanModel> {
-    return await this._model
-      .findOne({ _id: this.getValidObjectId(id) })
-      .populate({
-        path: "product",
-        populate: {
-          path: "items",
-          model: "Items",
-        },
-      });
+    return await this._model.findOne({ _id: getValidObjectId(id) }).populate({
+      path: "product",
+      populate: {
+        path: "items",
+        model: "Items",
+      },
+    });
   }
 
   async deleteById(id: string): Promise<WorkPlanModel> {
     return await this._model.findByIdAndDelete({
-      _id: this.getValidObjectId(id),
+      _id: getValidObjectId(id),
     });
   }
 
@@ -67,7 +58,7 @@ export class WorkPlanRepository {
 
   async update(id: string, dto: WorkPlanInterface): Promise<WorkPlanModel> {
     return await this._model.findByIdAndUpdate(
-      { _id: this.getValidObjectId(id) },
+      { _id: getValidObjectId(id) },
       { $set: { ...dto } },
       { new: true },
     );
