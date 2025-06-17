@@ -74,7 +74,7 @@ export class UserRepository {
     return await this._model.find({ roles: role });
   }
   async register(dto: UserRegisterRequestDto): Promise<UserModel> {
-    const existUser = await this._model.findOne({ email: dto.email });
+    const existUser = await this._model.findOne({ email: { $eq: dto.email } });
     if (existUser) return existUser;
     const newUser = new this._model(dto);
     return newUser.save();
