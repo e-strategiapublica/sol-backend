@@ -8,6 +8,7 @@ import { SupplierUpdateStatusDto } from "../dtos/supplier-update-status-request.
 import { SupplierGroupIdUpdateDto } from "../dtos/supplier-group-id-update.dto";
 import { NotificationInterface } from "../interfaces/notification.interface";
 import { SupplierRegisterBlockRequestDto } from "../dtos/supplier-register-block-request.dt";
+import { getValidObjectId } from "../utils/strings.utl";
 
 @Injectable()
 export class SupplierRepository {
@@ -16,7 +17,7 @@ export class SupplierRepository {
   ) {}
 
   async register(dto: SupplierRegisterDto): Promise<SupplierModel> {
-    const data = await new this._model(dto);
+    const data = new this._model(dto);
     return data.save();
   }
 
@@ -26,7 +27,9 @@ export class SupplierRepository {
   }
 
   async listById(_id: string): Promise<SupplierModel> {
-    const data = await this._model.findOne({ _id }).populate("categories");
+    const data = await this._model
+      .findOne({ _id: getValidObjectId(_id) })
+      .populate("categories");
     return data;
   }
 
@@ -35,7 +38,7 @@ export class SupplierRepository {
     dto: NotificationInterface,
   ): Promise<SupplierModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       {
         $push: {
           notification_list: dto,
@@ -49,7 +52,7 @@ export class SupplierRepository {
     dto: SupplierRegisterDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       { $set: dto },
       { new: true },
     );
@@ -61,7 +64,7 @@ export class SupplierRepository {
     dto: SupplierUpdateStatusDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       {
         $set: {
           blocked: dto.blocked,
@@ -78,7 +81,7 @@ export class SupplierRepository {
     dto: SupplierGroupIdUpdateDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       {
         $push: {
           group_id: dto.group_id,
@@ -94,7 +97,7 @@ export class SupplierRepository {
     dto: SupplierGroupIdUpdateDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       {
         $pull: {
           group_id: dto.group_id,
@@ -106,7 +109,7 @@ export class SupplierRepository {
   }
 
   async deleteById(_id: string) {
-    return await this._model.findOneAndDelete({ _id });
+    return await this._model.findOneAndDelete({ _id: getValidObjectId(_id) });
   }
 
   async block(
@@ -114,7 +117,7 @@ export class SupplierRepository {
     dto: SupplierRegisterBlockRequestDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id: supplierId },
+      { _id: getValidObjectId(supplierId) },
       {
         $set: {
           blocked: true,
@@ -131,7 +134,7 @@ export class SupplierRepository {
     dto: SupplierRegisterBlockRequestDto,
   ): Promise<SupplierModel> {
     const data = await this._model.findByIdAndUpdate(
-      { _id: supplierId },
+      { _id: getValidObjectId(supplierId) },
       {
         $set: {
           blocked: false,
