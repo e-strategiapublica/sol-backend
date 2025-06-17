@@ -221,16 +221,16 @@ export class UserService {
     return new UserUpdateResponseDto(user.id, user.email);
   }
 
-  async updateProfilePicture(
-    _id: string,
-    profilePicture: string,
-  ): Promise<UserUpdateProfilePictureResponseDto> {
-    const userModel = await this._userRepository.updateProfilePicture(
-      _id,
-      profilePicture,
-    );
-    return new UserUpdateProfilePictureResponseDto(userModel.profilePicture);
-  }
+  // async updateProfilePicture(
+  //   _id: string,
+  //   profilePicture: string,
+  // ): Promise<UserUpdateProfilePictureResponseDto> {
+  //   const userModel = await this._userRepository.updateProfilePicture(
+  //     _id,
+  //     profilePicture,
+  //   );
+  //   return new UserUpdateProfilePictureResponseDto(userModel.profilePicture);
+  // }
 
   async listByType(type: UserTypeEnum): Promise<UserListByTypeResponseDto[]> {
     const list = await this._userRepository.listByType(type);

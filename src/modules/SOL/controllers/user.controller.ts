@@ -417,23 +417,23 @@ export class UserController {
     }
   }
 
-  @Put("update-profile-picture")
-  @HttpCode(200)
-  async updateProfilePicture(@Body() dto: UserUpdateProfilePictureRequestDto) {
-    try {
-      const profilePicture = await this.userService.updateProfilePicture(
-        dto.userId,
-        dto.profilePicture,
-      );
+  // @Put("update-profile-picture")
+  // @HttpCode(200)
+  // async updateProfilePicture(@Body() dto: UserUpdateProfilePictureRequestDto) {
+  //   try {
+  //     const profilePicture = await this.userService.updateProfilePicture(
+  //       dto.userId,
+  //       dto.profilePicture,
+  //     );
 
-      return new ResponseDto(true, profilePicture, null);
-    } catch (error) {
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
+  //     return new ResponseDto(true, profilePicture, null);
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       new ResponseDto(false, null, [error.message]),
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  // }
 
   @Delete("delete-by-id/:_id")
   @HttpCode(200)
