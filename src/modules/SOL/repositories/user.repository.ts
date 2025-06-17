@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import mongoose, { Model } from "mongoose";
 import { User } from "../schemas/user.schema";
 import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
 import { UserUpdatePasswordRequestDto } from "../dtos/user-update-password-request.dto";
@@ -40,22 +40,31 @@ export class UserRepository {
     return await this._model.find();
   }
 
+  private getValidObjectId(_id: string) {
+    if (!mongoose.Types.ObjectId.isValid(_id)) {
+      throw new Error("Invalid ID");
+    }
+    return _id;
+  }
+
   async getById(_id: string): Promise<UserModel> {
     return await this._model
-      .findById({ _id })
+      .findById({ _id: this.getValidObjectId(_id) })
       .populate("association")
       .populate("supplier");
   }
 
   async getByIdPopulate(_id: string): Promise<UserModel> {
     return await this._model
-      .findById({ _id })
+      .findById({ _id: this.getValidObjectId(_id) })
       .populate("association")
       .populate("supplier");
   }
 
   async getUserBySupplierId(_id: string): Promise<UserModel[]> {
-    return await this._model.find({ supplier: _id }).populate("association");
+    return await this._model
+      .find({ supplier: this.getValidObjectId(_id) })
+      .populate("association");
   }
 
   async listByType(type: UserTypeEnum): Promise<UserModel[]> {
@@ -65,21 +74,17 @@ export class UserRepository {
     return await this._model.find({ roles: role });
   }
   async register(dto: UserRegisterRequestDto): Promise<UserModel> {
-    const client = new MongoClient(this.url);
-    await client.connect();
-    const db = client.db(this.dbName);
-    const collection = db.collection(this.collection);
-    const res = await collection.findOne({ email: dto.email });
-    await client.close();
-
-    if (!res) {
-      const data = await new this._model(dto);
-      return data.save();
-    }
+    const existUser = await this._model.findOne({ email: { $eq: dto.email } });
+    if (existUser) return existUser;
+    const newUser = new this._model(dto);
+    return newUser.save();
   }
 
   async updatePassword(_id: string, password: string): Promise<UserModel> {
-    return this._model.findOneAndUpdate({ _id }, { password });
+    return this._model.findOneAndUpdate(
+      { _id: this.getValidObjectId(_id) },
+      { password },
+    );
   }
 
   async updateNotifications(
@@ -87,7 +92,7 @@ export class UserRepository {
     dto: NotificationInterface,
   ): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $push: {
           notification_list: dto,
@@ -98,7 +103,7 @@ export class UserRepository {
 
   async update(_id: string, dto: UserUpdateRequestDto): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $set: {
           name: dto.name,
@@ -112,7 +117,7 @@ export class UserRepository {
     dto: UserUpdateByIdRequestDto,
   ): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $set: {
           email: dto.email,
@@ -134,7 +139,7 @@ export class UserRepository {
     refreshToken: string | null,
   ): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $set: {
           refreshToken,
@@ -148,7 +153,7 @@ export class UserRepository {
     dto: UserRegisterPasswordRequestDto,
   ): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $set: {
           password: dto.password,
@@ -160,7 +165,7 @@ export class UserRepository {
 
   async updateStatus(_id: string, status: UserStatusEnum): Promise<UserModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: this.getValidObjectId(_id) },
       {
         $set: {
           status,
@@ -185,21 +190,23 @@ export class UserRepository {
     });
   }
 
-  async updateProfilePicture(
-    _id: string,
-    profilePicture: string,
-  ): Promise<UserModel> {
-    return await this._model.findOneAndUpdate(
-      { _id },
-      {
-        $set: {
-          profilePicture,
-        },
-      },
-    );
-  }
+  // async updateProfilePicture(
+  //   _id: string,
+  //   profilePicture: string,
+  // ): Promise<UserModel> {
+  //   return await this._model.findOneAndUpdate(
+  //     {_id: this.getValidObjectId(_id)},
+  //     {
+  //       $set: {
+  //         profilePicture,
+  //       },
+  //     },
+  //   );
+  // }
 
   async deleteById(_id: string) {
-    return await this._model.findOneAndDelete({ _id });
+    return await this._model.findOneAndDelete({
+      _id: this.getValidObjectId(_id),
+    });
   }
 }
