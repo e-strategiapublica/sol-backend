@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "assets": [
+      {
+        "include": "shared/documents/*.py"
+      }
+    ]
+  }
+}

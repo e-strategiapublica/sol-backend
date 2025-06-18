@@ -4,6 +4,7 @@ import { Model } from "mongoose";
 import { Products } from "../schemas/product.schema";
 import { ProductModel } from "../models/product.model";
 import { ProductRegisterDto } from "../dtos/product-register-request.dto";
+import { getValidObjectId } from "../utils/strings.utl";
 
 @Injectable()
 export class ProductRepository {
@@ -12,13 +13,13 @@ export class ProductRepository {
   ) {}
 
   async register(dto: ProductRegisterDto): Promise<any> {
-    const data = await new this._model(dto);
+    const data = new this._model(dto);
     return data.save();
   }
 
   async update(_id: string, dto: ProductRegisterDto): Promise<ProductModel> {
     return await this._model.findOneAndUpdate(
-      { _id },
+      { _id: getValidObjectId(_id) },
       {
         $set: {
           product_name: dto.product_name,
@@ -34,7 +35,7 @@ export class ProductRepository {
   }
 
   async getById(_id: string): Promise<ProductModel> {
-    return await this._model.findOne({ _id });
+    return await this._model.findOne({ _id: getValidObjectId(_id) });
   }
 
   async getByIdentifier(identifier: number): Promise<ProductModel> {
@@ -42,7 +43,7 @@ export class ProductRepository {
   }
 
   async deleteById(_id: string) {
-    return await this._model.findByIdAndDelete({ _id });
+    return await this._model.findByIdAndDelete({ _id: getValidObjectId(_id) });
   }
 
   async getByName(product_name: string): Promise<ProductModel> {

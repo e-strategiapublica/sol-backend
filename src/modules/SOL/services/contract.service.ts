@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import {
+  BadRequestException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from "@nestjs/common";
 import { ContractRepository } from "../repositories/contract.repository";
 import { ContractModel } from "../models/contract.model";
 import { ContractRegisterDto } from "../dtos/contract-register-request.dto";
@@ -23,6 +28,9 @@ import { LanguageContractEnum } from "../enums/language-contract.enum";
 import { ModelContractClassificationEnum } from "../enums/modelContract-classification.enum";
 import { ProposalModel } from "../models/proposal.model";
 import { AgreementRepository } from "../repositories/agreement.repository";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import { ErrorMessages } from "src/shared/utils/error-model-document-messages.util";
+
 // import * as docxConverter from 'docx-pdf';
 // import * as temp from 'temp';
 const PizZip = require("pizzip");
@@ -708,41 +716,68 @@ export class ContractService {
     _id: string,
     lang: string = LanguageContractEnum.english,
     type: ModelContractClassificationEnum,
-  ): Promise<any> {
-    const modelContract =
-      await this._modelContractRepository.getByContractAndLanguage(lang, type);
+  ): Promise<Buffer> {
+    const logger = new Logger("DocumentGenerator");
 
-    if (!modelContract) throw new Error("Modelo de documento não encontrado");
-
-    const content = fs.readFileSync(
-      path.resolve("src/shared/documents", modelContract.contract),
-      "binary",
+    logger.log(
+      `Iniciando criação de documento - ID: ${_id}, language: ${lang}, type: ${type}`,
     );
 
-    const zip = new PizZip(content);
+    const modelContract =
+      await this._modelContractRepository.getByContractAndLanguage(lang, type);
+    logger.log(
+      `Resultado da busca pelo modelo: ${modelContract?.contract || "Nenhum modelo encontrado"}`,
+    );
 
+    if (!modelContract) {
+      logger.error(
+        `Modelo de documento não encontrado para language=${lang}, type=${type}`,
+      );
+      throw new CustomHttpException(
+        "Modelo de documento não encontrado",
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const modelPath = path.resolve(
+      "src/shared/documents",
+      modelContract.contract,
+    );
+    logger.log(`Caminho do modelo a ser carregado: ${modelPath}`);
+
+    // Verifique se o arquivo do modelo existe
+    if (!fs.existsSync(modelPath)) {
+      throw new Error(ErrorMessages.FILE_NOT_CREATED_OR_MISSING[lang]);
+    }
+
+    const content = fs.readFileSync(modelPath, "binary");
+
+    const zip = new PizZip(content);
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
     });
 
+    logger.log("Modelo carregado e parser iniciado");
+
     const contract = await this._contractRepository.getById(_id);
+    logger.log(`Contrato carregado: ${contract?._id?.toString()}`);
 
     const proposalArray = await this._proposalRepository.listByBid(
       contract.bid_number._id.toString(),
     );
+    logger.log(`Propostas carregadas: ${proposalArray?.length}`);
 
     let allotment: AllotmentModel[] = [];
-
     contract.proposal_id.forEach((proposal) => {
       proposal.allotment.forEach((allot) => {
         allotment.push(allot);
       });
     });
+    logger.log(`Lotes extraídos: ${allotment.length}`);
 
-    let listOfItems: any[] = [];
-
-    listOfItems = await this.costItensGet(allotment, proposalArray);
+    const listOfItems = await this.costItensGet(allotment, proposalArray);
+    logger.log(`Itens de custo carregados: ${listOfItems.length}`);
 
     let signature = "Assinado eletronicamente pela: ";
     let yes = "Sim";
@@ -758,17 +793,15 @@ export class ContractService {
         yes = "Sí";
         no = "No";
         break;
-      case LanguageContractEnum.portuguese:
-        signature = "Assinado eletronicamente pela: ";
-        yes = "Sim";
-        no = "Não";
-        break;
       case LanguageContractEnum.french:
         signature = "Signé électroniquement par: ";
         yes = "Oui";
         no = "Non";
         break;
-      default:
+      case LanguageContractEnum.portuguese:
+        signature = "Assinado eletrônico pela: ";
+        yes = "Sim";
+        no = "Nao";
         break;
     }
 
@@ -806,6 +839,10 @@ export class ContractService {
               moment(contract.createdAt).format("YYYY"),
           });
         });
+
+    logger.log(
+      `Lista de preços das propostas montada: ${listOfBidPrices.length}`,
+    );
 
     doc.render({
       process_description: contract.bid_number.description,
@@ -914,26 +951,31 @@ export class ContractService {
         ) || 0,
     });
 
+    logger.log("Documento renderizado com sucesso");
+
     const buf = doc.getZip().generate({ type: "nodebuffer" });
 
-    await fs.writeFileSync(
-      path.resolve("src/shared/documents", "output.docx"),
-      buf,
-    );
+    const outputPath = path.resolve("src/shared/documents", "output.docx");
+    logger.log(`Salvando documento temporário em: ${outputPath}`);
+
+    fs.writeFileSync(outputPath, buf);
 
     await this.callPythonFile()
-      .then(async () => {
-        fs.unlinkSync(path.resolve("src/shared/documents", "output.docx"));
-
-        return;
+      .then(() => {
+        logger.log(
+          "Documento convertido com sucesso via Python, excluindo temporário",
+        );
+        fs.unlinkSync(outputPath);
       })
       .catch((err) => {
-        console.log(err);
-        throw new BadRequestException(
+        logger.error("Erro ao converter o arquivo via Python:", err);
+        throw new CustomHttpException(
           "Erro ao converter o arquivo, verifique se o python está instalado e se o caminho está correto",
+          HttpStatus.INTERNAL_SERVER_ERROR,
         );
       });
 
+    logger.log("Criação de documento finalizada com sucesso");
     return buf;
   }
 
@@ -959,14 +1001,17 @@ export class ContractService {
     proposal?: ProposalModel[],
   ): Promise<any[]> {
     let listOfItems = [];
+
     for (let allot of allotment) {
-      let el = proposal.find((proposal) =>
+      let el = proposal?.find((proposal) =>
         proposal.allotment.find(
           (all) => all._id.toString() === allot._id.toString(),
         ),
       );
+
       let price = 0;
       let quantity = 0;
+
       if (el) {
         price = +el?.total_value || 0;
         quantity = +el.allotment
@@ -977,10 +1022,14 @@ export class ContractService {
       }
 
       for (let item of allot.add_item) {
+        console.log("Processando item:", item.item);
+
         const costItems = await this._costItemsService.getByName(item.item);
+        console.log("Resultado de getByName:", costItems);
+
         listOfItems.push({
-          code: costItems.code || item.group,
           name: item.item,
+          code: costItems?.code || item.group,
           classification: costItems?.category?.segment || "Sem classificação",
           specification: item.specification || "Sem especificação",
           quantity: item.quantity,
@@ -993,6 +1042,7 @@ export class ContractService {
       }
     }
 
+    console.log("Itens de custo finais:", JSON.stringify(listOfItems, null, 2));
     return listOfItems;
   }
 

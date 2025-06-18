@@ -65,8 +65,8 @@ export class ModelContractRepository {
     classification: ModelContractClassificationEnum,
   ): Promise<ModelContractModel> {
     return await this._model.findOne({
-      classification: classification,
-      language: lang,
+      classification: classification.toString(),
+      language: lang.toString(),
     });
   }
 }
