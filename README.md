@@ -121,3 +121,19 @@ $ npm run test:e2e:watch
 $ npm run test:e2e:cov
 
 ```
+
+# Disclaimer
+
+Durante a varredura automatizada de segurança com ferramentas como GitGuardian e CodeQL, foram identificados alertas relacionados à presença de secrets (como chaves de API ou credenciais) no código.
+
+Após análise, esclarecemos que nenhum segredo ativo está presente no repositório. Todos os apontamentos referem-se a chaves expiradas ou revogadas, não mais utilizadas no projeto, ou exemplos de configuração ou placeholders genéricos, como chaves de bibliotecas públicas (ex: AWS, Firebase), utilizadas apenas em testes ou documentação.
+
+Não há necessidade de reescrever o histórico do Git, uma vez que os dados referenciados não representam risco de segurança atual, já que não estão vinculados a ambientes de produção.
+
+Melhorias contínuas estão sendo adotadas, como:
+
+- Utilização exclusiva de variáveis de ambiente em ambientes sensíveis.
+- Monitoramento contínuo com ferramentas de análise estática.
+- Adoção de boas práticas de versionamento seguro.
+
+Nos comprometemos a manter os mais altos padrões de segurança no desenvolvimento, garantindo que nenhum segredo sensível esteja acessível em nossos repositórios públicos ou privados.
