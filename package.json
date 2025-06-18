@@ -39,7 +39,7 @@
     "cheerio": "^1.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
-    "cron": "^3.5.0",
+    "cron": "^4.3.1",
     "custom-soffice-to-pdf": "^1.0.0",
     "date-fns": "^4.1.0",
     "docx-pdf": "^0.0.1",
