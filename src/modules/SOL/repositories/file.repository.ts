@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as fs from "fs";
 import * as path from "path";
@@ -7,6 +7,11 @@ import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variab
 export class FileRepository {
   private bucketPath: string;
   private readonly _logger = new Logger(FileRepository.name);
+  private readonly _configService: ConfigService;
+
+  constructor(configService: ConfigService) {
+    this._configService = configService;
+  }
   private sanitizeFilename(filename: string): string {
     // Remove caracteres suspeitos e impede "../" e similares
     const base = path.basename(filename); // já elimina ../
