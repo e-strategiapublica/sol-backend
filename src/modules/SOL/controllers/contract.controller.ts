@@ -26,6 +26,8 @@ import { ContractUpdateStatusItemDto } from "../dtos/contract-update-status-item
 import { Response } from "express";
 const path = require("path");
 import * as fs from "fs";
+import { ModelContractClassificationEnum } from "../enums/modelContract-classification.enum";
+import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
 
 @ApiTags("contract")
 @Controller("contract")
@@ -270,27 +272,40 @@ export class ContractController {
     @Param("type") type: string,
     @Res() res: Response,
   ) {
-    try {
-      await this.contractService.createDocument(_id, language, type as any);
-      res.sendFile(
-        path.resolve("src/shared/documents", "output.pdf"),
-        {},
-        (err) => {
-          if (err) {
-            throw new HttpException(
-              new ResponseDto(false, null, [err.message]),
-              HttpStatus.BAD_REQUEST,
-            );
-          }
-          fs.unlinkSync(path.resolve("src/shared/documents", "output.pdf"));
-        },
-      );
-    } catch (error) {
-      this.logger.error(error.message);
-      throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    this.logger.log(
+      `[INÍCIO] Geração de documento: _id=${_id}, language=${language}, type=${type}`,
+    );
+
+    this.logger.log(`[CHAMADA] contractService.createDocument`);
+    await this.contractService.createDocument(
+      _id,
+      language,
+      type as ModelContractClassificationEnum,
+    );
+    this.logger.log(`[OK] Documento gerado com sucesso`);
+
+    const filePath = path.resolve("src/shared/documents", "output.pdf");
+    this.logger.log(`[ENVIO] Tentando enviar o arquivo: ${filePath}`);
+
+    res.sendFile(filePath, {}, (err) => {
+      if (err) {
+        this.logger.error(`[ERRO] Falha no envio do arquivo: ${err.message}`);
+        throw new CustomHttpException(
+          "Falha no envio do arquivo",
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      }
+
+      this.logger.log(`[SUCESSO] Arquivo enviado com sucesso: ${filePath}`);
+
+      try {
+        fs.unlinkSync(filePath);
+        this.logger.log(`[LIMPEZA] Arquivo deletado após envio: ${filePath}`);
+      } catch (unlinkErr) {
+        this.logger.error(
+          `[ERRO] Falha ao deletar o arquivo: ${unlinkErr.message}`,
+        );
+      }
+    });
   }
 }

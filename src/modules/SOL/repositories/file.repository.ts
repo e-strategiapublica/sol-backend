@@ -3,11 +3,10 @@ import { ConfigService } from "@nestjs/config";
 import * as fs from "fs";
 import * as path from "path";
 import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
-
 @Injectable()
 export class FileRepository {
-  constructor(private readonly _configService: ConfigService) {}
-
+  private bucketPath: string;
+  private readonly _logger = new Logger(FileRepository.name);
   private sanitizeFilename(filename: string): string {
     // Remove caracteres suspeitos e impede "../" e similares
     const base = path.basename(filename); // já elimina ../
@@ -24,7 +23,6 @@ export class FileRepository {
     if (!fullPath.startsWith(bucket + path.sep)) {
       throw new Error(`Invalid file path detected: ${fullPath}`);
     }
-
     return fullPath;
   }
 

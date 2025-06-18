@@ -4,7 +4,7 @@ import { WorkPlanModel } from "../models/work-plan.model";
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { WorkPlanInterface } from "../interfaces/agreement.interface";
-import { MongoClient } from "mongodb";
+import { getValidObjectId } from "../utils/strings.utl";
 
 @Injectable()
 export class WorkPlanRepository {
@@ -17,7 +17,7 @@ export class WorkPlanRepository {
   ) {}
 
   async findById(id: string): Promise<WorkPlanModel> {
-    return await this._model.findOne({ _id: id }).populate({
+    return await this._model.findOne({ _id: getValidObjectId(id) }).populate({
       path: "product",
       populate: {
         path: "items",
@@ -27,7 +27,9 @@ export class WorkPlanRepository {
   }
 
   async deleteById(id: string): Promise<WorkPlanModel> {
-    return await this._model.findByIdAndDelete({ _id: id });
+    return await this._model.findByIdAndDelete({
+      _id: getValidObjectId(id),
+    });
   }
 
   async register(dto: any): Promise<any> {
@@ -56,7 +58,7 @@ export class WorkPlanRepository {
 
   async update(id: string, dto: WorkPlanInterface): Promise<WorkPlanModel> {
     return await this._model.findByIdAndUpdate(
-      { _id: id },
+      { _id: getValidObjectId(id) },
       { $set: { ...dto } },
       { new: true },
     );

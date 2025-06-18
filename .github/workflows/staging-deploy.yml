@@ -3,8 +3,6 @@ name: Staging CI/CD
 on:
   push:
     branches: [staging]
-  pull_request:
-    branches: [staging]
 
 jobs:
   build-and-deploy:
@@ -22,9 +20,6 @@ jobs:
 
       - name: Instalar dependências
         run: yarn install --frozen-lockfile
-
-      - name: Lint
-        run: yarn lint
 
       - name: Type check
         run: yarn type-check

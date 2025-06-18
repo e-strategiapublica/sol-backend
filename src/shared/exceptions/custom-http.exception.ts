@@ -3,11 +3,12 @@ import { ResponseDtoV2 } from "../dtos/response.dto";
 
 export class CustomHttpException extends HttpException {
   constructor(
-    errors: string[] | string,
+    errors: string | string[],
     status: HttpStatus = HttpStatus.BAD_REQUEST,
   ) {
-    const normalizedErrors = Array.isArray(errors) ? errors : [errors];
-
+    const normalizedErrors: string[] = Array.isArray(errors)
+      ? errors
+      : [errors];
     const response: ResponseDtoV2<null> = {
       success: false,
       data: null,
