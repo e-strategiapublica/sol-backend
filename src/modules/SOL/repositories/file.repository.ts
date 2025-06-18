@@ -14,7 +14,9 @@ export class FileRepository {
   }
 
   private resolveAndValidatePath(filename: string): string {
-    const bucketRaw = this._configService.get<string>(EnviromentVariablesEnum.BUCKET);
+    const bucketRaw = this._configService.get<string>(
+      EnviromentVariablesEnum.BUCKET,
+    );
     const bucket = path.resolve(bucketRaw);
     const sanitized = this.sanitizeFilename(filename);
     const fullPath = path.resolve(bucket, sanitized);

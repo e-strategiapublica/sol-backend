@@ -321,7 +321,7 @@ export class VerificationService {
 
     const systemName = "SOL";
     const plainText = `Hello ${user.name},\n\nVoce esta recebendo este e-mail para realizar o primeiro acesso ao sistema SOL.\n\nSeu codigo de verificacao (PIN): ${code}\n\nSe voce nao solicitou este acesso, ignore este e-mail.\n\nAtenciosamente,\nEquipe ${systemName}`;
- 
+
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; background: #f7f7f7; padding: 24px;">
         <table width="100%" style="max-width: 480px; margin: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 8px #00000011;">
