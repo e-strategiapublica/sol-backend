@@ -77,6 +77,7 @@ export class BidController {
       const payload: JwtPayload = request.user;
 
       // Log para depuração
+      this.logger.log('Payload recebido (register bid):', JSON.stringify(dto));
       if (dto.status === BidStatusEnum.draft) {
         this.logger.log("Processando requisição de rascunho de licitação");
       }
