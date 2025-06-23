@@ -28,6 +28,8 @@ export class EndPointsService {
   }
 
   async createEndpoint(endpoint: EndPointsInterface): Promise<EndPointsModel> {
+    // FUNCIONALIDADE DESATIVADA: A funcionalidade de Integração foi temporariamente desativada por decisão da equipe.
+    // Pode ser reativada no futuro removendo os comentários abaixo.
     const old = await this.endpointsRepository.getByEndpointType(
       endpoint.endpointType,
     );
@@ -43,7 +45,8 @@ export class EndPointsService {
       this._logger.debug(
         `Running endpoint${endpoint.endpointType} :${endpoint.endpointPath}`,
       );
-      return this.dynamicJob(endpoint.endpointType);
+      // Chamando o método e ignorando o retorno para garantir compatibilidade com Promise<void>
+      await this.dynamicJob(endpoint.endpointType);
     });
 
     this.schedulerRegistry.addCronJob(endpoint.endpointType, job);
@@ -53,7 +56,22 @@ export class EndPointsService {
   }
 
   async listEndpoints(): Promise<EndPointsModel[]> {
-    return await this.endpointsRepository.list();
+    // FUNCIONALIDADE DESATIVADA: A funcionalidade de Integração foi temporariamente desativada por decisão da equipe.
+    // Pode ser reativada no futuro removendo os comentários abaixo.
+    /*
+    try {
+      return await this.endpointsRepository.list();
+    } catch (error) {
+      throw new BadRequestException(
+        {
+          message: "Erro ao listar endpoints",
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    */
+    // Retornando lista vazia para evitar erros no frontend
+    return [];
   }
 
   async getEndpointById(_id: string): Promise<EndPointsModel> {
@@ -64,6 +82,8 @@ export class EndPointsService {
     _id: string,
     endpoint: EndPointsInterface,
   ): Promise<EndPointsModel> {
+    // FUNCIONALIDADE DESATIVADA: A funcionalidade de Integração foi temporariamente desativada por decisão da equipe.
+    // Pode ser reativada no futuro removendo os comentários abaixo.
     endpoint.status = EndPointsStatusEnum.stopped;
     const result = await this.endpointsRepository.update(_id, endpoint);
     if (!result) {
@@ -78,7 +98,8 @@ export class EndPointsService {
       this._logger.debug(
         `Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`,
       );
-      return this.dynamicJob(endpoint.endpointType);
+      // Chamando o método e ignorando o retorno para garantir compatibilidade com Promise<void>
+      await this.dynamicJob(endpoint.endpointType);
     });
 
     this.schedulerRegistry.addCronJob(result.endpointType, job);
@@ -98,57 +119,88 @@ export class EndPointsService {
     return await this.endpointsRepository.deleteById(_id);
   }
 
-  async dynamicJob(type: EndPointsTypeEnum) {
-    const endpoint = await this.endpointsRepository.getByEndpointType(type);
-    endpoint.lastRun = new Date();
-    endpoint.status = EndPointsStatusEnum.running;
-    await this.endpointsRepository.update(endpoint.id, endpoint);
+  async dynamicJob(type: EndPointsTypeEnum): Promise<void> {
+    // FUNCIONALIDADE DESATIVADA: A funcionalidade de Integração foi temporariamente desativada por decisão da equipe.
+    // Pode ser reativada no futuro removendo os comentários abaixo.
+    /*
     try {
-      const headers = {
-        Authorization: endpoint.token,
-      };
+      const endpoint = await this.endpointsRepository.getByEndpointType(type);
+      endpoint.lastRun = new Date();
+      endpoint.status = EndPointsStatusEnum.running;
+      await this.endpointsRepository.update(endpoint.id, endpoint);
+      try {
+        const headers = {
+          Authorization: endpoint.token,
+        };
 
-      const result = await firstValueFrom(
-        this.httpService.get(endpoint.endpointPath, { headers }),
-      );
+        const result = await firstValueFrom(
+          this.httpService.get(endpoint.endpointPath, { headers }),
+        );
 
-      if (result.data) {
-        endpoint.status = EndPointsStatusEnum.success;
+        if (result.data) {
+          endpoint.status = EndPointsStatusEnum.success;
+          await this.endpointsRepository.update(endpoint.id, endpoint);
+          if (type === EndPointsTypeEnum.association)
+            return await this.associationService.handlerJob(result.data);
+          if (type === EndPointsTypeEnum.agreement)
+            return await this.agreementService.handlerJob(result.data);
+          if (type === EndPointsTypeEnum.costItems)
+            return await this.costItemsService.handlerJob(result.data);
+        }
+
+        endpoint.status = EndPointsStatusEnum.error;
+        endpoint.messageError = "Não foi possivel obter os dados do endpoint";
+
         await this.endpointsRepository.update(endpoint.id, endpoint);
-        if (type === EndPointsTypeEnum.association)
-          return await this.associationService.handlerJob(result.data);
-        if (type === EndPointsTypeEnum.agreement)
-          return await this.agreementService.handlerJob(result.data);
-        if (type === EndPointsTypeEnum.costItems)
-          return await this.costItemsService.handlerJob(result.data);
+        return;
+      } catch (error) {
+        endpoint.status = EndPointsStatusEnum.error;
+        endpoint.messageError = error;
+        this._logger.error(error);
+        await this.endpointsRepository.update(endpoint.id, endpoint);
       }
-
-      endpoint.status = EndPointsStatusEnum.error;
-      endpoint.messageError = "Não foi possivel obter os dados do endpoint";
-
-      await this.endpointsRepository.update(endpoint.id, endpoint);
-      return;
     } catch (error) {
-      endpoint.status = EndPointsStatusEnum.error;
-      endpoint.messageError = error;
-      this._logger.error(error);
-      await this.endpointsRepository.update(endpoint.id, endpoint);
+      throw new BadRequestException(
+        {
+          message: "Erro ao executar job",
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
+    */
+    // Registrando mensagem de desativação no log
+    this._logger.warn(
+      "Funcionalidade de Integração temporariamente desativada",
+    );
+    // Não retornamos nada para manter a compatibilidade com o tipo Promise<void>
+    return;
   }
 
   async initAllJobs() {
     this._logger.debug("EndpointsService initialized");
+    // FUNCIONALIDADE DESATIVADA: A funcionalidade de Integração foi temporariamente desativada por decisão da equipe.
+    // Pode ser reativada no futuro removendo os comentários abaixo.
     const endpoints = await this.endpointsRepository.list();
+    if (endpoints.length > 0) {
+      this._logger.warn(
+        "Integração está desativada. Os jobs não serão inicializados.",
+      );
+    }
+
+    // Comentando a inicialização dos jobs
+    /*
     endpoints.forEach((endpoint) => {
       const job = new CronJob(endpoint.frequency, async () => {
         this._logger.debug(
           `Running endpoint ${endpoint.endpointType} :${endpoint.endpointPath}`,
         );
-        return this.dynamicJob(endpoint.endpointType);
+        // Chamando o método e ignorando o retorno para garantir compatibilidade com Promise<void>
+        await this.dynamicJob(endpoint.endpointType);
       });
 
       this.schedulerRegistry.addCronJob(endpoint.endpointType, job);
       this.schedulerRegistry.getCronJob(endpoint.endpointType).start();
     });
+    */
   }
 }
