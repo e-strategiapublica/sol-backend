@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -35,6 +36,9 @@ import { BidDateUpdateDto } from "../dtos/bid-date-update.dto";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { BidStatusEnum } from "../enums/bid-status.enum";
+import { BidTypeEnum } from "../enums/bid-type.enum";
+import { BidModalityEnum } from "../enums/bid-modality.enum";
 import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 const path = require("path");
@@ -70,8 +74,14 @@ export class BidController {
   ) {
     try {
       const [bearer, token] = authorizationHeader.split(" ");
-
       const payload: JwtPayload = request.user;
+
+      // Log para depuração
+      if (dto.status === BidStatusEnum.draft) {
+        this.logger.log("Processando requisição de rascunho de licitação");
+      }
+
+      // Delegar toda a responsabilidade de tratamento para o serviço
       const response = await this.bidsService.register(
         token,
         payload.userId,
@@ -81,10 +91,20 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
+      // Log detalhado do erro para facilitar a depuração
+      this.logger.error(`Erro ao registrar licitação: ${error.message}`);
+
+      // Melhorar a mensagem de erro para o frontend
+      const errorMessage =
+        error.message || "Erro interno ao processar a licitação";
+      const statusCode =
+        error instanceof BadRequestException
+          ? HttpStatus.BAD_REQUEST
+          : HttpStatus.INTERNAL_SERVER_ERROR;
+
       throw new HttpException(
-        new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        new ResponseDto(false, null, [errorMessage]),
+        statusCode,
       );
     }
   }
