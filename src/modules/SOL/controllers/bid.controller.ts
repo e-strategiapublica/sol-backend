@@ -75,8 +75,6 @@ export class BidController {
     try {
       const [bearer, token] = authorizationHeader.split(" ");
       const payload: JwtPayload = request.user;
-
-      // Log para depuração
       if (dto.status === BidStatusEnum.draft) {
         this.logger.log("Processando requisição de rascunho de licitação");
       }
