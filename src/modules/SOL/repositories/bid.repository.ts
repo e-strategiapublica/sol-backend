@@ -158,9 +158,9 @@ export class BidRepository {
           path: "proposals.proposal",
           populate: {
             path: "proposedBy",
-            populate: { path: "supplier" }
-          }
-        }
+            populate: { path: "supplier" },
+          },
+        },
       });
   }
 
