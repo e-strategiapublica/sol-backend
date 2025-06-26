@@ -152,16 +152,7 @@ export class BidRepository {
       .populate("invited_suppliers")
       .populate("association")
       .populate({ path: "association", populate: { path: "association" } })
-      .populate({
-        path: "add_allotment",
-        populate: {
-          path: "proposals.proposal",
-          populate: {
-            path: "proposedBy",
-            populate: { path: "supplier" },
-          },
-        },
-      });
+      .populate("add_allotment.proposals.proposedBy");
   }
 
   async getById(_id: string): Promise<BidModel> {
