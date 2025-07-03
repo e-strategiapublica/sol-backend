@@ -1,40 +1,40 @@
-import {
-  HttpStatus,
-  Injectable,
-  Logger,
-  Scope,
-  StreamableFile,
-} from "@nestjs/common";
+import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import * as fs from "fs";
-import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
 import * as path from "path";
-import sanitizeFilename from "sanitize-filename";
-import { CustomHttpException } from "src/shared/exceptions/custom-http.exception";
+import { EnviromentVariablesEnum } from "../../../shared/enums/enviroment.variables.enum";
 @Injectable()
 export class FileRepository {
   private bucketPath: string;
   private readonly _logger = new Logger(FileRepository.name);
+  private readonly _configService: ConfigService;
 
-  constructor(private readonly _configService: ConfigService) {
-    const bucket = this._configService.get<string>(
-      EnviromentVariablesEnum.BUCKET,
-    );
-    this.bucketPath = path.resolve(bucket);
+  constructor(configService: ConfigService) {
+    this._configService = configService;
+  }
+  private sanitizeFilename(filename: string): string {
+    // Remove caracteres suspeitos e impede "../" e similares
+    const base = path.basename(filename); // já elimina ../
+    return base.replace(/[^a-zA-Z0-9._-]/g, "_");
   }
 
-  private getFilePath(filename: string): string {
-    const sanitizedFilename = sanitizeFilename(filename);
-    const fullPath = path.resolve(this.bucketPath, sanitizedFilename);
-    if (!fullPath.startsWith(this.bucketPath)) {
-      this._logger.error({ full_path: fullPath }, "invalid file path");
-      throw new CustomHttpException("", HttpStatus.INTERNAL_SERVER_ERROR);
+  private resolveAndValidatePath(filename: string): string {
+    const bucketRaw = this._configService.get<string>(
+      EnviromentVariablesEnum.BUCKET,
+    );
+    const bucket = path.resolve(bucketRaw);
+    const sanitized = this.sanitizeFilename(filename);
+    const fullPath = path.resolve(bucket, sanitized);
+
+    // Verificação de segurança contra path traversal
+    if (!fullPath.startsWith(bucket + path.sep)) {
+      throw new Error(`Invalid file path detected: ${fullPath}`);
     }
     return fullPath;
   }
 
   upload(filename: string, base64: string): string {
-    const fullPath = this.getFilePath(filename);
+    const fullPath = this.resolveAndValidatePath(filename);
     const dir = path.dirname(fullPath);
 
     if (!fs.existsSync(dir)) {
@@ -42,22 +42,13 @@ export class FileRepository {
     }
 
     const base64Data = base64.replace(/^data:([A-Za-z-+/]+);base64,/, "");
-
     fs.writeFileSync(fullPath, base64Data, { encoding: "base64" });
 
     return fullPath;
   }
 
   async download(filename: string): Promise<Buffer> {
-    const pdf = await new Promise<Buffer>((resolve, reject) => {
-      fs.readFile(filename, {}, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      });
-    });
-    return pdf;
+    const fullPath = this.resolveAndValidatePath(filename);
+    return fs.promises.readFile(fullPath);
   }
 }

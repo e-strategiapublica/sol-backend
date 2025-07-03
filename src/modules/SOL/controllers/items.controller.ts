@@ -48,7 +48,7 @@ export class ItemsController {
   @ApiBearerAuth()
   async register(@Body() dto) {
     try {
-      await this.itemsModel.verifyCodeExists(dto.code);
+      await this.itemsModel.verifyCodeExists(dto.item);
       await this.itemsModel.saveItem(dto);
 
       return { type: "success" };
