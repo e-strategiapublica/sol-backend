@@ -30,7 +30,9 @@ export class UserSeeder implements OnModuleInit {
 
     if (adminExists) return;
 
-    const passwordSalt = this.configService.get<number>(Env.PASSWORD_SALT);
+    const passwordSalt = Number(
+      this.configService.get<number>(Env.PASSWORD_SALT),
+    );
 
     const adminEmail = this.configService.get<string>(Env.ADMIN_DEFAULT_EMAIL);
     const adminPassword = this.configService.get<string>(
