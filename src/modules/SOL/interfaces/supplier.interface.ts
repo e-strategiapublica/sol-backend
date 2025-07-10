@@ -7,6 +7,7 @@ import { Category } from "../schemas/category.schema";
 
 export interface SupplierInterface {
   readonly name: string;
+  readonly cnpj?: string;
   readonly cpf: string;
   readonly blocked: boolean;
   readonly blocked_reason: string;
