@@ -107,6 +107,10 @@ export class UserService {
   async register(
     dto: UserRegisterRequestDto,
   ): Promise<UserRegisterResponseDto> {
+    // Proteção extra: fornecedores não podem ter roles
+    if (dto.type === UserTypeEnum.fornecedor) {
+      dto.roles = undefined;
+    }
     // if (dto.phone) {
     //   const userByPhone = await this._userRepository.getByPhone(dto.phone);
     //   if (userByPhone) {
