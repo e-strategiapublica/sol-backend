@@ -10,6 +10,9 @@ export abstract class SupplierRegisterDto {
   @ApiProperty({ type: String })
   name: string;
 
+  @ApiProperty({ type: String, required: false })
+  cnpj?: string;
+
   @ApiProperty({ type: String })
   cpf: string;
 

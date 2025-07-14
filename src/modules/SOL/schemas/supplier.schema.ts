@@ -14,7 +14,10 @@ export class Supplier {
   @Prop({ required: true })
   name: string;
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: false, unique: true })
+  cnpj: string;
+
+  @Prop({ required: false, unique: true })
   cpf: string;
 
   @Prop({ required: true, type: Boolean, default: false })
