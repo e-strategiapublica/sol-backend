@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { UserService } from './user.service';
-import { UserRepository } from '../repositories/user.repository';
-import { SupplierService } from '../services/supplier.service';
-import { UserRegisterRequestDto } from '../dtos/user-register-request.dto';
-import { UserTypeEnum } from '../enums/user-type.enum';
-import { AssociationService } from './association.service';
-import { VerificationService } from './verification.service';
-import { BadRequestException } from '@nestjs/common';
+import { Test, TestingModule } from "@nestjs/testing";
+import { UserService } from "./user.service";
+import { UserRepository } from "../repositories/user.repository";
+import { SupplierService } from "../services/supplier.service";
+import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
+import { UserTypeEnum } from "../enums/user-type.enum";
+import { AssociationService } from "./association.service";
+import { VerificationService } from "./verification.service";
+import { BadRequestException } from "@nestjs/common";
 
 // Mocks
 const mockUserRepository = {
@@ -21,7 +21,7 @@ const mockSupplierService = {
 const mockAssociationService = {};
 const mockVerificationService = {};
 
-describe('UserService', () => {
+describe("UserService", () => {
   let service: UserService;
   let userRepository: typeof mockUserRepository;
   let supplierService: typeof mockSupplierService;
@@ -43,32 +43,35 @@ describe('UserService', () => {
     jest.clearAllMocks();
   });
 
-  it('should remove roles if user is supplier', async () => {
+  it("should remove roles if user is supplier", async () => {
     const dto: UserRegisterRequestDto = {
       type: UserTypeEnum.fornecedor,
-      roles: ['admin'],
-      document: '123',
+      roles: ["admin"],
+      document: "123",
     } as any;
     userRepository.getByDocument.mockResolvedValue(null);
     supplierService.listById.mockResolvedValue(true);
-    userRepository.register.mockResolvedValue({ id: 1, email: 'teste@exemplo.com' });
+    userRepository.register.mockResolvedValue({
+      id: 1,
+      email: "teste@exemplo.com",
+    });
     await service.register(dto);
     expect(dto.roles).toBeUndefined();
   });
 
-  it('should throw error if document already exists', async () => {
+  it("should throw error if document already exists", async () => {
     const dto: UserRegisterRequestDto = {
       type: UserTypeEnum.administrador,
-      document: '123',
+      document: "123",
     } as any;
     userRepository.getByDocument.mockResolvedValue({ id: 1 });
     await expect(service.register(dto)).rejects.toThrow(BadRequestException);
   });
 
-  it('should throw error if supplier does not exist', async () => {
+  it("should throw error if supplier does not exist", async () => {
     const dto: UserRegisterRequestDto = {
       type: UserTypeEnum.administrador,
-      document: '123',
+      document: "123",
       supplier: 99,
     } as any;
     userRepository.getByDocument.mockResolvedValue(null);
