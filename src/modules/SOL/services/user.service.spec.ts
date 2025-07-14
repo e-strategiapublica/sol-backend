@@ -75,6 +75,4 @@ describe('UserService', () => {
     supplierService.listById.mockResolvedValue(undefined);
     await expect(service.register(dto)).rejects.toThrow();
   });
-
-  // Você pode adicionar mais casos conforme o método for evoluindo
 });
