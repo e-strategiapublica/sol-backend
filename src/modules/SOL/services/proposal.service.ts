@@ -434,8 +434,10 @@ export class ProposalService {
     const proposal = await this._proposalRepository.getById(proposalId);
 
     const list = await this._proposalRepository.listByBid(
-  typeof proposal.bid === 'string' ? proposal.bid : proposal.bid._id || proposal.bid.id
-);
+      typeof proposal.bid === "string"
+        ? proposal.bid
+        : proposal.bid._id || proposal.bid.id,
+    );
 
     if (refusedBy.type !== "administrador") {
       if (list.length > 1) {
@@ -498,8 +500,15 @@ export class ProposalService {
       const proposal = await this._proposalRepository.getById(proposalId);
 
       // Validação: impedir recusa se algum lote estiver em análise
-      if (proposal.allotment && proposal.allotment.some(a => a.status === AllotmentStatusEnum.emAnalise)) {
-        throw new BadRequestException('Não é possível recusar propostas enquanto o lote está em análise.');
+      if (
+        proposal.allotment &&
+        proposal.allotment.some(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        )
+      ) {
+        throw new BadRequestException(
+          "Não é possível recusar propostas enquanto o lote está em análise.",
+        );
       }
       const dto = {
         association_accept: true,
@@ -544,13 +553,22 @@ export class ProposalService {
       const proposal = await this._proposalRepository.getById(proposalId);
 
       // Validação: impedir aceitar se algum lote estiver em análise
-      if (proposal.allotment && proposal.allotment.some(a => a.status === AllotmentStatusEnum.emAnalise)) {
-        throw new BadRequestException('Não é possível aceitar propostas enquanto o lote está em análise.');
+      if (
+        proposal.allotment &&
+        proposal.allotment.some(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        )
+      ) {
+        throw new BadRequestException(
+          "Não é possível aceitar propostas enquanto o lote está em análise.",
+        );
       }
 
       const bid = await this._bidRepository.getById(
-  typeof proposal.bid === 'string' ? proposal.bid : proposal.bid._id || proposal.bid.id
-);
+        typeof proposal.bid === "string"
+          ? proposal.bid
+          : proposal.bid._id || proposal.bid.id,
+      );
 
       // for (let iterator of proposal.allotment) {
       //   await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.adjudicado);
@@ -558,7 +576,10 @@ export class ProposalService {
 
       let contractDto: ContractRegisterDto = {
         contract_number: "1",
-        bid_number: typeof proposal.bid === 'string' ? proposal.bid : proposal.bid._id || proposal.bid.id,
+        bid_number:
+          typeof proposal.bid === "string"
+            ? proposal.bid
+            : proposal.bid._id || proposal.bid.id,
         value: proposal.total_value,
         contract_document: "teste",
         association_accept: false,
@@ -566,14 +587,21 @@ export class ProposalService {
         status: ContractStatusEnum.aguardando_assinaturas,
         proposal_id: [proposal],
         association_id: bid.id,
-        supplier_id: typeof proposal.proposedBy.supplier === 'string' ? proposal.proposedBy.supplier : proposal.proposedBy.supplier._id || proposal.proposedBy.supplier.id,
+        supplier_id:
+          typeof proposal.proposedBy.supplier === "string"
+            ? proposal.proposedBy.supplier
+            : proposal.proposedBy.supplier._id ||
+              proposal.proposedBy.supplier.id,
       };
 
       await this._bidRepository.changeStatus(
-  typeof proposal.bid === 'string' ? proposal.bid : proposal.bid._id || proposal.bid.id,
-  {
-        status: BidStatusEnum["completed"],
-      });
+        typeof proposal.bid === "string"
+          ? proposal.bid
+          : proposal.bid._id || proposal.bid.id,
+        {
+          status: BidStatusEnum["completed"],
+        },
+      );
 
       await this._allotmentRepository.updateStatusByIds(
         proposal.allotment.map((item) => item._id.toString()),
