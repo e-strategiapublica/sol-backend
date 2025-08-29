@@ -499,12 +499,11 @@ export class ProposalService {
       const proposal = await this._proposalRepository.getById(proposalId);
 
       // Validação: impedir recusa se algum lote estiver em análise
-      if (
-        proposal.allotment &&
-        proposal.allotment.some(
-          (a) => a.status === AllotmentStatusEnum.emAnalise,
-        )
-      ) {
+      const hasAllotmentInAnalysis = proposal.allotment?.some(
+        (a) => a.status === AllotmentStatusEnum.emAnalise
+      );
+      
+      if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
           "Não é possível recusar propostas enquanto o lote está em análise.",
         );
