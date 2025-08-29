@@ -221,6 +221,7 @@ export class ProposalRepository {
       .populate("acceptedFornecedor")
       .populate("acceptedRevisor")
       .populate("allotment")
+      .populate("bid")
       .sort({ total_value: "descending" });
     // const sortedProposals = proposals.sort((a, b) => Number(a.total_value) - Number(b.total_value));
     return proposals;
@@ -254,7 +255,8 @@ export class ProposalRepository {
       .populate("refusedBy")
       .populate("acceptedFornecedor")
       .populate("acceptedRevisor")
-      .populate("allotment");
+      .populate("allotment")
+      .populate("bid");
     if (proposals.length > 1) {
       const sortedProposals = proposals.sort(
         (a, b) => Number(a.total_value) - Number(b.total_value),
@@ -275,7 +277,7 @@ export class ProposalRepository {
   }
 
   async getProposalWin(bidId: string): Promise<ProposalModel> {
-    const list = await this._model.find({ bid: { _id: bidId } });
+    const list = await this._model.find({ bid: { _id: bidId } }).populate("bid");
     const sortedProposals = list
       .sort((a, b) => Number(a.total_value) - Number(b.total_value))
       .filter(
@@ -293,7 +295,8 @@ export class ProposalRepository {
       .populate("refusedBy")
       .populate("acceptedFornecedor")
       .populate("acceptedRevisor")
-      .populate("allotment");
+      .populate("allotment")
+      .populate("bid");
   }
 
   async getById(_id: string): Promise<ProposalModel> {
@@ -303,7 +306,8 @@ export class ProposalRepository {
       .populate("refusedBy")
       .populate("acceptedFornecedor")
       .populate("acceptedRevisor")
-      .populate("allotment");
+      .populate("allotment")
+      .populate("bid");
   }
 
   async deleteById(_id: string) {

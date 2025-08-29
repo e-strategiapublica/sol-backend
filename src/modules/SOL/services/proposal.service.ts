@@ -34,6 +34,7 @@ import { AllotmentModel } from "../models/allotment.model";
 import { BidService } from "./bid.service";
 import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
 import { extractAndCompareContent } from "../utils/string-and-id-compare.helper";
+import { extractBidId, extractSupplierId } from "../utils/entity-id-extractor.helper";
 import { Proposal } from "../schemas/proposal.schema";
 
 @Injectable()
@@ -434,9 +435,7 @@ export class ProposalService {
     const proposal = await this._proposalRepository.getById(proposalId);
 
     const list = await this._proposalRepository.listByBid(
-      typeof proposal.bid === "string"
-        ? proposal.bid
-        : proposal.bid._id || proposal.bid.id,
+      extractBidId(proposal.bid),
     );
 
     if (refusedBy.type !== "administrador") {
@@ -565,9 +564,7 @@ export class ProposalService {
       }
 
       const bid = await this._bidRepository.getById(
-        typeof proposal.bid === "string"
-          ? proposal.bid
-          : proposal.bid._id || proposal.bid.id,
+        extractBidId(proposal.bid),
       );
 
       // for (let iterator of proposal.allotment) {
@@ -576,10 +573,7 @@ export class ProposalService {
 
       let contractDto: ContractRegisterDto = {
         contract_number: "1",
-        bid_number:
-          typeof proposal.bid === "string"
-            ? proposal.bid
-            : proposal.bid._id || proposal.bid.id,
+        bid_number: extractBidId(proposal.bid),
         value: proposal.total_value,
         contract_document: "teste",
         association_accept: false,
@@ -587,17 +581,11 @@ export class ProposalService {
         status: ContractStatusEnum.aguardando_assinaturas,
         proposal_id: [proposal],
         association_id: bid.id,
-        supplier_id:
-          typeof proposal.proposedBy.supplier === "string"
-            ? proposal.proposedBy.supplier
-            : proposal.proposedBy.supplier._id ||
-              proposal.proposedBy.supplier.id,
+        supplier_id: extractSupplierId(proposal.proposedBy.supplier),
       };
 
       await this._bidRepository.changeStatus(
-        typeof proposal.bid === "string"
-          ? proposal.bid
-          : proposal.bid._id || proposal.bid.id,
+        extractBidId(proposal.bid),
         {
           status: BidStatusEnum["completed"],
         },
