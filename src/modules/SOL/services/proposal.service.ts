@@ -35,6 +35,7 @@ import { BidService } from "./bid.service";
 import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
 import { extractAndCompareContent } from "../utils/string-and-id-compare.helper";
 import { extractBidId, extractSupplierId } from "../utils/entity-id-extractor.helper";
+import { ProposalErrorMessages } from "../utils/error-messages.helper";
 import { Proposal } from "../schemas/proposal.schema";
 
 @Injectable()
@@ -75,7 +76,7 @@ export class ProposalService {
       BidStatusEnum.reopened !== bid.status
     )
       throw new BadRequestException(
-        "Não é possivel cadastrar proposta para licitação fechada!",
+        ProposalErrorMessages.BID_CLOSED,
       );
 
     dto.bid = bid;
@@ -101,7 +102,7 @@ export class ProposalService {
       }
       if (!result)
         throw new BadRequestException(
-          "Não foi possivel cadastrar essa proposta!",
+          ProposalErrorMessages.REGISTRATION_FAILED,
         );
 
       return result;
@@ -116,7 +117,7 @@ export class ProposalService {
       );
       if (verify) {
         throw new BadRequestException(
-          "Já foi enviado uma proposta para essa licitação!",
+          ProposalErrorMessages.DUPLICATE_PROPOSAL,
         );
       }
     }
@@ -146,7 +147,7 @@ export class ProposalService {
 
         if (verify) {
           throw new BadRequestException(
-            "Já foi enviado uma proposta para essa licitação!",
+            ProposalErrorMessages.DUPLICATE_PROPOSAL,
           );
         }
       });
@@ -332,7 +333,7 @@ export class ProposalService {
     const result = await this._proposalRepository.register(dto);
     if (!result)
       throw new BadRequestException(
-        "Não foi possivel cadastrar essa proposta!",
+        ProposalErrorMessages.REGISTRATION_FAILED,
       );
 
     newProposal.push({ proposal: result, proposalWin: dto.proposalWin });
@@ -355,7 +356,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
 
     const result = await this._proposalRepository.updateAcceptSupplier(
@@ -377,7 +378,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
 
     const result = await this._proposalRepository.updateAcceptAssociation(
@@ -401,7 +402,7 @@ export class ProposalService {
   ): Promise<ProposalModel | any> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
     const result = await this._proposalRepository.updateAcceptReviewer(
       _id,
@@ -505,7 +506,7 @@ export class ProposalService {
       
       if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
-          "Não é possível recusar propostas enquanto o lote está em análise.",
+          ProposalErrorMessages.CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS,
         );
       }
       const dto = {
@@ -557,7 +558,7 @@ export class ProposalService {
       
       if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
-          "Não é possível aceitar propostas enquanto o lote está em análise.",
+          ProposalErrorMessages.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS,
         );
       }
 
@@ -624,7 +625,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
 
     const result = await this._proposalRepository.updateStatus(_id, dto);
@@ -660,7 +661,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
     const result = await this._proposalRepository.addItem(_id, dto);
     return result;
@@ -672,7 +673,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
     const result = await this._proposalRepository.removeItem(_id, dto);
     return result;
@@ -682,10 +683,10 @@ export class ProposalService {
     const result = await this._proposalRepository.getById(_id);
 
     if (!result) {
-      throw new BadRequestException("Proposta não encontrada!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
     if (result.deleted === true) {
-      throw new BadRequestException("Esse contrato já foi deletado!");
+      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_ALREADY_DELETED);
     }
     return result;
   }
