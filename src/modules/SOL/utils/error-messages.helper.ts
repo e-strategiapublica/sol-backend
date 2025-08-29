@@ -1,20 +1,18 @@
 export const ProposalErrorMessages = {
   // Proposal not found
-  PROPOSAL_NOT_FOUND: "Proposta não encontrada!",
+  PROPOSAL_NOT_FOUND: "PROPOSAL_NOT_FOUND",
 
   // Proposal already deleted
-  PROPOSAL_ALREADY_DELETED: "Esse contrato já foi deletado!",
+  PROPOSAL_ALREADY_DELETED: "PROPOSAL_ALREADY_DELETED",
 
   // Registration errors
-  BID_CLOSED: "Não é possivel cadastrar proposta para licitação fechada!",
-  REGISTRATION_FAILED: "Não foi possivel cadastrar essa proposta!",
-  DUPLICATE_PROPOSAL: "Já foi enviado uma proposta para essa licitação!",
+  BID_CLOSED: "BID_CLOSED",
+  REGISTRATION_FAILED: "REGISTRATION_FAILED",
+  DUPLICATE_PROPOSAL: "DUPLICATE_PROPOSAL",
 
   // Allotment analysis errors
-  CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS:
-    "Não é possível recusar propostas enquanto o lote está em análise.",
-  CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS:
-    "Não é possível aceitar propostas enquanto o lote está em análise.",
+  CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS: "CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS",
+  CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS: "CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS",
 } as const;
 
 export type ProposalErrorMessageKey = keyof typeof ProposalErrorMessages;

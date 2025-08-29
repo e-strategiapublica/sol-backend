@@ -503,7 +503,7 @@ export class ProposalService {
 
       if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
-          ProposalErrorMessages.CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS,
+          ProposalErrorMessages.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS,
         );
       }
       const dto = {

@@ -445,8 +445,6 @@ export class ProposalController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST,
