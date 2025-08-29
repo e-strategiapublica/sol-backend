@@ -277,7 +277,9 @@ export class ProposalRepository {
   }
 
   async getProposalWin(bidId: string): Promise<ProposalModel> {
-    const list = await this._model.find({ bid: { _id: bidId } }).populate("bid");
+    const list = await this._model
+      .find({ bid: { _id: bidId } })
+      .populate("bid");
     const sortedProposals = list
       .sort((a, b) => Number(a.total_value) - Number(b.total_value))
       .filter(

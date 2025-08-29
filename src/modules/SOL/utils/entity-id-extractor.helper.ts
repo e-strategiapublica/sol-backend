@@ -8,15 +8,15 @@
  * @returns The bid ID as string
  */
 export function extractBidId(bid: any): string {
-  if (typeof bid === 'string') {
+  if (typeof bid === "string") {
     return bid;
   }
-  
-  if (bid && typeof bid === 'object') {
+
+  if (bid && typeof bid === "object") {
     return bid._id?.toString() || bid.id?.toString();
   }
-  
-  throw new Error('Invalid bid entity: cannot extract ID');
+
+  throw new Error("Invalid bid entity: cannot extract ID");
 }
 
 /**
@@ -25,15 +25,15 @@ export function extractBidId(bid: any): string {
  * @returns The supplier ID as string
  */
 export function extractSupplierId(supplier: any): string {
-  if (typeof supplier === 'string') {
+  if (typeof supplier === "string") {
     return supplier;
   }
-  
-  if (supplier && typeof supplier === 'object') {
+
+  if (supplier && typeof supplier === "object") {
     return supplier._id?.toString() || supplier.id?.toString();
   }
-  
-  throw new Error('Invalid supplier entity: cannot extract ID');
+
+  throw new Error("Invalid supplier entity: cannot extract ID");
 }
 
 /**
@@ -42,13 +42,13 @@ export function extractSupplierId(supplier: any): string {
  * @returns The entity ID as string
  */
 export function extractEntityId(entity: any): string {
-  if (typeof entity === 'string') {
+  if (typeof entity === "string") {
     return entity;
   }
-  
-  if (entity && typeof entity === 'object') {
+
+  if (entity && typeof entity === "object") {
     return entity._id?.toString() || entity.id?.toString();
   }
-  
-  throw new Error('Invalid entity: cannot extract ID');
+
+  throw new Error("Invalid entity: cannot extract ID");
 }

@@ -34,7 +34,10 @@ import { AllotmentModel } from "../models/allotment.model";
 import { BidService } from "./bid.service";
 import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
 import { extractAndCompareContent } from "../utils/string-and-id-compare.helper";
-import { extractBidId, extractSupplierId } from "../utils/entity-id-extractor.helper";
+import {
+  extractBidId,
+  extractSupplierId,
+} from "../utils/entity-id-extractor.helper";
 import { ProposalErrorMessages } from "../utils/error-messages.helper";
 import { Proposal } from "../schemas/proposal.schema";
 
@@ -75,9 +78,7 @@ export class ProposalService {
       BidStatusEnum.open !== bid.status &&
       BidStatusEnum.reopened !== bid.status
     )
-      throw new BadRequestException(
-        ProposalErrorMessages.BID_CLOSED,
-      );
+      throw new BadRequestException(ProposalErrorMessages.BID_CLOSED);
 
     dto.bid = bid;
 
@@ -116,9 +117,7 @@ export class ProposalService {
         ),
       );
       if (verify) {
-        throw new BadRequestException(
-          ProposalErrorMessages.DUPLICATE_PROPOSAL,
-        );
+        throw new BadRequestException(ProposalErrorMessages.DUPLICATE_PROPOSAL);
       }
     }
 
@@ -332,9 +331,7 @@ export class ProposalService {
 
     const result = await this._proposalRepository.register(dto);
     if (!result)
-      throw new BadRequestException(
-        ProposalErrorMessages.REGISTRATION_FAILED,
-      );
+      throw new BadRequestException(ProposalErrorMessages.REGISTRATION_FAILED);
 
     newProposal.push({ proposal: result, proposalWin: dto.proposalWin });
 
@@ -501,9 +498,9 @@ export class ProposalService {
 
       // Validação: impedir recusa se algum lote estiver em análise
       const hasAllotmentInAnalysis = proposal.allotment?.some(
-        (a) => a.status === AllotmentStatusEnum.emAnalise
+        (a) => a.status === AllotmentStatusEnum.emAnalise,
       );
-      
+
       if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
           ProposalErrorMessages.CANNOT_REFUSE_ALLOTMENT_IN_ANALYSIS,
@@ -553,18 +550,16 @@ export class ProposalService {
 
       // Validação: impedir aceitar se algum lote estiver em análise
       const hasAllotmentInAnalysis = proposal.allotment?.some(
-        (a) => a.status === AllotmentStatusEnum.emAnalise
+        (a) => a.status === AllotmentStatusEnum.emAnalise,
       );
-      
+
       if (hasAllotmentInAnalysis) {
         throw new BadRequestException(
           ProposalErrorMessages.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS,
         );
       }
 
-      const bid = await this._bidRepository.getById(
-        extractBidId(proposal.bid),
-      );
+      const bid = await this._bidRepository.getById(extractBidId(proposal.bid));
 
       // for (let iterator of proposal.allotment) {
       //   await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.adjudicado);
@@ -583,12 +578,9 @@ export class ProposalService {
         supplier_id: extractSupplierId(proposal.proposedBy.supplier),
       };
 
-      await this._bidRepository.changeStatus(
-        extractBidId(proposal.bid),
-        {
-          status: BidStatusEnum["completed"],
-        },
-      );
+      await this._bidRepository.changeStatus(extractBidId(proposal.bid), {
+        status: BidStatusEnum["completed"],
+      });
 
       await this._allotmentRepository.updateStatusByIds(
         proposal.allotment.map((item) => item._id.toString()),
@@ -686,7 +678,9 @@ export class ProposalService {
       throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
     }
     if (result.deleted === true) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_ALREADY_DELETED);
+      throw new BadRequestException(
+        ProposalErrorMessages.PROPOSAL_ALREADY_DELETED,
+      );
     }
     return result;
   }
