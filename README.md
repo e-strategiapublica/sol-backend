@@ -4,7 +4,7 @@ Backend do SOL: Solução Online de Licitação.
 
 ## Dependencies
 
-[![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)]((https://nodejs.org/en//))
+[![NodeJS](https://img.shields.io/badge/node.js-%2343853D.svg?style=for-the-badge&logo=node.js&logoColor=white)](<(https://nodejs.org/en//)>)
 [![YARN](https://img.shields.io/badge/Yarn-2C8EBB.svg?style=for-the-badge&logo=Yarn&logoColor=white)](https://yarnpkg.com/cli/install)
 [![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://docs.docker.com/compose/install/#install-compose)
 
@@ -25,6 +25,12 @@ To build the docker image with the project running inside, use:
 ```sh
 docker build .
 ```
+
+## Errors Handler
+
+1. Criar o identificador do erro(enum) em shared/enums/errors.ts
+2. Utilizar da seguinte forma:
+   `throw new CustomExceptionV2(BackendErrors.PROPOSAL_NOT_FOUND, {proposal_id: 1})`
 
 ## Running
 

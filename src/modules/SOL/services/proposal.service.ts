@@ -39,7 +39,6 @@ import {
   extractSupplierId,
 } from "../utils/entity-id-extractor.helper";
 import { ProposalErrorMessages } from "../utils/error-messages.helper";
-import { Proposal } from "../schemas/proposal.schema";
 
 @Injectable()
 export class ProposalService {
@@ -56,6 +55,47 @@ export class ProposalService {
     private readonly _bidService: BidService,
   ) {}
 
+  /**
+   * Registra uma nova proposta para uma licitação.
+   *
+   * Regras de Negócio:
+   * 1. Validação Inicial:
+   *    - O usuário que propõe (proposedBy) deve existir
+   *    - A licitação (bid) deve existir e estar com status 'open' ou 'reopened'
+   *
+   * 2. Tipos de Licitação:
+   *    - Para tipo "globalPrice": Uma proposta pode abranger múltiplos lotes
+   *    - Para outros tipos: Uma proposta é específica para um único lote
+   *
+   * 3. Validação de Propostas Existentes:
+   *    - Para tipo "globalPrice": Um fornecedor só pode ter uma proposta por licitação
+   *    - Para outros tipos: Um fornecedor pode ter uma proposta por lote
+   *
+   * 4. Lógica de ProposalWin (Proposta Vencedora):
+   *    Para licitações "globalPrice":
+   *    - Se é a primeira proposta: automaticamente marcada como vencedora
+   *    - Se existem outras propostas:
+   *      * Se o valor total é menor que a menor proposta existente: marca como vencedora
+   *      * Se o valor total é igual à menor proposta: todas com mesmo valor são marcadas como vencedoras
+   *      * Se o valor total é maior: marca como não vencedora
+   *
+   *    Para outros tipos de licitação:
+   *    - Mesma lógica aplicada por lote individualmente
+   *    - Considera o valor total + frete para comparação
+   *
+   * 5. Atualização de Lotes:
+   *    - Cada lote é atualizado com a referência da nova proposta
+   *    - O status de vencedora (proposalWin) é atualizado em cada lote
+   *
+   * @param proposedById - ID do usuário que está fazendo a proposta
+   * @param dto - Dados da proposta incluindo valores, licitação, lotes e demais informações
+   * @returns Promise<ProposalModel> - Retorna a proposta registrada
+   * @throws CustomException
+   *    - Quando a licitação está fechada
+   *    - Quando já existe uma proposta do fornecedor para a licitação (globalPrice)
+   *    - Quando já existe uma proposta do fornecedor para o lote
+   *    - Quando falha ao registrar a proposta
+   */
   async register(
     proposedById: string,
     dto: ProposalRegisterDto,
