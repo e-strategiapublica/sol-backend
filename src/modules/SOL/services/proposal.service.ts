@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
 import { ProposalModel } from "../models/proposal.model";
 import { ProposalRegisterDto } from "../dtos/proposal-register-request.dto";
 import { ProposalRepository } from "../repositories/proposal.repository";
@@ -393,7 +394,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateAcceptSupplier(
@@ -415,7 +416,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateAcceptAssociation(
@@ -439,7 +440,7 @@ export class ProposalService {
   ): Promise<ProposalModel | any> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.updateAcceptReviewer(
       _id,
@@ -542,8 +543,11 @@ export class ProposalService {
       );
 
       if (hasAllotmentInAnalysis) {
-        throw new BadRequestException(
-          ProposalErrorMessages.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS,
+        const allotmentInAnalysis = proposal.allotment?.find(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        );
+        StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
+          allotmentInAnalysis?._id?.toString() || 'unknown'
         );
       }
       const dto = {
@@ -594,8 +598,11 @@ export class ProposalService {
       );
 
       if (hasAllotmentInAnalysis) {
-        throw new BadRequestException(
-          ProposalErrorMessages.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS,
+        const allotmentInAnalysis = proposal.allotment?.find(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        );
+        StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
+          allotmentInAnalysis?._id?.toString() || 'unknown'
         );
       }
 
@@ -657,7 +664,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateStatus(_id, dto);
@@ -693,7 +700,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.addItem(_id, dto);
     return result;
@@ -705,7 +712,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.removeItem(_id, dto);
     return result;
@@ -715,12 +722,10 @@ export class ProposalService {
     const result = await this._proposalRepository.getById(_id);
 
     if (!result) {
-      throw new BadRequestException(ProposalErrorMessages.PROPOSAL_NOT_FOUND);
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     if (result.deleted === true) {
-      throw new BadRequestException(
-        ProposalErrorMessages.PROPOSAL_ALREADY_DELETED,
-      );
+      StructuredErrorHelper.throwProposalAlreadyDeleted(_id);
     }
     return result;
   }

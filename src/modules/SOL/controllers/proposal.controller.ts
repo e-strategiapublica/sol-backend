@@ -302,6 +302,11 @@ export class ProposalController {
     } catch (error) {
       this.logger.error(error.message);
 
+      // Verifica se é um erro estruturado e preserva sua estrutura
+      if (error instanceof HttpException && (error as any).isStructuredError) {
+        throw error; // Re-lança o erro estruturado sem modificar
+      }
+
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.BAD_REQUEST,
