@@ -195,7 +195,8 @@ export class BidService {
     const association = await this._userRepository.getById(associationId);
     const agreement = await this._agreementService.findById(dto.agreementId);
 
-    if (!agreement) StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
+    if (!agreement)
+      StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
     if (!association)
       StructuredErrorHelper.throwAssociationNotFound(associationId);
     dto.agreement = agreement;
@@ -539,7 +540,8 @@ export class BidService {
     }
 
     const agreement = await this._agreementService.findById(dto.agreementId);
-    if (!agreement) StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
+    if (!agreement)
+      StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
     dto.agreement = agreement;
 
     let newArray = [];

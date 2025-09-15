@@ -12,32 +12,37 @@ export class StructuredErrorHelper {
    */
   static throw(errorKey: BackendErrors, data: Record<string, any> = {}): never {
     const errorInfo = BackendErrorsInfo[errorKey];
-    
-    console.log('StructuredErrorHelper.throw - errorKey:', errorKey);
-    console.log('StructuredErrorHelper.throw - data:', data);
-    console.log('StructuredErrorHelper.throw - errorInfo:', errorInfo);
-    
+
+    console.log("StructuredErrorHelper.throw - errorKey:", errorKey);
+    console.log("StructuredErrorHelper.throw - data:", data);
+    console.log("StructuredErrorHelper.throw - errorInfo:", errorInfo);
+
     if (!errorInfo) {
-      console.log('StructuredErrorHelper.throw - errorInfo not found, throwing generic error');
+      console.log(
+        "StructuredErrorHelper.throw - errorInfo not found, throwing generic error",
+      );
       throw new BadRequestException({
         error: BackendErrors.GENERIC_ERROR,
-        data: {}
+        data: {},
       });
     }
 
     const errorResponse = {
       error: errorKey,
-      data: data
+      data: data,
     };
 
-    console.log('StructuredErrorHelper.throw - errorResponse:', errorResponse);
-    console.log('StructuredErrorHelper.throw - throwing HttpException with code:', errorInfo.code);
+    console.log("StructuredErrorHelper.throw - errorResponse:", errorResponse);
+    console.log(
+      "StructuredErrorHelper.throw - throwing HttpException with code:",
+      errorInfo.code,
+    );
 
     // Criar uma exceção customizada que preserve a estrutura
     const customError = new HttpException(errorResponse, errorInfo.code);
     // Marcar como erro estruturado para que interceptadores possam identificar
     (customError as any).isStructuredError = true;
-    
+
     throw customError;
   }
 
@@ -54,7 +59,9 @@ export class StructuredErrorHelper {
    * @param proposalId ID da proposta
    */
   static throwProposalAlreadyDeleted(proposalId: string): never {
-    this.throw(BackendErrors.PROPOSAL_ALREADY_DELETED, { proposal_id: proposalId });
+    this.throw(BackendErrors.PROPOSAL_ALREADY_DELETED, {
+      proposal_id: proposalId,
+    });
   }
 
   /**
@@ -78,7 +85,9 @@ export class StructuredErrorHelper {
    * @param associationId ID da associação
    */
   static throwAssociationNotFound(associationId: string): never {
-    this.throw(BackendErrors.ASSOCIATION_NOT_FOUND, { association_id: associationId });
+    this.throw(BackendErrors.ASSOCIATION_NOT_FOUND, {
+      association_id: associationId,
+    });
   }
 
   /**
@@ -86,7 +95,9 @@ export class StructuredErrorHelper {
    * @param agreementId ID do convênio
    */
   static throwAgreementNotFound(agreementId: string): never {
-    this.throw(BackendErrors.AGREEMENT_NOT_FOUND, { agreement_id: agreementId });
+    this.throw(BackendErrors.AGREEMENT_NOT_FOUND, {
+      agreement_id: agreementId,
+    });
   }
 
   /**
@@ -110,7 +121,9 @@ export class StructuredErrorHelper {
    * @param allotmentId ID do lote
    */
   static throwAllotmentNotFound(allotmentId: string): never {
-    this.throw(BackendErrors.ALLOTMENT_NOT_FOUND, { allotment_id: allotmentId });
+    this.throw(BackendErrors.ALLOTMENT_NOT_FOUND, {
+      allotment_id: allotmentId,
+    });
   }
 
   /**
@@ -126,7 +139,9 @@ export class StructuredErrorHelper {
    * @param missingFields Array com os campos ausentes
    */
   static throwMissingRequiredFields(missingFields: string[]): never {
-    this.throw(BackendErrors.MISSING_REQUIRED_FIELDS, { fields: missingFields.join(", ") });
+    this.throw(BackendErrors.MISSING_REQUIRED_FIELDS, {
+      fields: missingFields.join(", "),
+    });
   }
 
   /**
@@ -134,7 +149,9 @@ export class StructuredErrorHelper {
    * @param allotmentId ID do lote
    */
   static throwCannotAcceptAllotmentInAnalysis(allotmentId: string): never {
-    this.throw(BackendErrors.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS, { allotment_id: allotmentId });
+    this.throw(BackendErrors.CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS, {
+      allotment_id: allotmentId,
+    });
   }
 
   /**
@@ -160,7 +177,10 @@ export class StructuredErrorHelper {
    * @param fileType Tipo do arquivo
    */
   static throwBidDownloadFailed(bidId: string, fileType: string): never {
-    this.throw(BackendErrors.BID_DOWNLOAD_FAILED, { bid_id: bidId, file_type: fileType });
+    this.throw(BackendErrors.BID_DOWNLOAD_FAILED, {
+      bid_id: bidId,
+      file_type: fileType,
+    });
   }
 
   /**

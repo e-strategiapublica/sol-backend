@@ -10,7 +10,7 @@ export enum BackendErrors {
   PROPOSAL_ALREADY_DELETED = "PROPOSAL_ALREADY_DELETED",
   PROPOSAL_REGISTRATION_FAILED = "PROPOSAL_REGISTRATION_FAILED",
   PROPOSAL_UPDATE_FAILED = "PROPOSAL_UPDATE_FAILED",
-  
+
   // Bid errors
   BID_NOT_FOUND = "BID_NOT_FOUND",
   BID_CLOSED = "BID_CLOSED",
@@ -23,14 +23,14 @@ export enum BackendErrors {
   BID_DOCUMENT_GENERATION_FAILED = "BID_DOCUMENT_GENERATION_FAILED",
   BID_DOWNLOAD_FAILED = "BID_DOWNLOAD_FAILED",
   BID_UNAUTHORIZED_ACCESS = "BID_UNAUTHORIZED_ACCESS",
-  
+
   // Association errors
   ASSOCIATION_NOT_FOUND = "ASSOCIATION_NOT_FOUND",
   ASSOCIATION_REGISTRATION_FAILED = "ASSOCIATION_REGISTRATION_FAILED",
-  
+
   // Agreement errors
   AGREEMENT_NOT_FOUND = "AGREEMENT_NOT_FOUND",
-  
+
   // User errors
   USER_NOT_FOUND = "USER_NOT_FOUND",
   USER_REGISTRATION_FAILED = "USER_REGISTRATION_FAILED",
@@ -40,24 +40,24 @@ export enum BackendErrors {
   USER_PASSWORD_UPDATE_FAILED = "USER_PASSWORD_UPDATE_FAILED",
   USER_VERIFICATION_CODE_INVALID = "USER_VERIFICATION_CODE_INVALID",
   USER_VERIFICATION_CODE_EXPIRED = "USER_VERIFICATION_CODE_EXPIRED",
-  
+
   // Supplier errors
   SUPPLIER_NOT_FOUND = "SUPPLIER_NOT_FOUND",
   SUPPLIER_NO_BIDS = "SUPPLIER_NO_BIDS",
-  
+
   // Allotment errors
   ALLOTMENT_NOT_FOUND = "ALLOTMENT_NOT_FOUND",
   ALLOTMENT_REGISTRATION_FAILED = "ALLOTMENT_REGISTRATION_FAILED",
   ALLOTMENT_UNDER_ANALYSIS = "ALLOTMENT_UNDER_ANALYSIS",
   CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS = "CANNOT_ACCEPT_ALLOTMENT_IN_ANALYSIS",
-  
+
   // File errors
   FILE_NOT_FOUND = "FILE_NOT_FOUND",
   FILE_CONVERSION_ERROR = "FILE_CONVERSION_ERROR",
-  
+
   // Platform errors
   PLATFORM_CONFIG_NOT_FOUND = "PLATFORM_CONFIG_NOT_FOUND",
-  
+
   // Generic errors
   MISSING_REQUIRED_FIELDS = "MISSING_REQUIRED_FIELDS",
   GENERIC_ERROR = "GENERIC_ERROR",
@@ -81,7 +81,7 @@ export const BackendErrorsInfo = {
     code: HttpStatus.BAD_REQUEST,
     data: ["proposal_id"] as const,
   },
-  
+
   // Bid errors
   [BackendErrors.BID_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -127,7 +127,7 @@ export const BackendErrorsInfo = {
     code: HttpStatus.FORBIDDEN,
     data: ["bid_id"] as const,
   },
-  
+
   // Association errors
   [BackendErrors.ASSOCIATION_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -137,13 +137,13 @@ export const BackendErrorsInfo = {
     code: HttpStatus.BAD_REQUEST,
     data: [] as const,
   },
-  
+
   // Agreement errors
   [BackendErrors.AGREEMENT_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
     data: ["agreement_id"] as const,
   },
-  
+
   // User errors
   [BackendErrors.USER_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -177,7 +177,7 @@ export const BackendErrorsInfo = {
     code: HttpStatus.BAD_REQUEST,
     data: ["code"] as const,
   },
-  
+
   // Supplier errors
   [BackendErrors.SUPPLIER_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -187,7 +187,7 @@ export const BackendErrorsInfo = {
     code: HttpStatus.NOT_FOUND,
     data: ["supplier_id"] as const,
   },
-  
+
   // Allotment errors
   [BackendErrors.ALLOTMENT_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -205,7 +205,7 @@ export const BackendErrorsInfo = {
     code: HttpStatus.BAD_REQUEST,
     data: ["allotment_id"] as const,
   },
-  
+
   // File errors
   [BackendErrors.FILE_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
@@ -215,13 +215,13 @@ export const BackendErrorsInfo = {
     code: HttpStatus.INTERNAL_SERVER_ERROR,
     data: [] as const,
   },
-  
+
   // Platform errors
   [BackendErrors.PLATFORM_CONFIG_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
     data: [] as const,
   },
-  
+
   // Generic errors
   [BackendErrors.MISSING_REQUIRED_FIELDS]: {
     code: HttpStatus.BAD_REQUEST,

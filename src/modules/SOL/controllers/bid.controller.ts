@@ -93,7 +93,9 @@ export class BidController {
       if (error.isStructuredError) {
         throw error;
       }
-      this.logger.error(`Erro inesperado ao registrar licitação: ${error.message}`);
+      this.logger.error(
+        `Erro inesperado ao registrar licitação: ${error.message}`,
+      );
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
         HttpStatus.INTERNAL_SERVER_ERROR,

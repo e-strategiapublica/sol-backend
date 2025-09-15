@@ -547,7 +547,7 @@ export class ProposalService {
           (a) => a.status === AllotmentStatusEnum.emAnalise,
         );
         StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
-          allotmentInAnalysis?._id?.toString() || 'unknown'
+          allotmentInAnalysis?._id?.toString() || "unknown",
         );
       }
       const dto = {
@@ -602,7 +602,7 @@ export class ProposalService {
           (a) => a.status === AllotmentStatusEnum.emAnalise,
         );
         StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
-          allotmentInAnalysis?._id?.toString() || 'unknown'
+          allotmentInAnalysis?._id?.toString() || "unknown",
         );
       }
 
