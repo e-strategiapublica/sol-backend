@@ -19,6 +19,10 @@ export enum BackendErrors {
   BID_NOT_IN_ANALYSIS = "BID_NOT_IN_ANALYSIS",
   BID_NO_PROPOSALS_FOR_TIE_BREAKER = "BID_NO_PROPOSALS_FOR_TIE_BREAKER",
   BID_MISSING_ALLOTMENTS = "BID_MISSING_ALLOTMENTS",
+  BID_INVALID_STATUS = "BID_INVALID_STATUS",
+  BID_DOCUMENT_GENERATION_FAILED = "BID_DOCUMENT_GENERATION_FAILED",
+  BID_DOWNLOAD_FAILED = "BID_DOWNLOAD_FAILED",
+  BID_UNAUTHORIZED_ACCESS = "BID_UNAUTHORIZED_ACCESS",
   
   // Association errors
   ASSOCIATION_NOT_FOUND = "ASSOCIATION_NOT_FOUND",
@@ -29,6 +33,13 @@ export enum BackendErrors {
   
   // User errors
   USER_NOT_FOUND = "USER_NOT_FOUND",
+  USER_REGISTRATION_FAILED = "USER_REGISTRATION_FAILED",
+  USER_UPDATE_FAILED = "USER_UPDATE_FAILED",
+  USER_EMAIL_ALREADY_EXISTS = "USER_EMAIL_ALREADY_EXISTS",
+  USER_INVALID_CREDENTIALS = "USER_INVALID_CREDENTIALS",
+  USER_PASSWORD_UPDATE_FAILED = "USER_PASSWORD_UPDATE_FAILED",
+  USER_VERIFICATION_CODE_INVALID = "USER_VERIFICATION_CODE_INVALID",
+  USER_VERIFICATION_CODE_EXPIRED = "USER_VERIFICATION_CODE_EXPIRED",
   
   // Supplier errors
   SUPPLIER_NOT_FOUND = "SUPPLIER_NOT_FOUND",
@@ -100,6 +111,22 @@ export const BackendErrorsInfo = {
     code: HttpStatus.BAD_REQUEST,
     data: [] as const,
   },
+  [BackendErrors.BID_INVALID_STATUS]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: ["bid_id", "status"] as const,
+  },
+  [BackendErrors.BID_DOCUMENT_GENERATION_FAILED]: {
+    code: HttpStatus.INTERNAL_SERVER_ERROR,
+    data: ["bid_id"] as const,
+  },
+  [BackendErrors.BID_DOWNLOAD_FAILED]: {
+    code: HttpStatus.INTERNAL_SERVER_ERROR,
+    data: ["bid_id", "file_type"] as const,
+  },
+  [BackendErrors.BID_UNAUTHORIZED_ACCESS]: {
+    code: HttpStatus.FORBIDDEN,
+    data: ["bid_id"] as const,
+  },
   
   // Association errors
   [BackendErrors.ASSOCIATION_NOT_FOUND]: {
@@ -121,6 +148,34 @@ export const BackendErrorsInfo = {
   [BackendErrors.USER_NOT_FOUND]: {
     code: HttpStatus.NOT_FOUND,
     data: ["user_id"] as const,
+  },
+  [BackendErrors.USER_REGISTRATION_FAILED]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: [] as const,
+  },
+  [BackendErrors.USER_UPDATE_FAILED]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: ["user_id"] as const,
+  },
+  [BackendErrors.USER_EMAIL_ALREADY_EXISTS]: {
+    code: HttpStatus.CONFLICT,
+    data: ["email"] as const,
+  },
+  [BackendErrors.USER_INVALID_CREDENTIALS]: {
+    code: HttpStatus.UNAUTHORIZED,
+    data: [] as const,
+  },
+  [BackendErrors.USER_PASSWORD_UPDATE_FAILED]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: ["user_id"] as const,
+  },
+  [BackendErrors.USER_VERIFICATION_CODE_INVALID]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: ["code"] as const,
+  },
+  [BackendErrors.USER_VERIFICATION_CODE_EXPIRED]: {
+    code: HttpStatus.BAD_REQUEST,
+    data: ["code"] as const,
   },
   
   // Supplier errors

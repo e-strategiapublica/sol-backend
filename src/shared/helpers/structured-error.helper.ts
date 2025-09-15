@@ -138,6 +138,94 @@ export class StructuredErrorHelper {
   }
 
   /**
+   * Lança erro de status de licitação inválido
+   * @param bidId ID da licitação
+   * @param status Status inválido
+   */
+  static throwBidInvalidStatus(bidId: string, status: string): never {
+    this.throw(BackendErrors.BID_INVALID_STATUS, { bid_id: bidId, status });
+  }
+
+  /**
+   * Lança erro de falha na geração de documento
+   * @param bidId ID da licitação
+   */
+  static throwBidDocumentGenerationFailed(bidId: string): never {
+    this.throw(BackendErrors.BID_DOCUMENT_GENERATION_FAILED, { bid_id: bidId });
+  }
+
+  /**
+   * Lança erro de falha no download
+   * @param bidId ID da licitação
+   * @param fileType Tipo do arquivo
+   */
+  static throwBidDownloadFailed(bidId: string, fileType: string): never {
+    this.throw(BackendErrors.BID_DOWNLOAD_FAILED, { bid_id: bidId, file_type: fileType });
+  }
+
+  /**
+   * Lança erro de acesso não autorizado à licitação
+   * @param bidId ID da licitação
+   */
+  static throwBidUnauthorizedAccess(bidId: string): never {
+    this.throw(BackendErrors.BID_UNAUTHORIZED_ACCESS, { bid_id: bidId });
+  }
+
+  /**
+   * Lança erro de falha no registro de usuário
+   */
+  static throwUserRegistrationFailed(): never {
+    this.throw(BackendErrors.USER_REGISTRATION_FAILED);
+  }
+
+  /**
+   * Lança erro de falha na atualização de usuário
+   * @param userId ID do usuário
+   */
+  static throwUserUpdateFailed(userId: string): never {
+    this.throw(BackendErrors.USER_UPDATE_FAILED, { user_id: userId });
+  }
+
+  /**
+   * Lança erro de email já existente
+   * @param email Email que já existe
+   */
+  static throwUserEmailAlreadyExists(email: string): never {
+    this.throw(BackendErrors.USER_EMAIL_ALREADY_EXISTS, { email });
+  }
+
+  /**
+   * Lança erro de credenciais inválidas
+   */
+  static throwUserInvalidCredentials(): never {
+    this.throw(BackendErrors.USER_INVALID_CREDENTIALS);
+  }
+
+  /**
+   * Lança erro de falha na atualização de senha
+   * @param userId ID do usuário
+   */
+  static throwUserPasswordUpdateFailed(userId: string): never {
+    this.throw(BackendErrors.USER_PASSWORD_UPDATE_FAILED, { user_id: userId });
+  }
+
+  /**
+   * Lança erro de código de verificação inválido
+   * @param code Código inválido
+   */
+  static throwUserVerificationCodeInvalid(code: string): never {
+    this.throw(BackendErrors.USER_VERIFICATION_CODE_INVALID, { code });
+  }
+
+  /**
+   * Lança erro de código de verificação expirado
+   * @param code Código expirado
+   */
+  static throwUserVerificationCodeExpired(code: string): never {
+    this.throw(BackendErrors.USER_VERIFICATION_CODE_EXPIRED, { code });
+  }
+
+  /**
    * Lança erro genérico
    */
   static throwGenericError(): never {

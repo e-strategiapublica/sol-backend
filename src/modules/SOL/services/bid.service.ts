@@ -46,6 +46,8 @@ import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ItemsModel } from "../models/database/items.model";
 import { SHA256, enc } from "crypto-js";
 import { bidStatusTranslations } from "src/shared/utils/translation.utils";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
+import { BackendErrors } from "../../../shared/enums/errors";
 
 const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
@@ -193,9 +195,9 @@ export class BidService {
     const association = await this._userRepository.getById(associationId);
     const agreement = await this._agreementService.findById(dto.agreementId);
 
-    if (!agreement) throw new BadRequestException("Convênio não encontrado!");
+    if (!agreement) StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
     if (!association)
-      throw new BadRequestException("Associação nao encontrada!");
+      StructuredErrorHelper.throwAssociationNotFound(associationId);
     dto.agreement = agreement;
     dto.association = association;
 
@@ -303,9 +305,7 @@ export class BidService {
         dto.add_allotment = [];
       } else {
         // Para licitações finais, exigir lotes
-        throw new BadRequestException(
-          "Não foi possível cadastrar essa licitação! É necessário adicionar pelo menos um lote.",
-        );
+        StructuredErrorHelper.throw(BackendErrors.BID_MISSING_ALLOTMENTS);
       }
     } catch (error) {
       // Se for rascunho, ignorar erros relacionados aos lotes
@@ -324,9 +324,7 @@ export class BidService {
     try {
       const result = await this._bidsRepository.register(dto);
       if (!result) {
-        throw new BadRequestException(
-          "Não foi possivel cadastrar essa licitação!",
-        );
+        StructuredErrorHelper.throw(BackendErrors.BID_REGISTRATION_FAILED);
       }
 
       // Lacchain
@@ -411,9 +409,7 @@ export class BidService {
       return result;
     } catch (error) {
       this._logger.error(`Erro ao registrar licitação: ${error.message}`);
-      throw new BadRequestException(
-        `Não foi possivel cadastrar essa licitação: ${error.message}`,
-      );
+      StructuredErrorHelper.throw(BackendErrors.BID_REGISTRATION_FAILED);
     }
   }
 
@@ -539,11 +535,11 @@ export class BidService {
   async update(_id: string, dto: BidUpdateDto): Promise<BidModel> {
     const item = await this._bidsRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Não foi possivel atualizar a licitação!");
+      StructuredErrorHelper.throwBidNotFound(_id);
     }
 
     const agreement = await this._agreementService.findById(dto.agreementId);
-    if (!agreement) throw new BadRequestException("Convênio não encontrado!");
+    if (!agreement) StructuredErrorHelper.throwAgreementNotFound(dto.agreementId);
     dto.agreement = agreement;
 
     let newArray = [];
@@ -585,9 +581,7 @@ export class BidService {
   async addProposal(_id: string, dto: BidAddProposalDto): Promise<BidModel> {
     const item = await this._bidsRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException(
-        "Não foi possivel atualizar a adicionar proposta na licitação!",
-      );
+      StructuredErrorHelper.throwBidNotFound(_id);
     }
     const result = await this._bidsRepository.addProposal(_id, dto);
     return result;
@@ -601,7 +595,7 @@ export class BidService {
   ): Promise<BidModel | any> {
     const user = await this._userRepository.getById(userId);
 
-    if (!user) throw new BadRequestException("Usuário não encontrado!");
+    if (!user) StructuredErrorHelper.throwUserNotFound(userId);
 
     if (user.type === "administrador") dto.proofreader = user;
 
@@ -614,9 +608,7 @@ export class BidService {
       const configs = await this._plataformRepository.findOne();
 
       if (!configs)
-        throw new BadRequestException(
-          "Não foi possivel encontrar as configurações da plataforma!",
-        );
+        StructuredErrorHelper.throw(BackendErrors.PLATFORM_CONFIG_NOT_FOUND);
 
       const { start_at } = await this._bidsRepository.addStartHour(
         _id,
