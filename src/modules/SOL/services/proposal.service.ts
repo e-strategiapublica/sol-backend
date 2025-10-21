@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
 import { ProposalModel } from "../models/proposal.model";
 import { ProposalRegisterDto } from "../dtos/proposal-register-request.dto";
 import { ProposalRepository } from "../repositories/proposal.repository";
@@ -34,7 +35,11 @@ import { AllotmentModel } from "../models/allotment.model";
 import { BidService } from "./bid.service";
 import { ProposalReviewerAcceptUpdateDto } from "../dtos/proposal-accept-reviewer-update.dto";
 import { extractAndCompareContent } from "../utils/string-and-id-compare.helper";
-import { Proposal } from "../schemas/proposal.schema";
+import {
+  extractBidId,
+  extractSupplierId,
+} from "../utils/entity-id-extractor.helper";
+import { ProposalErrorMessages } from "../utils/error-messages.helper";
 
 @Injectable()
 export class ProposalService {
@@ -51,6 +56,47 @@ export class ProposalService {
     private readonly _bidService: BidService,
   ) {}
 
+  /**
+   * Registra uma nova proposta para uma licitação.
+   *
+   * Regras de Negócio:
+   * 1. Validação Inicial:
+   *    - O usuário que propõe (proposedBy) deve existir
+   *    - A licitação (bid) deve existir e estar com status 'open' ou 'reopened'
+   *
+   * 2. Tipos de Licitação:
+   *    - Para tipo "globalPrice": Uma proposta pode abranger múltiplos lotes
+   *    - Para outros tipos: Uma proposta é específica para um único lote
+   *
+   * 3. Validação de Propostas Existentes:
+   *    - Para tipo "globalPrice": Um fornecedor só pode ter uma proposta por licitação
+   *    - Para outros tipos: Um fornecedor pode ter uma proposta por lote
+   *
+   * 4. Lógica de ProposalWin (Proposta Vencedora):
+   *    Para licitações "globalPrice":
+   *    - Se é a primeira proposta: automaticamente marcada como vencedora
+   *    - Se existem outras propostas:
+   *      * Se o valor total é menor que a menor proposta existente: marca como vencedora
+   *      * Se o valor total é igual à menor proposta: todas com mesmo valor são marcadas como vencedoras
+   *      * Se o valor total é maior: marca como não vencedora
+   *
+   *    Para outros tipos de licitação:
+   *    - Mesma lógica aplicada por lote individualmente
+   *    - Considera o valor total + frete para comparação
+   *
+   * 5. Atualização de Lotes:
+   *    - Cada lote é atualizado com a referência da nova proposta
+   *    - O status de vencedora (proposalWin) é atualizado em cada lote
+   *
+   * @param proposedById - ID do usuário que está fazendo a proposta
+   * @param dto - Dados da proposta incluindo valores, licitação, lotes e demais informações
+   * @returns Promise<ProposalModel> - Retorna a proposta registrada
+   * @throws CustomException
+   *    - Quando a licitação está fechada
+   *    - Quando já existe uma proposta do fornecedor para a licitação (globalPrice)
+   *    - Quando já existe uma proposta do fornecedor para o lote
+   *    - Quando falha ao registrar a proposta
+   */
   async register(
     proposedById: string,
     dto: ProposalRegisterDto,
@@ -73,9 +119,7 @@ export class ProposalService {
       BidStatusEnum.open !== bid.status &&
       BidStatusEnum.reopened !== bid.status
     )
-      throw new BadRequestException(
-        "Não é possivel cadastrar proposta para licitação fechada!",
-      );
+      throw new BadRequestException(ProposalErrorMessages.BID_CLOSED);
 
     dto.bid = bid;
 
@@ -100,7 +144,7 @@ export class ProposalService {
       }
       if (!result)
         throw new BadRequestException(
-          "Não foi possivel cadastrar essa proposta!",
+          ProposalErrorMessages.REGISTRATION_FAILED,
         );
 
       return result;
@@ -114,9 +158,7 @@ export class ProposalService {
         ),
       );
       if (verify) {
-        throw new BadRequestException(
-          "Já foi enviado uma proposta para essa licitação!",
-        );
+        throw new BadRequestException(ProposalErrorMessages.DUPLICATE_PROPOSAL);
       }
     }
 
@@ -145,7 +187,7 @@ export class ProposalService {
 
         if (verify) {
           throw new BadRequestException(
-            "Já foi enviado uma proposta para essa licitação!",
+            ProposalErrorMessages.DUPLICATE_PROPOSAL,
           );
         }
       });
@@ -330,9 +372,7 @@ export class ProposalService {
 
     const result = await this._proposalRepository.register(dto);
     if (!result)
-      throw new BadRequestException(
-        "Não foi possivel cadastrar essa proposta!",
-      );
+      throw new BadRequestException(ProposalErrorMessages.REGISTRATION_FAILED);
 
     newProposal.push({ proposal: result, proposalWin: dto.proposalWin });
 
@@ -354,7 +394,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateAcceptSupplier(
@@ -376,7 +416,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateAcceptAssociation(
@@ -400,7 +440,7 @@ export class ProposalService {
   ): Promise<ProposalModel | any> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.updateAcceptReviewer(
       _id,
@@ -433,7 +473,9 @@ export class ProposalService {
 
     const proposal = await this._proposalRepository.getById(proposalId);
 
-    const list = await this._proposalRepository.listByBid(proposal.bid.id);
+    const list = await this._proposalRepository.listByBid(
+      extractBidId(proposal.bid),
+    );
 
     if (refusedBy.type !== "administrador") {
       if (list.length > 1) {
@@ -494,6 +536,20 @@ export class ProposalService {
     if (acceptBy.type === UserTypeEnum.associacao) {
       obj.status = ProposalStatusEnum.aceitoAssociacao;
       const proposal = await this._proposalRepository.getById(proposalId);
+
+      // Validação: impedir recusa se algum lote estiver em análise
+      const hasAllotmentInAnalysis = proposal.allotment?.some(
+        (a) => a.status === AllotmentStatusEnum.emAnalise,
+      );
+
+      if (hasAllotmentInAnalysis) {
+        const allotmentInAnalysis = proposal.allotment?.find(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        );
+        StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
+          allotmentInAnalysis?._id?.toString() || "unknown",
+        );
+      }
       const dto = {
         association_accept: true,
       };
@@ -536,7 +592,21 @@ export class ProposalService {
 
       const proposal = await this._proposalRepository.getById(proposalId);
 
-      const bid = await this._bidRepository.getById(proposal.bid.id);
+      // Validação: impedir aceitar se algum lote estiver em análise
+      const hasAllotmentInAnalysis = proposal.allotment?.some(
+        (a) => a.status === AllotmentStatusEnum.emAnalise,
+      );
+
+      if (hasAllotmentInAnalysis) {
+        const allotmentInAnalysis = proposal.allotment?.find(
+          (a) => a.status === AllotmentStatusEnum.emAnalise,
+        );
+        StructuredErrorHelper.throwCannotAcceptAllotmentInAnalysis(
+          allotmentInAnalysis?._id?.toString() || "unknown",
+        );
+      }
+
+      const bid = await this._bidRepository.getById(extractBidId(proposal.bid));
 
       // for (let iterator of proposal.allotment) {
       //   await this._allotmentService.updateStatus(iterator._id.toString(), AllotmentStatusEnum.adjudicado);
@@ -544,7 +614,7 @@ export class ProposalService {
 
       let contractDto: ContractRegisterDto = {
         contract_number: "1",
-        bid_number: proposal.bid.id,
+        bid_number: extractBidId(proposal.bid),
         value: proposal.total_value,
         contract_document: "teste",
         association_accept: false,
@@ -552,10 +622,10 @@ export class ProposalService {
         status: ContractStatusEnum.aguardando_assinaturas,
         proposal_id: [proposal],
         association_id: bid.id,
-        supplier_id: proposal.proposedBy.supplier.id,
+        supplier_id: extractSupplierId(proposal.proposedBy.supplier),
       };
 
-      await this._bidRepository.changeStatus(proposal.bid.id, {
+      await this._bidRepository.changeStatus(extractBidId(proposal.bid), {
         status: BidStatusEnum["completed"],
       });
 
@@ -594,7 +664,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
 
     const result = await this._proposalRepository.updateStatus(_id, dto);
@@ -630,7 +700,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.addItem(_id, dto);
     return result;
@@ -642,7 +712,7 @@ export class ProposalService {
   ): Promise<ProposalModel> {
     const item = await this._proposalRepository.getById(_id);
     if (!item) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     const result = await this._proposalRepository.removeItem(_id, dto);
     return result;
@@ -652,10 +722,10 @@ export class ProposalService {
     const result = await this._proposalRepository.getById(_id);
 
     if (!result) {
-      throw new BadRequestException("Proposta não encontrada!");
+      StructuredErrorHelper.throwProposalNotFound(_id);
     }
     if (result.deleted === true) {
-      throw new BadRequestException("Esse contrato já foi deletado!");
+      StructuredErrorHelper.throwProposalAlreadyDeleted(_id);
     }
     return result;
   }

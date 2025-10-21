@@ -1,11 +1,11 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { UserService } from "./user.service";
-import { UserRepository } from "../repositories/user.repository";
-import { SupplierService } from "../services/supplier.service";
-import { UserRegisterRequestDto } from "../dtos/user-register-request.dto";
-import { UserTypeEnum } from "../enums/user-type.enum";
-import { AssociationService } from "./association.service";
-import { VerificationService } from "./verification.service";
+import { UserService } from "../../src/modules/SOL/services/user.service";
+import { UserRepository } from "../../src/modules/SOL/repositories/user.repository";
+import { SupplierService } from "../../src/modules/SOL/services/supplier.service";
+import { UserRegisterRequestDto } from "../../src/modules/SOL/dtos/user-register-request.dto";
+import { UserTypeEnum } from "../../src/modules/SOL/enums/user-type.enum";
+import { AssociationService } from "../../src/modules/SOL/services/association.service";
+import { VerificationService } from "../../src/modules/SOL/services/verification.service";
 import { BadRequestException } from "@nestjs/common";
 
 // Mocks
