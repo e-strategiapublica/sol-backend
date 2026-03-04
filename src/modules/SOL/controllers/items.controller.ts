@@ -19,6 +19,7 @@ import { JwtAuthGuard } from "src/shared/guards/jwt-auth.guard";
 import { ItemsService } from "../services/items.service";
 import { ItemsModel } from "../models/database/items.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { RegisterItemDto } from "../dtos/register-item-request.dto";
 
 @ApiTags("items")
 @Controller("items")
@@ -46,9 +47,9 @@ export class ItemsController {
   @HttpCode(201)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async register(@Body() dto) {
+  async register(@Body() dto: RegisterItemDto) {
     try {
-      await this.itemsModel.verifyCodeExists(dto.item);
+      await this.itemsModel.verifyCodeExists(dto.code);
       await this.itemsModel.saveItem(dto);
 
       return { type: "success" };

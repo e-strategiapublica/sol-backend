@@ -73,7 +73,7 @@ export class ItemsModel {
       const res = await collection.findOne({ code: code });
 
       if (res) {
-        throw new ErrorManager(HttpStatus.BAD_REQUEST, "The code exists", 1);
+        throw new ErrorManager(HttpStatus.BAD_REQUEST, "The code exists", code);
       }
     } catch (error) {
       throw ErrorManager.createError(error);
