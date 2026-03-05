@@ -99,6 +99,7 @@ import { ItemsModel } from "./models/database/items.model";
 import { GamificationController } from "./controllers/gamification.controller";
 import { GamificationService } from "./services/gamification.service";
 import { UserSeeder } from "./seeds/user.seeder";
+import { HealthCheckController } from "./controllers/health.check.controller";
 
 @Module({
   imports: [
@@ -143,6 +144,7 @@ import { UserSeeder } from "./seeds/user.seeder";
     PdmController,
     ItemsController,
     GamificationController,
+    HealthCheckController,
   ],
   providers: [
     UserSeeder,

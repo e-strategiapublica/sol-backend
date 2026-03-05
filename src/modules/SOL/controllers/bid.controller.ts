@@ -36,6 +36,7 @@ import { BidDateUpdateDto } from "../dtos/bid-date-update.dto";
 import { LacchainModel } from "../models/blockchain/lacchain.model";
 import { BidHistoryModel } from "../models/database/bid_history.model";
 import { ErrorManager } from "../../../shared/utils/error.manager";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
 import { BidStatusEnum } from "../enums/bid-status.enum";
 import { BidTypeEnum } from "../enums/bid-type.enum";
 import { BidModalityEnum } from "../enums/bid-modality.enum";
@@ -89,20 +90,15 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      // Log detalhado do erro para facilitar a depuração
-      this.logger.error(`Erro ao registrar licitação: ${error.message}`);
-
-      // Melhorar a mensagem de erro para o frontend
-      const errorMessage =
-        error.message || "Erro interno ao processar a licitação";
-      const statusCode =
-        error instanceof BadRequestException
-          ? HttpStatus.BAD_REQUEST
-          : HttpStatus.INTERNAL_SERVER_ERROR;
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(
+        `Erro inesperado ao registrar licitação: ${error.message}`,
+      );
       throw new HttpException(
-        new ResponseDto(false, null, [errorMessage]),
-        statusCode,
+        new ResponseDto(false, null, [error.message]),
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -117,11 +113,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -138,11 +136,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -161,11 +161,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -206,11 +208,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -227,11 +231,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -247,11 +253,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -267,11 +275,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -288,11 +298,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -309,11 +321,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -328,11 +342,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -350,11 +366,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -386,11 +404,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -406,11 +426,13 @@ export class BidController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

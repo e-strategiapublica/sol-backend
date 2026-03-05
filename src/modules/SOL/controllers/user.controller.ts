@@ -42,6 +42,7 @@ import { UserUpdateValidator } from "../validators/user-update.validator";
 import { UserUpdateByIdRequestDto } from "../dtos/user-update-by-id-request.dto";
 import { UserRolesEnum } from "../enums/user-roles.enum";
 import { VerificationRegisterResponseDto } from "../dtos/vertification-register-response.dto";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
 
 @ApiTags("user")
 @Controller("user")
@@ -66,11 +67,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -85,11 +88,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -104,11 +109,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -123,11 +130,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -143,11 +152,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -163,11 +174,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -183,11 +196,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -201,11 +216,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -222,11 +239,13 @@ export class UserController {
 
       return new ResponseDto(true, true, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -241,11 +260,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -262,11 +283,13 @@ export class UserController {
         return new ResponseDto(true, response, null);
       }
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -282,11 +305,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -302,11 +327,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -325,11 +352,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -353,11 +382,13 @@ export class UserController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

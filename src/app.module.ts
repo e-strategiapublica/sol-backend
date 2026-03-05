@@ -1,7 +1,8 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { ScheduleModule } from "@nestjs/schedule";
 import { SolModule } from "./modules/SOL/sol.module";
+import { LoggerMiddleware } from "./shared/middlewares/logger.middleware";
 
 @Module({
   imports: [
@@ -14,4 +15,8 @@ import { SolModule } from "./modules/SOL/sol.module";
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*");
+  }
+}

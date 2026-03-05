@@ -22,6 +22,7 @@ import { AllotUpdateStatusRequestDto } from "../dtos/allotment-update-status-req
 import { FuncoesGuard } from "src/shared/guards/funcoes.guard";
 import { Funcoes } from "src/shared/decorators/function.decorator";
 import { UserTypeEnum } from "../enums/user-type.enum";
+import { StructuredErrorHelper } from "../../../shared/helpers/structured-error.helper";
 
 @ApiTags("allotment")
 @Controller("allotment")
@@ -40,11 +41,13 @@ export class AllotmentController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -58,11 +61,13 @@ export class AllotmentController {
       const response = await this.allotmentService.listById(_id);
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -78,11 +83,13 @@ export class AllotmentController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -103,11 +110,13 @@ export class AllotmentController {
 
       return new ResponseDto(true, response, null);
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
@@ -121,11 +130,13 @@ export class AllotmentController {
       const response = await this.allotmentService.downloadAllotmentById(_id);
       return response;
     } catch (error) {
-      this.logger.error(error.message);
-
+      if (error.isStructuredError) {
+        throw error;
+      }
+      this.logger.error(`Erro inesperado: ${error.message}`);
       throw new HttpException(
         new ResponseDto(false, null, [error.message]),
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }

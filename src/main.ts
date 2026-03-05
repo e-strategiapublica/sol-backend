@@ -8,6 +8,7 @@ import BooleanUtil from "./shared/utils/boolean.util";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import * as bodyParser from "body-parser";
 import { UnprocessableEntityException } from "./shared/exceptions/unprocessable-entity.exception";
+import { AllExceptionsFilter } from "./shared/filters/all-exceptions.filter";
 async function bootstrap() {
   const enviroment = process.env.NODE_ENV.toUpperCase();
 
@@ -34,6 +35,7 @@ async function bootstrap() {
       },
     }),
   );
+  app.useGlobalFilters(new AllExceptionsFilter());
   app.use(bodyParser.json({ limit: "100mb" }));
   app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 
