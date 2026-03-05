@@ -50,7 +50,7 @@ export class ItemsController {
   async register(@Body() dto: RegisterItemDto) {
     try {
       await this.itemsModel.verifyCodeExists(dto.code);
-      await this.itemsModel.saveItem(dto);
+      await this.itemsModel.saveItem({ ...dto, item: dto.code });
 
       return { type: "success" };
     } catch (error) {
